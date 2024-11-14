@@ -1,0 +1,32 @@
+@startuml
+autonumber 1.1
+
+actor User as Instance
+Instance -> React : User selects an email to view in detail
+
+React -> Nginx : Request Summary & Formatted Content (On-Demand)
+
+== Asynchronous Summary and Formatting ==
+
+Nginx -> CacheService : Check Cache for Summarized/Formatted Content
+CacheService --> Nginx : Cached Data [if available]
+alt Summary or Formatting not in Cache
+  par Summarization Task
+    autonumber 2.1
+    Nginx ->> SummarizationService : Summarize Email Content (async)
+    SummarizationService --> Nginx : Summarized Content
+    Nginx -> CacheService : Update Cache with Summarized Content
+    autonumber 1.5
+    Nginx --> React : Return Summarized Content
+    React -> Instance : Update UI with Summary
+  else Formatting Task
+    autonumber 3.1
+    Nginx ->> FormattingService : Generate Formatted Reader View (async)
+    FormattingService --> Nginx : Formatted Content
+    Nginx -> CacheService : Update Cache with Formatted Content
+    autonumber 1.7
+    Nginx --> React : Return Formatted Content
+    React -> Instance : Update UI with Formatted Email View
+  end
+end
+@enduml
