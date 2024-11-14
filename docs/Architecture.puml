@@ -1,0 +1,63 @@
+@startuml
+title High-Level Layered Architecture with Data Flow
+
+hide stereotype
+
+' Define the direction top to bottom for the entire diagram
+top to bottom direction
+
+' First, define the global boundary to hold all layers
+rectangle "Application Architecture" as Architecture {
+  
+  ' Define layers as nested rectangles, listed from top to bottom
+  rectangle "Presentation Layer" as presentation_layer {
+    rectangle "Tauri Desktop App" as TauriApp {
+      node "React Frontend" as ReactUI
+    }
+  }
+
+  rectangle "Middleware Layer" as middleware_layer {
+    node "Nginx (Proxy)" as Nginx
+    node "OAuth / AuthService (Authentication)" as OAuth
+  }
+
+  rectangle "Backend Layer" as backend_layer {
+    node "FastAPI (Main Backend Logic)" as FastAPI
+  }
+
+  rectangle "Data & Services Layer" as data_layer {
+    node "MongoDB (Data Storage)" as MongoDB
+    node "Redis (Caching)" as Redis
+  }
+
+  rectangle "Services Layer" as services_layer {
+    node "EmailService (Email Management)" as EmailService
+    node "SummarizationService (Content Summarization)" as SummarizationService
+  }
+}
+
+' Add flow arrows showing data requests (downwards) and responses (upwards)
+ReactUI --> Nginx : User Requests
+Nginx --> FastAPI : Proxy Requests
+FastAPI --> MongoDB : Retrieve/Store Data
+FastAPI --> Redis : Access/Store Cached Data
+FastAPI --> EmailService : Fetch/Send Emails
+FastAPI --> SummarizationService : Summarize Content
+
+' Define return flows
+SummarizationService --> FastAPI : Summarized Data
+EmailService --> FastAPI : Email Data
+MongoDB --> FastAPI : Retrieved Data
+Redis --> FastAPI : Cached Data
+FastAPI --> Nginx : Processed Response
+Nginx --> ReactUI : Return Data to UI
+
+' Authentication flow
+ReactUI --> Nginx : Authentication Request
+Nginx --> OAuth : Validate Session / Tokens
+OAuth --> EmailService : Retrieve Access Tokens (If Needed)
+EmailService --> OAuth : Return Tokens
+OAuth --> Nginx : Auth Response
+Nginx --> ReactUI : Auth Result
+
+@enduml
