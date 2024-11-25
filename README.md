@@ -4,6 +4,8 @@ An intelligent solution designed to enhance how we manage our inbox
 
 ### Frontend
 - React [Docs](https://react.dev/reference/rules)
+- Remix [Docs](https://remix.run)
+- Tauri [Docs](https://v2.tauri.app)
 
 ### Middleware
 - nginx [Docs](https://nginx.org/en/)
