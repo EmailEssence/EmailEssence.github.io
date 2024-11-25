@@ -1,0 +1,29 @@
+@startuml
+title Frontend Components UML
+
+autonumber 1.1
+
+actor User as Instance
+
+== Tauri Desktop App Component ==
+Instance -> TauriApp : Open Desktop Application
+
+== Load React Frontend ==
+autonumber inc B
+TauriApp -> React : Load and Initialize React UI
+
+== React Frontend Component ==
+Instance -> React : User Initiates Interaction / Request Inbox View
+React -> Nginx : Send Request (e.g., Inbox View, Auth)
+
+== Response Handling ==
+Nginx --> React : Return Processed Data (Inbox Overview, Auth Result)
+React -> Instance : Display Data or Error Message in UI
+
+== Overall Presentation Layer Interaction ==
+Instance -> React : User Interaction (e.g., clicks, navigation)
+React -> Nginx : Send Data Request (Auth, Data Fetch)
+Nginx --> React : Return Processed Data
+React -> Instance : Display Updated UI
+
+@enduml
