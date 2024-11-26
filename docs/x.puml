@@ -9,21 +9,41 @@ actor User as Instance
 Instance -> TauriApp : Open Desktop Application
 
 == Load React Frontend ==
-autonumber inc B
-TauriApp -> React : Load and Initialize React UI
+autonumber 2.1
+TauriApp -> TauriBackend : Request Frontend Files (HTML, JS, CSS)
+TauriBackend -> ReactFiles : Load Static Files (index.html, bundle.js, styles.css)
+ReactFiles --> TauriApp : Serve Frontend Files
+TauriApp -> React_and_RemixJS : Initialize React Application
+React_and_RemixJS -> VirtualDOM : Build Initial Virtual DOM
+VirtualDOM -> BrowserDOM : Sync Initial State to Real DOM
+BrowserDOM --> React_and_RemixJS : Notify React that UI is Ready
 
 == React Frontend Component ==
-Instance -> React : User Initiates Interaction / Request Inbox View
-React -> Nginx : Send Request (e.g., Inbox View, Auth)
-
-== Response Handling ==
-Nginx --> React : Return Processed Data (Inbox Overview, Auth Result)
-React -> Instance : Display Data or Error Message in UI
+autonumber 3.1
+Instance -> TauriApp : User Initiates Interaction 
+TauriApp -> React_and_RemixJS : Tauri Forwards Interaction / Request Inbox View
+React_and_RemixJS -> Nginx : Send Request (e.g., Inbox View, Auth)
+alt If Valid Request
+    Nginx --> React_and_RemixJS : Return Processed Data (Inbox Overview, Auth Result)
+else If Invalid Request
+    Nginx --> React_and_RemixJS : Return Error Message
+end
+React_and_RemixJS -> VirtualDOM: Update Virtual DOM State
+VirtualDOM -> BrowserDOM : Sync Updates State to Real DOM 
+React_and_RemixJS -> TauriApp : Update UI with Data
+TauriApp -> Instance : Display Data or Error Message in UI
 
 == Overall Presentation Layer Interaction ==
-Instance -> React : User Interaction (e.g., clicks, navigation)
-React -> Nginx : Send Data Request (Auth, Data Fetch)
-Nginx --> React : Return Processed Data
-React -> Instance : Display Updated UI
+autonumber 4.1
+Instance -> TauriApp : User Interaction (e.g., clicks, navigation)
+TauriApp -> React_and_RemixJS : Tauri Forwards Interaction
+alt If Data Fetch Required
+    React_and_RemixJS -> Nginx : Send Data Request (Auth, Data Fetch)
+    Nginx --> React_and_RemixJS : Return Processed Data
+end
+React_and_RemixJS -> VirtualDOM: Update Virtual DOM State
+VirtualDOM -> BrowserDOM : Sync Updates State to Real DOM 
+React_and_RemixJS -> TauriApp : Update UI with Data
+TauriApp -> Instance : Display Updated UI
 
 @enduml
