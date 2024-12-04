@@ -1,1 +1,3 @@
 .venv
+proto/__pycache__
+token.pickle
