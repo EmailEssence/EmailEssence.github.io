@@ -1,0 +1,11 @@
+.venv
+.env
+credentials.json
+proto/.env
+proto/credentials.json
+
+
+
+token.pickle
+
+proto/__pycache__
