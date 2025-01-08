@@ -1,0 +1,15 @@
+[project]
+name = "email-essence"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115.6",
+    "uvicorn>=0.32.1",
+    "google-api-python-client>=2.154.0",
+    "google-auth-oauthlib>=1.2.1",
+    "IMAPClient>=3.0.1",
+    "openai>=1.56.1",
+    "python-dotenv>=1.0.1",
+]
