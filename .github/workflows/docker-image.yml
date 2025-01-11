@@ -30,9 +30,8 @@ jobs:
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v2
-        run: |
-          docker buildx build \
-            --file Dockerfile \
-            --tag emmamelkumian/emailessence:latest \
-            --push .
+        with:
+          files: Dockerfile
+          tags: emmamelkumian/emailessence:latest
+          push: true
 
