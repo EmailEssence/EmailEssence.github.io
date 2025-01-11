@@ -31,7 +31,7 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v2
         with:
-          files: Dockerfile
-          tags: emmamelkumian/emailessence:latest
+          file: Dockerfile
+          tags: emmamelkumian/emailessence:${{ github.ref_name }}
           push: true
 
