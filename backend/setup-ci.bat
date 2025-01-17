@@ -1,4 +1,5 @@
 @echo off
+SETLOCAL
 
 cd backend
 
@@ -23,10 +24,12 @@ uv venv
 echo Activating virtual environment...
 call .venv\Scripts\activate.bat
 
-:: Install dependencies
+:: Install dependencies with additional test requirements
 echo Installing dependencies...
-uv pip install -r requirements.txt
+uv pip install -r requirements.txt -r requirements-test.txt
 
-echo Setup complete!
+:: Run tests
+echo Running tests...
+pytest
 
-cmd /k
+ENDLOCAL
