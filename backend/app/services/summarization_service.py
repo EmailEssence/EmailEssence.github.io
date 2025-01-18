@@ -1,5 +1,3 @@
-
-from dotenv import load_dotenv
 from openai import OpenAI
 
 def summarize_emails(emails):
