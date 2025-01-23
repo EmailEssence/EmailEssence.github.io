@@ -11,6 +11,7 @@ echo "Checking for UV installation..."
 if ! command -v uv &> /dev/null; then
     echo "UV not found, installing..."
     curl -LsSf https://astral.sh/uv/install.sh | sh
+    source $HOME/.local/bin/env
 else
     echo "UV already installed"
 fi
