@@ -16,6 +16,7 @@ dependencies = [
     "google-api-python-client>=2.157.0",
     "google-auth-oauthlib>=1.2.1",
     "imapclient>=3.0.1",
+    "pydantic>=2.6.1",  # redundant
     
     # AI/ML Integration
     "openai>=1.59.4",
@@ -74,6 +75,7 @@ strict = true
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
+plugins = ["pydantic.mypy"]
 
 [tool.ruff]
 line-length = 88
