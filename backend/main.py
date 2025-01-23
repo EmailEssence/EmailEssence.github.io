@@ -4,12 +4,9 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 from starlette.concurrency import run_in_threadpool
 
-from app.routers.emails_router import router as emails_router
-from app.routers.summaries_router import router as summaries_router
-from app.routers.auth_router import router as auth_router
+from app.routers import emails_router, summaries_router, auth_router
+from app.models import Email, EmailSummary
 
-from app.models.email_model import Email
-from app.models.summary_model import EmailSummary
 # from app.models.user_model import User
 
 app = FastAPI(

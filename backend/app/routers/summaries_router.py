@@ -1,14 +1,11 @@
 
 from typing import List
 from fastapi import APIRouter, HTTPException
-
-from app.services.email_service import fetch_emails
-from app.services.summarization_service import summarize_emails
-
-from app.models.summary_model import EmailSummary
-from app.models.email_model import Email
-
 from starlette.concurrency import run_in_threadpool
+
+from app.services import email_service, summarization_service
+from app.models import Email, EmailSummary
+
 
 router = APIRouter()
 
@@ -16,10 +13,10 @@ router = APIRouter()
 @router.get("/", response_model=List[EmailSummary])
 async def summarize_emails_endpoint():
     try:
-        emails_data = await fetch_emails()
+        emails_data = await email_service.fetch_emails()
         emails = [Email(**email_dict) for email_dict in emails_data]
 
-        summaries = summarize_emails(emails)
+        summaries = summarization_service.summarize_emails(emails)
         return summaries
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

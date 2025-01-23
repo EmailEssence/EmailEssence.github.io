@@ -1,17 +1,17 @@
 
 from typing import List
 from fastapi import APIRouter, HTTPException
-from app.services.email_service import fetch_emails
-from app.models.email_model import Email
-
 from starlette.concurrency import run_in_threadpool
+
+from app.services import email_service
+from app.models import Email
 
 router = APIRouter()
 
 @router.get("/", response_model=list[Email])
 async def retrieve_emails():
     try:
-        emails = await fetch_emails()  # This is fine now as fetch_emails handles threading internally
+        emails = await email_service.fetch_emails()  # This is fine now as fetch_emails handles threading internally
         for email in emails:
             email['from_'] = email.pop('from')
         return emails
