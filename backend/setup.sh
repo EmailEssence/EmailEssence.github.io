@@ -1,8 +1,9 @@
-# chmod +x setup.sh to make it executable
+# chmod +x setup.sh # to make it executable
+# source ./setup.sh # to run setup in current context
 
 #!/bin/bash
 
-# Move to backend directory
+# Move to backend directory if not already in
 cd backend
 
 echo "Checking for UV installation..."
