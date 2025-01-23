@@ -1,18 +1,80 @@
 [project]
 name = "email-essence"
 version = "0.1.0"
-description = "Add your description here"
-readme = "README.md"
+description = "Email client with summarization via AI"
 requires-python = ">=3.12"
+readme = "README.md"
+license = { text = "MIT" }
+
+# Core dependencies with minimal version constraints
 dependencies = [
+    # API Framework - Core Service Layer
     "fastapi>=0.115.6",
-    "uvicorn>=0.32.1",
-    "google-api-python-client>=2.154.0",
+    "uvicorn>=0.34.0",
+    
+    # Authentication & External Services
+    "google-api-python-client>=2.157.0",
     "google-auth-oauthlib>=1.2.1",
-    "IMAPClient>=3.0.1",
-    "openai>=1.56.1",
+    "imapclient>=3.0.1",
+    
+    # AI/ML Integration
+    "openai>=1.59.4",
+    
+    # Configuration Management
     "python-dotenv>=1.0.1",
+]
+
+[project.optional-dependencies]
+# Development Environment
+dev = [
+    # Testing Framework
     "pytest>=8.3.4",
     "pytest-asyncio>=0.25.1",
     "pytest-cov>=6.0.0",
+    "asgi-lifespan>=2.1.0",
+    "httpx>=0.28.1",  # For async HTTP testing
+    
+    # Code Quality
+    "ruff>=0.3.0",    # Modern Python linter
+    "mypy>=1.9.0",    # Static type checking
+    "black>=24.2.0",  # Code formatting
 ]
+
+# Documentation tooling
+docs = [
+    "sphinx>=7.2.6",
+    "sphinx-rtd-theme>=2.0.0",
+]
+
+# Production monitoring and profiling
+monitoring = [
+    "prometheus-client>=0.20.0",
+    "opentelemetry-api>=1.23.0",
+    "opentelemetry-sdk>=1.23.0",
+]
+
+[build-system]
+requires = ["hatchling>=1.21.1"]
+build-backend = "hatchling.build"
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+addopts = [
+    "--cov=app",
+    "--cov-report=term-missing",
+    "--import-mode=importlib",
+]
+testpaths = ["app/tests"]
+asyncio_mode = "auto"
+python_files = "test_*.py"
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
