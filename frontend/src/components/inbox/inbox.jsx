@@ -8,7 +8,22 @@ export default function Inbox() {
 }
 
 function EmailEntry() {
-  return <div></div>;
+  return (
+    <div className="entry">
+      <div className="indicator-container">
+        <div className="indicator"></div>
+      </div>
+      <div className="head">
+        <div className="from"></div>
+        <div className="date"></div>
+      </div>
+      <div className="title"></div>
+      <div className="seperator-container">
+        <div className="seperator"></div>
+      </div>
+      <div className="summary"></div>
+    </div>
+  );
 }
 
 function InboxEmailList() {
