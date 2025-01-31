@@ -8,6 +8,9 @@ import "./preflight.css";
 
 const Main = () => {
   const [showPage, setShowPage] = useState(false); 
+  // Theme toggle usestate
+  // summaries in inbox toggle usestate
+  //
 
   // Function to handle the settings click
   const handleSettingsClick = () => {

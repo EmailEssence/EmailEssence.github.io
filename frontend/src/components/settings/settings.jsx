@@ -12,7 +12,7 @@ export default function Settings() {
     );
 }
 
-function SummariesInInbox() {
+function SummariesInInbox() {  //globalize
     const [isChecked, setIsChecked] = useState(false);
     const handleToggle = () => setIsChecked(!isChecked);
 
@@ -20,8 +20,8 @@ function SummariesInInbox() {
         <div className="settings-block">
             <h2>Summaries in Inbox</h2>
             <label className="switch">
-                <input type="checkbox" checked={isChecked} onChange={handleToggle}/>
-                <span className="slider"></span>
+                <input type="checkbox" checked={isChecked} onChange={handleToggle} />
+                <span className="toggle"></span>
             </label>
         </div>
     );
@@ -29,9 +29,10 @@ function SummariesInInbox() {
 
 function EmailFetchInterval() {
     return (
-        <div className="settings-block">
+        <div className="settings-block email-fetch-interval">
             <h2>Email Fetch Interval</h2>
             <input
+                className="slider"
                 type="range"
                 min="5"
                 max="600"
@@ -43,15 +44,23 @@ function EmailFetchInterval() {
     );
 }
 
-
 function Theme() {
     const [theme, setTheme] = useState("system");
+    const themes = ["light", "system", "dark"];
 
     return (
         <div className="settings-block">
             <h2>Theme</h2>
-            <div className="theme">
-                
+            <div className="theme-toggle-group">
+                {themes.map((t) => (
+                    <button
+                        key={t}
+                        className={`theme-toggle-item ${theme === t ? "selected" : ""}`}
+                        onClick={() => setTheme(t)}
+                    >
+                        {t.charAt(0).toUpperCase() + t.slice(1)}
+                    </button>
+                ))}
             </div>
         </div>
     );
