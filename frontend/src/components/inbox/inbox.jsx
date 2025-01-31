@@ -29,7 +29,21 @@ function EmailEntry() {
 }
 
 function InboxEmailList() {
-  return <EmailEntry />;
+  return (
+    <div>
+      <div className="inbox-title">
+        <div className="inbox-word"></div>
+      </div>
+      <div className="email-list">
+        <EmailEntry />
+      </div>
+      <div className="scrollbar-container">
+        <div className="scrollbar">
+          <div className="nub"></div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function EmailDisplay() {
