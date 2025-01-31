@@ -1,8 +1,8 @@
 /* eslint-disable react/prop-types */
-import "./sidebar.css";
-import {useState} from "react";
-import SettingsIcon from "../../assets/SettingsIcon";
+import { useState } from "react";
 import InboxIcon from "../../assets/InboxIcon";
+import SettingsIcon from "../../assets/SettingsIcon";
+import "./sidebar.css";
 
 const unselectedColor = "#1E1E1E";
 const selectedColor = "#D9D9D9";
@@ -11,7 +11,7 @@ const selectedColorInner = "#1E1E1E";
 const sideBarContracted = "80px";
 const sideBarExpanded = "180px";
 
-export default function SideBar() {
+export default function SideBar({ onSettingsClick }) {
   const [selected, setSelected] = useState("logo");
   const [containerWidth, setContainerWidth] = useState("80px");
 
@@ -48,7 +48,7 @@ export default function SideBar() {
         <SettingsButton
           containerWidth={containerWidth}
           curState={selected}
-          onClick={() => handleClick("settings")}
+          onClick={() => {handleClick("settings"); onSettingsClick();}}
         />
       </div>
     </div>
