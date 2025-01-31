@@ -21,7 +21,7 @@ function EmailEntry() {
       </div>
       <div className="title"></div>
       <div className="separator-container">
-        <div className="seperator"></div>
+        <div className="separator"></div>
       </div>
       <div className="summary"></div>
     </div>

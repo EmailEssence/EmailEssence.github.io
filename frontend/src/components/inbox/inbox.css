@@ -1,38 +1,74 @@
+/* main grid */
 /* create space [0, 0] to [3, 1] */
 .entry {
   width: 460px;
-  height: 60px;
+  height: 4rem;
   display: grid;
   grid-template-rows: 1fr 2fr;
   grid-template-columns: 2rem 1fr 8px 2fr;
 }
+
 /* use space [0, 0] and [0, 1] */
 .indicator-container {
   grid-row: 1 / -1;
   grid-column: 1 / 1;
-  background-color: brown;
+  background-color: white;
+  padding: 1.5rem 0.5rem;
 }
+
 /* use space [1, 0] */
 .head {
   grid-row: 1 / 1;
   grid-column: 2 / 2;
-  background-color: teal;
+  /* set head grid */
+  display: grid;
+  grid-template-columns: 5fr 2fr;
 }
+
 /* use space [1, 1] */
 .title {
   grid-row: 2 / 2;
   grid-column: 2 / 2;
   background-color: yellow;
 }
+
 /* use space [2, 0] and [2, 1] */
 .separator-container {
   grid-row: 1 / -1;
   grid-column: 3 / 3;
-  background-color: grey;
+  background-color: white;
+  /* set separator spacing */
+  padding: 4px 2px;
 }
+
 /* use space [3, 0] and [3, 1] */
 .summary {
   grid-row: 1 / -1;
   grid-column: 4 / 4;
   background-color: black;
+}
+
+.indicator-container > .indicator {
+  height: 100%;
+  width: 100%;
+  margin: auto;
+  border-radius: 50%;
+  background-color: #a2845e;
+}
+
+.head > .from {
+  grid-column: 1 / 1;
+  background-color: teal;
+}
+
+.head > .date {
+  grid-column: 2 / 2;
+  background-color: aqua;
+}
+
+.separator-container > .separator {
+  height: 100%;
+  width: 100%;
+  background-color: grey;
+  border-radius: 2px;
 }
