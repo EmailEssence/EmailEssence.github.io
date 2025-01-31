@@ -8,6 +8,8 @@ const unselectedColor = "#1E1E1E";
 const selectedColor = "#D9D9D9";
 const unselectedColorInner = "#E9E9E9";
 const selectedColorInner = "#1E1E1E";
+const sideBarContracted = "80px";
+const sideBarExpanded = "180px";
 
 export default function SideBar() {
   const [selected, setSelected] = useState("logo");
@@ -16,9 +18,9 @@ export default function SideBar() {
   const handleClick = useStateID => {
     //expands the sidebar when the logo is clicked
     if (useStateID === "logo") {
-      containerWidth === "80px"
-        ? setContainerWidth("180px")
-        : setContainerWidth("80px");
+      containerWidth === sideBarContracted
+        ? setContainerWidth(sideBarExpanded)
+        : setContainerWidth(sideBarContracted);
     }
 
     //sets the selected state ID to dashboard after being unselected
@@ -73,8 +75,7 @@ function LogoButton({containerWidth, curState, onClick}) {
 }
 
 function InboxButton({containerWidth, curState, onClick}) {
-  let text;
-  containerWidth === "80px" ? (text = "") : (text = "Inbox");
+  const text = containerWidth === sideBarContracted ? "" : "Inbox";
   const color = curState === "inbox" ? selectedColor : unselectedColor;
   const innerColor =
     curState === "inbox" ? selectedColorInner : unselectedColorInner;
@@ -98,8 +99,7 @@ function InboxButton({containerWidth, curState, onClick}) {
 }
 
 function SettingsButton({containerWidth, curState, onClick}) {
-  let text;
-  containerWidth === "80px" ? (text = "") : (text = "Settings");
+  const text = containerWidth === sideBarContracted ? "" : "Settings";
   const color = curState === "settings" ? selectedColor : unselectedColor;
   const innerColor =
     curState === "settings" ? selectedColorInner : unselectedColorInner;
