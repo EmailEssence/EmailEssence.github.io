@@ -1,3 +1,5 @@
+import "./inbox.css";
+
 export default function Inbox() {
   return (
     <div>
@@ -18,7 +20,7 @@ function EmailEntry() {
         <div className="date"></div>
       </div>
       <div className="title"></div>
-      <div className="seperator-container">
+      <div className="separator-container">
         <div className="seperator"></div>
       </div>
       <div className="summary"></div>
