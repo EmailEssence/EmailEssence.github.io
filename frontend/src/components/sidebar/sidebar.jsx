@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 import "./sidebar.css";
 import {useState} from "react";
 import SettingsIcon from "../../assets/SettingsIcon";
@@ -5,6 +6,8 @@ import InboxIcon from "../../assets/InboxIcon";
 
 const unselectedColor = "#1E1E1E";
 const selectedColor = "#D9D9D9";
+const unselectedColorInner = "#E9E9E9";
+const selectedColorInner = "#1E1E1E";
 
 export default function SideBar() {
   const [selected, setSelected] = useState("logo");
@@ -50,12 +53,11 @@ export default function SideBar() {
   );
 }
 
-// eslint-disable-next-line react/prop-types
 function LogoButton({containerWidth, curState, onClick}) {
   const color = curState === "logo" ? selectedColor : unselectedColor;
   return (
     <div>
-      <button
+      <div
         className="container"
         id="logo"
         onClick={onClick}
@@ -65,34 +67,45 @@ function LogoButton({containerWidth, curState, onClick}) {
         }}
       >
         <p>EmailESSENCE</p>
-      </button>
+      </div>
     </div>
   );
 }
 
-// eslint-disable-next-line react/prop-types
 function InboxButton({containerWidth, curState, onClick}) {
+  let text;
+  containerWidth === "80px" ? (text = "") : (text = "Inbox");
   const color = curState === "inbox" ? selectedColor : unselectedColor;
+  const innerColor =
+    curState === "inbox" ? selectedColorInner : unselectedColorInner;
   return (
     <div>
-      <button
+      <div
         className="container"
         id="inbox"
         onClick={onClick}
         style={{backgroundColor: color, width: containerWidth}}
       >
-        <InboxIcon className="icon" />
-      </button>
+        <div className="icon">
+          <div>
+            <InboxIcon color={innerColor} />
+          </div>
+          <p style={{color: innerColor}}>{text}</p>
+        </div>
+      </div>
     </div>
   );
 }
 
-// eslint-disable-next-line react/prop-types
 function SettingsButton({containerWidth, curState, onClick}) {
+  let text;
+  containerWidth === "80px" ? (text = "") : (text = "Settings");
   const color = curState === "settings" ? selectedColor : unselectedColor;
+  const innerColor =
+    curState === "settings" ? selectedColorInner : unselectedColorInner;
   return (
     <div>
-      <button
+      <div
         className="container"
         id="settings"
         onClick={onClick}
@@ -101,8 +114,13 @@ function SettingsButton({containerWidth, curState, onClick}) {
           width: containerWidth,
         }}
       >
-        <SettingsIcon className="icon" />
-      </button>
+        <div className="icon">
+          <div>
+            <SettingsIcon color={innerColor} />
+          </div>
+          <p style={{color: innerColor}}>{text}</p>
+        </div>
+      </div>
     </div>
   );
 }
