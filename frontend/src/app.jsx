@@ -1,8 +1,7 @@
 // ReadME:
 // Uncomment Import & Run: npm run dev In ./frontend to Test
 
-import {useState} from "react";
-//import Settings from "./components/settings/settings";
+import { useState } from "react";
 import SideBar from "./components/sidebar/sidebar";
 // import Inbox from "./components/inbox/inbox";
 import "./app.css";
@@ -20,7 +19,7 @@ export default function Page() {
       <div className="page">
         <SideBar onSettingsClick={handleSettingsClick} />
         {/* Interchange settings/dashboard/inbox Until we make global variables */}
-        {/* <Settings /> */}
+        {/* { <Settings /> } */}
         {/* <Inbox /> */}
       </div>
     </>
