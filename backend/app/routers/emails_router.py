@@ -11,14 +11,18 @@ router = APIRouter()
 @router.get("/", response_model=list[Email])
 async def retrieve_emails():
     try:
-        emails = await email_service.fetch_emails()  # This is fine now as fetch_emails handles threading internally
-        for email in emails:
-            if 'from' in email and 'from_' not in email:
-                email['from_'] = email.pop('from')
+        emails = await email_service.fetch_emails() 
+        # Pydantic handling the from_ field
+        # for email in emails:
+        #     email['from_'] = email.pop('from')
         return emails
     except HTTPException as he:
         raise he  # Re-raise HTTP exceptions from our service
     except Exception as e:
+        import traceback
+        print(f"Debug - Exception: {str(e)}")
+        print(f"Debug - Exception type: {type(e)}")
+        print(f"Debug - Traceback: {traceback.format_exc()}")
         raise HTTPException(
             status_code=500,
             detail=f"Failed to retrieve emails: {str(e)}"
