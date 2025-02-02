@@ -13,7 +13,8 @@ async def retrieve_emails():
     try:
         emails = await email_service.fetch_emails()  # This is fine now as fetch_emails handles threading internally
         for email in emails:
-            email['from_'] = email.pop('from')
+            if 'from' in email and 'from_' not in email:
+                email['from_'] = email.pop('from')
         return emails
     except HTTPException as he:
         raise he  # Re-raise HTTP exceptions from our service
