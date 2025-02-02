@@ -1,4 +1,5 @@
 @echo off
+SETLOCAL
 
 cd backend
 
@@ -23,10 +24,9 @@ uv venv
 echo Activating virtual environment...
 call .venv\Scripts\activate.bat
 
-:: Install dependencies
+:: Install dependencies using pyproject.toml
 echo Installing dependencies...
-uv pip install -r requirements.txt
+uv pip sync --python-version 3.12 pyproject.toml
 
 echo Setup complete!
-
 cmd /k

@@ -1,6 +1,3 @@
-# chmod +x setup.sh # to make it executable
-# source ./setup.sh # to run setup in current context
-
 #!/bin/bash
 
 # Move to backend directory if not already in
@@ -25,8 +22,8 @@ uv venv
 echo "Activating virtual environment..."
 source .venv/bin/activate
 
-# Install dependencies
+# Install dependencies using pyproject.toml
 echo "Installing dependencies..."
-uv pip install -r requirements.txt
+uv pip sync --python-version 3.12 pyproject.toml
 
 echo "Setup complete!"
