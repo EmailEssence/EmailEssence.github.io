@@ -1,6 +1,3 @@
-@echo off
-SETLOCAL
-
 cd backend
 
 echo Checking for UV installation...
@@ -24,9 +21,13 @@ uv venv
 echo Activating virtual environment...
 call .venv\Scripts\activate.bat
 
-:: Install dependencies with additional test requirements
+:: Generate requirements file with all extras
+echo Generating requirements from pyproject.toml...
+uv pip compile --extra dev --extra docs --extra monitoring pyproject.toml > requirements-all.txt
+
+:: Install all dependencies
 echo Installing dependencies...
-uv pip install -r requirements.txt -r requirements-test.txt
+uv pip sync --python-version 3.12 requirements-all.txt
 
 :: Run tests
 echo Running tests...

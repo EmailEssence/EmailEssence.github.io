@@ -24,9 +24,9 @@ uv venv
 echo "Activating virtual environment..."
 source .venv/bin/activate
 
-# Install dependencies with additional test requirements
+# Install all dependencies including dev dependencies
 echo "Installing dependencies..."
-uv pip install -r requirements.txt -r requirements-test.txt
+uv pip sync --python-version 3.12 --extra-index-url https://pypi.org/simple --all-extras pyproject.toml
 
 # Run tests
 echo "Running tests..."

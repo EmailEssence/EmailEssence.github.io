@@ -68,6 +68,7 @@ addopts = [
 testpaths = ["app/tests"]
 asyncio_mode = "auto"
 python_files = "test_*.py"
+pythonpath = ["."] # imports
 
 [tool.mypy]
 python_version = "3.12"
