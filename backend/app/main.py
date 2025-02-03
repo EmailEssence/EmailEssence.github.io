@@ -4,8 +4,10 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 from starlette.concurrency import run_in_threadpool
 
-from app.routers import emails_router, summaries_router, auth_router
+from app.routers import emails_router, summaries_router, auth_router, user_router
 from app.models import Email, EmailSummary
+from backend.database import db  # Ensure MongoDB is connected
+
 
 # from app.models.user_model import User
 
@@ -17,9 +19,19 @@ app = FastAPI(
     # contact={"name": "Support", "url": "https://example.com/support"},
 )
 
+@app.on_event("startup")
+async def startup_db_client():
+    print("Connecting to MongoDB...")
+    try:
+        await db.command("ping")
+        print("MongoDB connection successful!")
+    except Exception as e:
+        print(f"Failed to connect to MongoDB: {str(e)}")
+
 # Register routers
 app.include_router(emails_router, prefix="/emails", tags=["Emails"])
 app.include_router(summaries_router, prefix="/summaries", tags=["Summaries"])
+app.include_router(user_router, prefix="/users", tags=["Users"])
 app.include_router(auth_router, prefix="/auth", tags=["Auth"])
 
 # Serve favicon.ico from root directory
