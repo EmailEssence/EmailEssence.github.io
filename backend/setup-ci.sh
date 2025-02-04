@@ -3,9 +3,6 @@
 # Exit on error
 set -e
 
-# Move to backend directory
-cd backend
-
 echo "Checking for UV installation..."
 
 # Check if UV is installed
@@ -26,7 +23,7 @@ source .venv/bin/activate
 
 # Install all dependencies including dev dependencies
 echo "Installing dependencies..."
-uv pip sync --python-version 3.12 --extra-index-url https://pypi.org/simple --all-extras pyproject.toml
+uv pip sync --python-version 3.12 --extra-index-url https://pypi.org/simple pyproject.toml
 
 # Run tests
 echo "Running tests..."
