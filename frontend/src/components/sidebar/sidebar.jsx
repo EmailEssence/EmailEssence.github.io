@@ -1,5 +1,5 @@
 /* eslint-disable react/prop-types */
-import { useState } from "react";
+import {useState} from "react";
 import InboxIcon from "../../assets/InboxIcon";
 import SettingsIcon from "../../assets/SettingsIcon";
 import "./sidebar.css";
@@ -9,20 +9,11 @@ const selectedColor = "#D9D9D9";
 const unselectedColorInner = "#E9E9E9";
 const selectedColorInner = "#1E1E1E";
 const sideBarContracted = "80px";
-const sideBarExpanded = "180px";
 
-export default function SideBar({ onSettingsClick }) {
+export default function SideBar({onLogoClick, containerWidth}) {
   const [selected, setSelected] = useState("logo");
-  const [containerWidth, setContainerWidth] = useState("80px");
 
   const handleClick = useStateID => {
-    //expands the sidebar when the logo is clicked
-    if (useStateID === "logo") {
-      containerWidth === sideBarContracted
-        ? setContainerWidth(sideBarExpanded)
-        : setContainerWidth(sideBarContracted);
-    }
-
     //sets the selected state ID to dashboard after being unselected
     if (selected === useStateID) {
       setSelected("logo");
@@ -37,7 +28,10 @@ export default function SideBar({ onSettingsClick }) {
         <LogoButton
           containerWidth={containerWidth}
           curState={selected}
-          onClick={() => handleClick("logo")}
+          onClick={() => {
+            handleClick("logo");
+            onLogoClick();
+          }}
         />
         <InboxButton
           containerWidth={containerWidth}
@@ -48,7 +42,7 @@ export default function SideBar({ onSettingsClick }) {
         <SettingsButton
           containerWidth={containerWidth}
           curState={selected}
-          onClick={() => {handleClick("settings"); onSettingsClick();}}
+          onClick={() => handleClick("settings")}
         />
       </div>
     </div>
