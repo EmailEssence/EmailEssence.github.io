@@ -13,6 +13,7 @@ export default function Page() {
   const [showPage, setShowPage] = useState("dashboard");
   const [placeholder, setPlaceholder] = useState("80px");
   const [loggedIn, setLoggedIn] = useState(false);
+  const gridTempCol = `${placeholder} 1fr`;
 
   const handleLogin = () => {
     setLoggedIn(true);
@@ -47,7 +48,7 @@ export default function Page() {
 
   const emailClient = () => {
     return (
-      <div className="client">
+      <div className="client" style={{gridTemplateColumns: gridTempCol}}>
         <SideBar
           onLogoClick={handleLogoClick}
           containerWidth={placeholder}
