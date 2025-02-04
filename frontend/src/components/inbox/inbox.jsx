@@ -29,17 +29,24 @@ function EmailEntry() {
 }
 
 function InboxEmailList() {
+  const emails = () => {
+    const returnBlock = [];
+    for (let i = 0; i < 10; i++) {
+      returnBlock.push(<EmailEntry key={i} />);
+    }
+    return returnBlock;
+  };
   return (
     <div>
       <div className="inbox-title">
         <div className="inbox-word"></div>
       </div>
-      <div className="email-list">
-        <EmailEntry />
-      </div>
-      <div className="scrollbar-container">
-        <div className="scrollbar">
-          <div className="nub"></div>
+      <div className="email-container">
+        <div className="email-list">{emails()}</div>
+        <div className="scrollbar-container">
+          <div className="scrollbar">
+            <div className="nub"></div>
+          </div>
         </div>
       </div>
     </div>
