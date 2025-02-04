@@ -7,3 +7,5 @@ class SummarySchema(BaseModel):
     summary_text: str
     keywords: List[str]
     generated_at: Optional[datetime] = datetime.now() # TODO : UTC?
+    class Config:
+        frozen = True # Immutable!
