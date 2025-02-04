@@ -1,6 +1,3 @@
-// ReadME:
-// Uncomment Import & Run: npm run dev In ./frontend to Test
-
 import {useState} from "react";
 import Dashboard from "./components/dashboard/dashboard";
 import Settings from "./components/settings/settings";
@@ -21,28 +18,21 @@ export default function Page() {
 
   // Function to handle expanding and collapsing of sidebar
   const handleLogoClick = () => {
-    if (placeholder === "80px") {
-      setPlaceholder("180px");
-    } else {
-      setPlaceholder("80px");
-    }
+    placeholder === "80px" ? setPlaceholder("180px") : setPlaceholder("80px");
   };
 
   const getPageComponent = pageName => {
-    if (showPage === pageName) {
-      setShowPage("dashboard");
-      return;
-    }
-    setShowPage(pageName);
+    showPage === pageName ? setShowPage("dashboard") : setShowPage(pageName);
   };
 
   const getPage = () => {
-    if (showPage === "dashboard") {
-      return <Dashboard />;
-    } else if (showPage === "inbox") {
-      return <Inbox />;
-    } else {
-      return <Settings />;
+    switch (showPage) {
+      case "inbox":
+        return <Inbox />;
+      case "settings":
+        return <Settings />;
+      default:
+        return <Dashboard />;
     }
   };
 
