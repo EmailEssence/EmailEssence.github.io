@@ -10,8 +10,6 @@ router = APIRouter()
 async def retrieve_emails():
     try:
         emails = await email_service.fetch_emails()
-        for email in emails:
-            email["from_"] = email.pop("from", None)  # Rename for response
         return emails
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to retrieve emails: {str(e)}")

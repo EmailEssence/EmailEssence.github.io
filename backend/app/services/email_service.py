@@ -1,6 +1,7 @@
 import os
 import email
 import httpx
+import re
 from email.header import decode_header
 from imapclient import IMAPClient
 from database import db
@@ -25,6 +26,55 @@ async def get_auth_token():
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f"Token retrieval failed: {str(e)}"
         )
+    
+def clean_body(body: str) -> str:
+    """Clean up email body content"""
+    # Remove image tags
+    body = re.sub(r'\[image:[^\]]*\]', '', body)
+    
+    # Replace multiple newlines with single newline
+    body = re.sub(r'(\r\n|\r|\n)+', '\n', body)
+    
+    # Remove trailing/leading whitespace
+    body = body.strip()
+    
+    return body
+
+def parse_email_message(uid: int, email_message, raw_body: str) -> dict:
+    """Parse email message into schema-compliant format"""
+    # Decode email fields
+    subject, encoding = decode_header(email_message['Subject'])[0]
+    if isinstance(subject, bytes):
+        subject = subject.decode(encoding or 'utf-8', errors='ignore')
+    
+    from_, encoding = decode_header(email_message.get('From'))[0]
+    if isinstance(from_, bytes):
+        from_ = from_.decode(encoding or 'utf-8', errors='ignore')
+    
+    # Parse recipients
+    to_field = email_message.get('To', '')
+    if to_field:
+        to_decoded, encoding = decode_header(to_field)[0]
+        if isinstance(to_decoded, bytes):
+            to_decoded = to_decoded.decode(encoding or 'utf-8', errors='ignore')
+        recipients = [addr.strip() for addr in to_decoded.split(',')]
+    else:
+        recipients = []
+
+    # Clean and process the body
+    clean_body_text = clean_body(raw_body)
+
+    return {
+        'user_id': 'default',  # You should get this from authentication
+        'email_id': str(uid),
+        'sender': from_,
+        'recipients': recipients,
+        'subject': subject or '',
+        'body': clean_body_text,
+        'received_at': datetime.now(),
+        'category': 'uncategorized',
+        'is_read': False
+    }
 
 def fetch_from_imap(token: str, email_account: str):
     imap_host = 'imap.gmail.com'
@@ -46,35 +96,18 @@ def fetch_from_imap(token: str, email_account: str):
             raw_message = server.fetch(uid, ['RFC822'])[uid][b'RFC822']
             email_message = email.message_from_bytes(raw_message)
 
-            # Decode email fields
-            subject, encoding = decode_header(email_message['Subject'])[0]
-            if isinstance(subject, bytes):
-                subject = subject.decode(encoding or 'utf-8', errors='ignore')
-            from_, encoding = decode_header(email_message.get('From'))[0]
-            if isinstance(from_, bytes):
-                from_ = from_.decode(encoding or 'utf-8', errors='ignore')
-
             # Get email body
             body = ""
             if email_message.is_multipart():
                 for part in email_message.walk():
-                    content_type = part.get_content_type()
-                    content_disposition = str(part.get('Content-Disposition'))
-                    if content_type == 'text/plain' and 'attachment' not in content_disposition:
-                        body_bytes = part.get_payload(decode=True)
-                        body = body_bytes.decode(part.get_content_charset() or 'utf-8', errors='replace')
+                    if part.get_content_type() == 'text/plain' and 'attachment' not in str(part.get('Content-Disposition')):
+                        body = part.get_payload(decode=True).decode(part.get_content_charset() or 'utf-8', errors='replace')
                         break
             else:
-                body_bytes = email_message.get_payload(decode=True)
-                body = body_bytes.decode(email_message.get_content_charset() or 'utf-8', errors='replace')
+                body = email_message.get_payload(decode=True).decode(email_message.get_content_charset() or 'utf-8', errors='replace')
 
-            email_data = {
-                'email_id': str(uid),
-                'sender': from_,
-                'subject': subject,
-                'body': body,
-                'received_at': datetime.utcnow()
-            }
+            # Parse into schema-compliant format
+            email_data = parse_email_message(uid, email_message, body)
 
             # Store email in MongoDB if it doesn't exist
             existing_email = db.emails.find_one({"email_id": str(uid)})
