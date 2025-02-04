@@ -2,7 +2,7 @@
 // Uncomment Import & Run: npm run dev In ./frontend to Test
 
 import {useState} from "react";
-// import Dashboard from "./components/dashboard/dashboard";
+import Dashboard from "./components/dashboard/dashboard";
 import Settings from "./components/settings/settings";
 import SideBar from "./components/sidebar/sidebar";
 import Inbox from "./components/inbox/inbox";
@@ -41,7 +41,7 @@ export default function Page() {
           selected={showPage}
         />
         {/* Interchange settings/dashboard/inbox Until we make global variables */}
-        {/* <Dashboard /> */}
+        <Dashboard />
         <Settings />
         <Inbox />
       </div>
