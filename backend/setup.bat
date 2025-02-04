@@ -1,7 +1,7 @@
 @echo off
 SETLOCAL
 
-cd backend
+:: cd backend
 
 echo Checking for UV installation...
 
