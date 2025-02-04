@@ -6,13 +6,13 @@
   display: grid;
   grid-template-rows: 1fr 2fr;
   grid-template-columns: 2rem 1fr 8px 2fr;
+  flex: 0, 0, 4rem;
 }
 
 /* use space [0, 0] and [0, 1] */
 .indicator-container {
   grid-row: 1 / -1;
   grid-column: 1 / 1;
-  background-color: white;
   padding: 1.5rem 0.5rem;
 }
 

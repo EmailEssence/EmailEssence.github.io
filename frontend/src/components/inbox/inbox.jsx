@@ -1,4 +1,5 @@
-import "./inbox.css";
+import "./emailEntry.css";
+import "./emailList.css";
 
 export default function Inbox() {
   return (
@@ -31,23 +32,22 @@ function EmailEntry() {
 function InboxEmailList() {
   const emails = () => {
     const returnBlock = [];
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 25; i++) {
       returnBlock.push(<EmailEntry key={i} />);
     }
     return returnBlock;
   };
   return (
-    <div>
-      <div className="inbox-title">
-        <div className="inbox-word"></div>
-      </div>
-      <div className="email-container">
-        <div className="email-list">{emails()}</div>
-        <div className="scrollbar-container">
-          <div className="scrollbar">
-            <div className="nub"></div>
-          </div>
+    <div className="list">
+      <div className="inbox-title-container">
+        <div className="inbox-title">
+          <div className="inbox-icon">IN</div>
+          <div className="inbox-word">Inbox</div>
         </div>
+      </div>
+      <div className="divider"></div>
+      <div className="email-container">
+        <div className="emails">{emails()}</div>
       </div>
     </div>
   );
