@@ -31,6 +31,16 @@ export default function Page() {
     console.log(pageName);
   };
 
+  const getPage = () => {
+    if (showPage === "dashboard") {
+      return <Dashboard />;
+    } else if (showPage === "inbox") {
+      return <Inbox />;
+    } else {
+      return <Settings />;
+    }
+  };
+
   return (
     <>
       <div className="page">
@@ -41,9 +51,7 @@ export default function Page() {
           selected={showPage}
         />
         {/* Interchange settings/dashboard/inbox Until we make global variables */}
-        <Dashboard />
-        <Settings />
-        <Inbox />
+        {getPage()}
       </div>
     </>
   );
