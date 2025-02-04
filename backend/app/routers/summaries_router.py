@@ -4,17 +4,17 @@ from fastapi import APIRouter, HTTPException
 from starlette.concurrency import run_in_threadpool
 
 from app.services import email_service, summarization_service
-from app.models import Email, EmailSummary
+from app.models import EmailSchema, SummarySchema
 
 
 router = APIRouter()
 
 # Retrieve all summaries
-@router.get("/", response_model=List[EmailSummary])
+@router.get("/", response_model=List[SummarySchema])
 async def summarize_emails_endpoint():
     try:
         emails_data = await email_service.fetch_emails()
-        emails = [Email(**email_dict) for email_dict in emails_data]
+        emails = [EmailSchema(**email_dict) for email_dict in emails_data]
 
         summaries = summarization_service.summarize_emails(emails)
         return summaries

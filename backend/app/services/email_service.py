@@ -3,7 +3,7 @@ import email
 import httpx
 from email.header import decode_header
 from imapclient import IMAPClient
-from backend.database import db
+from database import db
 from datetime import datetime
 from app.services.auth_service import get_credentials
 from fastapi import HTTPException, status

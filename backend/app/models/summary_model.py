@@ -6,4 +6,4 @@ class SummarySchema(BaseModel):
     email_id: str
     summary_text: str
     keywords: List[str]
-    generated_at: Optional[datetime] = datetime.now(datetime.timezone.utc)
+    generated_at: Optional[datetime] = datetime.now() # TODO : UTC?

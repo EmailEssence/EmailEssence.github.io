@@ -9,6 +9,6 @@ class EmailSchema(BaseModel):
     recipients: List[str]
     subject: str
     body: str
-    received_at: Optional[datetime] = datetime.now(datetime.timezone.utc)
+    received_at: Optional[datetime] = datetime.now()
     category: Optional[str] = "uncategorized"
     is_read: Optional[bool] = False

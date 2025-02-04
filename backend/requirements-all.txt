@@ -42,10 +42,16 @@ deprecated==1.2.18
     #   opentelemetry-semantic-conventions
 distro==1.9.0
     # via openai
+dnspython==2.7.0
+    # via
+    #   email-validator
+    #   pymongo
 docutils==0.21.2
     # via
     #   sphinx
     #   sphinx-rtd-theme
+email-validator==2.2.0
+    # via pydantic
 fastapi==0.115.8
     # via email-essence (pyproject.toml)
 google-api-core==2.24.1
@@ -81,6 +87,7 @@ httpx==0.28.1
 idna==3.10
     # via
     #   anyio
+    #   email-validator
     #   httpx
     #   requests
 imagesize==1.4.1
@@ -97,6 +104,8 @@ jiter==0.8.2
     # via openai
 markupsafe==3.0.2
     # via jinja2
+motor==3.7.0
+    # via email-essence (pyproject.toml)
 mypy==1.14.1
     # via email-essence (pyproject.toml)
 mypy-extensions==1.0.0
@@ -151,6 +160,8 @@ pydantic-core==2.27.2
     # via pydantic
 pygments==2.19.1
     # via sphinx
+pymongo==4.11
+    # via motor
 pyparsing==3.2.1
     # via httplib2
 pytest==8.3.4

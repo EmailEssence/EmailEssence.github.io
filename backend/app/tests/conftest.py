@@ -8,7 +8,7 @@ from typing import Generator
 from fastapi.testclient import TestClient
 from fastapi import FastAPI
 
-from app.main import app  # main FastAPI application
+from main import app  # main FastAPI application
 
 # Base application fixture
 @pytest.fixture(scope="session")

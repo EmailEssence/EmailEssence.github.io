@@ -1,12 +1,12 @@
 from typing import List
 from fastapi import APIRouter, HTTPException
 from app.services import email_service
-from app.models.email_model import Email
+from app.models import EmailSchema
 
 router = APIRouter()
 
 # Get all emails
-@router.get("/", response_model=List[Email])
+@router.get("/", response_model=List[EmailSchema])
 async def retrieve_emails():
     try:
         emails = await email_service.fetch_emails()
@@ -17,7 +17,7 @@ async def retrieve_emails():
         raise HTTPException(status_code=500, detail=f"Failed to retrieve emails: {str(e)}")
 
 # Get a single email by ID
-@router.get("/{email_id}", response_model=Email)
+@router.get("/{email_id}", response_model=EmailSchema)
 async def retrieve_email(email_id: str):
     email = await email_service.fetch_email(email_id)
     if not email:
@@ -26,8 +26,8 @@ async def retrieve_email(email_id: str):
     return email
 
 # Insert a new email
-@router.post("/", response_model=Email)
-async def create_email(email: Email):
+@router.post("/", response_model=EmailSchema)
+async def create_email(email: EmailSchema):
     try:
         inserted_email = await email_service.insert_email(email)
         inserted_email["from_"] = inserted_email.pop("from", None)
@@ -36,7 +36,7 @@ async def create_email(email: Email):
         raise HTTPException(status_code=500, detail=f"Failed to insert email: {str(e)}")
 
 # Mark an email as read
-@router.put("/{email_id}/read", response_model=Email)
+@router.put("/{email_id}/read", response_model=EmailSchema)
 async def mark_email_as_read(email_id: str):
     updated_email = await email_service.mark_email_as_read(email_id)
     if not updated_email:

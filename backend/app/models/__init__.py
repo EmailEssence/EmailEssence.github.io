@@ -1,5 +1,5 @@
-from .email_model import Email
-from .summary_model import EmailSummary
-# from .user_model import User
+from .email_model import EmailSchema
+from .summary_model import SummarySchema
+from .user_model import UserSchema
 
-__all__ = ['Email', 'EmailSummary', 'User']
+__all__ = ['EmailSchema', 'SummarySchema', 'UserSchema']

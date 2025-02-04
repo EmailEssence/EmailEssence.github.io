@@ -5,8 +5,8 @@ from fastapi.responses import FileResponse
 from starlette.concurrency import run_in_threadpool
 
 from app.routers import emails_router, summaries_router, auth_router, user_router
-from app.models import Email, EmailSummary
-from backend.database import db  # Ensure MongoDB is connected
+from app.models import EmailSchema, SummarySchema, UserSchema
+from database import db  # Ensure MongoDB is connected
 
 
 # from app.models.user_model import User
