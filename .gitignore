@@ -1,11 +1,30 @@
-.venv
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environment
 .env
-credentials.json
-proto/.env
-proto/credentials.json
+.venv
+env/
+venv/
+ENV/
 
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
 
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
 
+# Local development
+*.log
+.env.local
 token.pickle
 
-proto/__pycache__
+# FastAPI
+.pytest_cache/

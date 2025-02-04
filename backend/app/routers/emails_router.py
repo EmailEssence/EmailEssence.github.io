@@ -1,8 +1,8 @@
 
 from typing import List
 from fastapi import APIRouter, HTTPException
-from services.email_service import fetch_emails
-from backend.app.models.email_model import Email
+from app.services.email_service import fetch_emails
+from app.models.email_model import Email
 
 from starlette.concurrency import run_in_threadpool
 
@@ -11,13 +11,17 @@ router = APIRouter()
 @router.get("/", response_model=list[Email])
 async def retrieve_emails():
     try:
-        emails = await run_in_threadpool(fetch_emails)
-        # Adjust key name 'from_' in models to 'from' from fetch_emails
+        emails = await fetch_emails()  # This is fine now as fetch_emails handles threading internally
         for email in emails:
             email['from_'] = email.pop('from')
         return emails
+    except HTTPException as he:
+        raise he  # Re-raise HTTP exceptions from our service
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to retrieve emails: {str(e)}"
+        )
 
 # Retrieve a specific email
 # @router.get("/{email_id}", response_model=Email)

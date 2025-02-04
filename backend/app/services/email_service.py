@@ -1,33 +1,42 @@
-
 import os
 import email
+import httpx
 from email.header import decode_header
 from imapclient import IMAPClient
 
+from app.services.auth_service import get_credentials
+from fastapi import HTTPException, status
 
+from starlette.concurrency import run_in_threadpool
 
-# TODO decouple the auth from the email service
-from backend.app.services.auth_service import get_credentials
-
-def fetch_emails():
-    creds = get_credentials()
-    EMAIL_ACCOUNT = os.getenv('EMAIL_ACCOUNT')
-    access_token = creds.token
-
+async def get_auth_token():
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get("http://localhost:8000/auth/internal/token")
+            if response.status_code != 200:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Failed to get authentication token"
+                )
+            return response.json()["access_token"]
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"Token retrieval failed: {str(e)}"
+        )
+# TODO This is very slow, not sure where slow down is coming from
+def fetch_from_imap(token: str, email_account: str):
     imap_host = 'imap.gmail.com'
-
+    
     with IMAPClient(imap_host, use_uid=True, ssl=True) as server:
         try:
-            # Use the oauth2_login method provided by IMAPClient
-            server.oauth2_login(EMAIL_ACCOUNT, access_token)
+            server.oauth2_login(email_account, token)
         except Exception as e:
             print(f"IMAP Authentication Error: {e}")
-            # If the exception has more details
             if hasattr(e, 'args') and e.args:
                 print(f"Additional error info: {e.args}")
             raise
 
-        # Select the INBOX folder
         server.select_folder('INBOX')
         messages = server.search('ALL')
 
@@ -65,6 +74,24 @@ def fetch_emails():
                 'body': body
             })
 
-    return emails
+        return emails
 
-# def extract_email_body(email):
+async def fetch_emails():
+    try:
+        token = await get_auth_token()
+        email_account = os.getenv('EMAIL_ACCOUNT')
+        if not email_account:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Email account not configured"
+            )
+        
+        emails = await run_in_threadpool(lambda: fetch_from_imap(token, email_account))
+        return emails
+    except Exception as e:
+        if isinstance(e, HTTPException):
+            raise e
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to fetch emails: {str(e)}"
+        )

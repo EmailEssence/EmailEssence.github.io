@@ -30,7 +30,7 @@ body {
 }
 
 .settings-block {
-  width: 40%;
+  width: 650px;
   height: auto;
   flex-shrink: 0;
   padding: 0 20px;
@@ -41,7 +41,6 @@ body {
   margin: 1rem;
   display: flex;
   align-items: center;
-  position: relative;
 }
 
 h2 {
@@ -58,10 +57,8 @@ h2 {
   margin-left: auto;
   position: relative;
   display: inline-block;
-  width: 40px;
-  /* Adjusted width */
-  height: 20px;
-  /* Adjusted height */
+  width: 40px; /* Adjusted width */
+  height: 20px; /* Adjusted height */
 }
 
 /* Hide default HTML checkbox */
@@ -79,25 +76,19 @@ h2 {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: var(--color-border);
-  /* Default color */
+  background-color: var(--color-border); /* Default color */
   -webkit-transition: 0.4s;
   transition: 0.4s;
-  border-radius: 20px;
-  /* Adjusted border-radius */
+  border-radius: 20px; /* Adjusted border-radius */
 }
 
 .toggle:before {
   position: absolute;
   content: "";
-  height: 15px;
-  /* Adjusted height */
-  width: 15px;
-  /* Adjusted width */
-  left: 3px;
-  /* Adjusted left position */
-  bottom: 3px;
-  /* Adjusted bottom position */
+  height: 15px; /* Adjusted height */
+  width: 15px; /* Adjusted width */
+  left: 3px; /* Adjusted left position */
+  bottom: 3px; /* Adjusted bottom position */
   background-color: white;
   transition: 0.4s;
   border-radius: 50%;
@@ -105,8 +96,7 @@ h2 {
 
 /* When the checkbox is checked, add a background color */
 .switch input:checked + .toggle {
-  background-color: var(--color-toggle-border);
-  /* Color after toggle */
+  background-color: var(--color-toggle-border); /* Color after toggle */
 }
 
 /* Move the slider when the checkbox is checked */
@@ -127,49 +117,6 @@ h2 {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-}
-
-.header-container {
-  display: flex;
-  align-items: center;
-}
-
-.header {
-  display: flex;
-  align-items: center;
-}
-
-.metric {
-  margin-left: -15px;
-
-  color: #5e5e5e;
-  font-family: sans-serif;
-  font-size: 10px;
-  font-style: normal;
-  font-weight: 200;
-  line-height: normal;
-}
-
-.count-display {
-  position: absolute;
-  top: 0;
-  right: 0;
-  margin-top: 5px;
-  margin-right: 16px;
-
-  border: 2px solid var(--color-border);
-  border-radius: 4px;
-  padding: 5px 10px;
-  color: #000;
-
-  font-family: var(--Label-Large-Font, sans-serif);
-  font-size: var(--Label-Large-Size, 14px);
-
-  display: flex;
-  width: 60px;
-  height: 30px;
-  flex-direction: column;
-  justify-content: center;
 }
 
 .slider {

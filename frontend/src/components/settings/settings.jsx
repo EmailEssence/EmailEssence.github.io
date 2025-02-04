@@ -31,21 +31,18 @@ function SummariesInInbox() {
 function EmailFetchInterval() {
   return (
     <div className="settings-block email-fetch-interval">
-      <div className="header-container">
-        <h2 className="header">Email Fetch Interval</h2>
-        <p className="metric">(seconds)</p>
-      </div>
+      <h2>Email Fetch Interval</h2>
       <input
         className="slider"
         type="range"
-        min="0"
+        min="5"
         max="600"
-        step="5"
+        step="1"
         onInput={inputEvent =>
-          (inputEvent.target.nextSibling.textContent = `${inputEvent.target.value}`)
+          (inputEvent.target.nextSibling.textContent = `${inputEvent.target.value} seconds`)
         }
       />
-      <p className="count-display"> </p>
+      <p>5 seconds</p>
     </div>
   );
 }
