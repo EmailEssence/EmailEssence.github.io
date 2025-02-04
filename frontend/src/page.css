@@ -1,4 +1,4 @@
-.page {
+.client {
   display: grid;
   grid-template-columns: 80px 1fr;
 }

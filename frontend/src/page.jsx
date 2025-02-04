@@ -6,11 +6,17 @@ import Dashboard from "./components/dashboard/dashboard";
 import Settings from "./components/settings/settings";
 import SideBar from "./components/sidebar/sidebar";
 import Inbox from "./components/inbox/inbox";
+import Login from "./components/login/login";
 import "./page.css";
 
 export default function Page() {
   const [showPage, setShowPage] = useState("dashboard");
   const [placeholder, setPlaceholder] = useState("80px");
+  const [loggedIn, setLoggedIn] = useState(false);
+
+  const handleLogin = () => {
+    setLoggedIn(true);
+  };
 
   // Function to handle expanding and collapsing of sidebar
   const handleLogoClick = () => {
@@ -24,11 +30,9 @@ export default function Page() {
   const getPageComponent = pageName => {
     if (showPage === pageName) {
       setShowPage("dashboard");
-      console.log("dashboard");
       return;
     }
     setShowPage(pageName);
-    console.log(pageName);
   };
 
   const getPage = () => {
@@ -41,18 +45,27 @@ export default function Page() {
     }
   };
 
-  return (
-    <>
-      <div className="page">
+  const emailClient = () => {
+    return (
+      <div className="client">
         <SideBar
           onLogoClick={handleLogoClick}
           containerWidth={placeholder}
           getPageComponent={getPageComponent}
           selected={showPage}
         />
-        {/* Interchange settings/dashboard/inbox Until we make global variables */}
         {getPage()}
       </div>
+    );
+  };
+
+  const loginPage = () => {
+    return <Login forward={handleLogin} />;
+  };
+
+  return (
+    <>
+      <div className="page">{loggedIn ? emailClient() : loginPage()}</div>
     </>
   );
 }
