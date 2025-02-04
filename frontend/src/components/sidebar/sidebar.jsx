@@ -1,5 +1,4 @@
 /* eslint-disable react/prop-types */
-import {useState} from "react";
 import InboxIcon from "../../assets/InboxIcon";
 import SettingsIcon from "../../assets/SettingsIcon";
 import "./sidebar.css";
@@ -10,18 +9,12 @@ const unselectedColorInner = "#E9E9E9";
 const selectedColorInner = "#1E1E1E";
 const sideBarContracted = "80px";
 
-export default function SideBar({onLogoClick, containerWidth}) {
-  const [selected, setSelected] = useState("logo");
-
-  const handleClick = useStateID => {
-    //sets the selected state ID to dashboard after being unselected
-    if (selected === useStateID) {
-      setSelected("logo");
-      return;
-    }
-    setSelected(useStateID);
-  };
-
+export default function SideBar({
+  onLogoClick,
+  containerWidth,
+  getPageComponent,
+  selected,
+}) {
   return (
     <div>
       <div className="sidebar" style={{width: containerWidth}}>
@@ -29,20 +22,20 @@ export default function SideBar({onLogoClick, containerWidth}) {
           containerWidth={containerWidth}
           curState={selected}
           onClick={() => {
-            handleClick("logo");
+            getPageComponent("dashboard");
             onLogoClick();
           }}
         />
         <InboxButton
           containerWidth={containerWidth}
           curState={selected}
-          onClick={() => handleClick("inbox")}
+          onClick={() => getPageComponent("inbox")}
         />
         <p></p>
         <SettingsButton
           containerWidth={containerWidth}
           curState={selected}
-          onClick={() => handleClick("settings")}
+          onClick={() => getPageComponent("settings")}
         />
       </div>
     </div>
@@ -50,12 +43,12 @@ export default function SideBar({onLogoClick, containerWidth}) {
 }
 
 function LogoButton({containerWidth, curState, onClick}) {
-  const color = curState === "logo" ? selectedColor : unselectedColor;
+  const color = curState === "dashboard" ? selectedColor : unselectedColor;
   return (
     <div>
       <div
         className="container"
-        id="logo"
+        id="dashboard"
         onClick={onClick}
         style={{
           backgroundColor: color,

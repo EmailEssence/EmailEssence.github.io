@@ -2,16 +2,17 @@
 // Uncomment Import & Run: npm run dev In ./frontend to Test
 
 import {useState} from "react";
-//import Settings from "./components/settings/settings";
+// import Dashboard from "./components/dashboard/dashboard";
+import Settings from "./components/settings/settings";
 import SideBar from "./components/sidebar/sidebar";
-// import Inbox from "./components/inbox/inbox";
+import Inbox from "./components/inbox/inbox";
 import "./page.css";
 
 export default function Page() {
-  //const [showPage, setShowPage] = useState(false);
+  const [showPage, setShowPage] = useState("dashboard");
   const [placeholder, setPlaceholder] = useState("80px");
 
-  // Function to handle the settings click
+  // Function to handle expanding and collapsing of sidebar
   const handleLogoClick = () => {
     if (placeholder === "80px") {
       setPlaceholder("180px");
@@ -19,14 +20,30 @@ export default function Page() {
       setPlaceholder("80px");
     }
   };
-  // const divClassName = `settings ${showPage ? "show" : ""}`;
+
+  const getPageComponent = pageName => {
+    if (showPage === pageName) {
+      setShowPage("dashboard");
+      console.log("dashboard");
+      return;
+    }
+    setShowPage(pageName);
+    console.log(pageName);
+  };
+
   return (
     <>
       <div className="page">
-        <SideBar onLogoClick={handleLogoClick} containerWidth={placeholder} />
+        <SideBar
+          onLogoClick={handleLogoClick}
+          containerWidth={placeholder}
+          getPageComponent={getPageComponent}
+          selected={showPage}
+        />
         {/* Interchange settings/dashboard/inbox Until we make global variables */}
-        {/* <Settings /> */}
-        {/* <Inbox /> */}
+        {/* <Dashboard /> */}
+        <Settings />
+        <Inbox />
       </div>
     </>
   );
