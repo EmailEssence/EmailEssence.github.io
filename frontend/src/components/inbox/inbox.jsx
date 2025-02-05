@@ -1,18 +1,26 @@
+/* eslint-disable react/prop-types */
 import "./emailEntry.css";
 import "./emailList.css";
+import {useState} from "react";
 
 export default function Inbox() {
+  const [curEmail, setCurEmail] = useState(0);
+  const handleClick = email => {
+    console.log(email);
+    setCurEmail(email);
+  };
   return (
-    <div>
-      <InboxEmailList />
-      <EmailDisplay />
+    <div className="inbox-display">
+      <InboxEmailList curEmail={curEmail} onClick={handleClick} />
+      <EmailDisplay key={curEmail} curEmail={curEmail} />
     </div>
   );
 }
 
-function EmailEntry() {
+function EmailEntry({onClick, selected}) {
+  const brColor = selected ? "#000000" : "#FFFFFF";
   return (
-    <div className="entry">
+    <div className="entry" style={{backgroundColor: brColor}} onClick={onClick}>
       <div className="indicator-container">
         <div className="indicator"></div>
       </div>
@@ -29,11 +37,14 @@ function EmailEntry() {
   );
 }
 
-function InboxEmailList() {
+function InboxEmailList({curEmail, onClick}) {
   const emails = () => {
     const returnBlock = [];
     for (let i = 0; i < 25; i++) {
-      returnBlock.push(<EmailEntry key={i} />);
+      let selected = i === curEmail;
+      returnBlock.push(
+        <EmailEntry key={i} onClick={() => onClick(i)} selected={selected} />
+      );
     }
     return returnBlock;
   };
@@ -53,10 +64,16 @@ function InboxEmailList() {
   );
 }
 
-function EmailDisplay() {
-  return <ReaderView />;
+function EmailDisplay({key, curEmail}) {
+  console.log(key);
+  return (
+    <div className="email-display">
+      <ReaderView curEmail={curEmail} />
+    </div>
+  );
 }
 
-function ReaderView() {
+function ReaderView({curEmail}) {
+  console.log(curEmail);
   return <div></div>;
 }
