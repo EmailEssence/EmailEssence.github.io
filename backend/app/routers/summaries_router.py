@@ -2,24 +2,46 @@ import logging
 from typing import List
 from fastapi import APIRouter, HTTPException, Depends
 
-from app.utils.config import Settings, get_settings
+from app.utils.config import Settings, get_settings, SummarizerProvider
 from app.models import EmailSchema, SummarySchema
 from app.services import email_service
-from app.services.summarization import OpenAIEmailSummarizer, ProcessingStrategy
+from app.services.summarization.base import AdaptiveSummarizer
+from app.services.summarization import (
+  ProcessingStrategy, 
+  OpenAIEmailSummarizer
+)
+
 
 router = APIRouter()
 
-async def get_summarizer(settings: Settings = Depends(get_settings)) -> OpenAIEmailSummarizer:
-    """Dependency injection for email summarizer."""
-    return OpenAIEmailSummarizer(
-        api_key=settings.openai_api_key,
-        model="gpt-4-turbo-preview",
-        batch_threshold=10
-    )
+async def get_summarizer(
+    settings: Settings = Depends(get_settings)
+) -> AdaptiveSummarizer[EmailSchema]:
+    """
+    Factory function for creating the appropriate summarizer based on settings.
+    """
+    match settings.summarizer_provider:
+        case SummarizerProvider.OPENAI:
+            if not settings.openai_api_key:
+                raise HTTPException(
+                    status_code=500,
+                    detail="OpenAI API key not configured"
+                )
+            return OpenAIEmailSummarizer(
+                api_key=settings.openai_api_key,
+                model=settings.summarizer_model,
+                batch_threshold=settings.summarizer_batch_threshold
+            )
+        # TODO Add support for other providers : Deepseek, Local
+        case _:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Unsupported summarizer provider: {settings.summarizer_provider}"
+            )
 
 @router.get("/", response_model=List[SummarySchema])
 async def summarize_emails_endpoint(
-    summarizer: OpenAIEmailSummarizer = Depends(get_summarizer)
+    summarizer: AdaptiveSummarizer[EmailSchema] = Depends(get_summarizer)
 ):
     """
     Fetch emails and generate summaries using the OpenAI-based summarizer.
