@@ -1,4 +1,5 @@
 /* eslint-disable react/prop-types */
+//import "./emailDisplay.css";
 import "./emailEntry.css";
 import "./emailList.css";
 import {useState} from "react";
@@ -71,9 +72,19 @@ function InboxEmailList({curEmail, onClick}) {
 }
 
 function EmailDisplay({curEmail}) {
+  const curContent = emails[curEmail];
   return (
     <div className="email-display">
-      <ReaderView curEmail={curEmail} />
+      <div className="header">
+        <div className="from">{curContent.from}</div>
+        <div className="title">{curContent.title}</div>
+        <div className="to">{curContent.to}</div>
+        <div className="date">{curContent.date}</div>
+        <ReaderView curEmail={curEmail} />
+      </div>
+      <div className="body">
+        <div className="content">{curContent.content}</div>
+      </div>
     </div>
   );
 }

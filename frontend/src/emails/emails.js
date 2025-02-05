@@ -2,6 +2,7 @@ export const emails = [
   {
     from: "User1",
     date: "03/09/2024",
+    to: "Me",
     title:
       "Lorem ipsum dolor sit amet consectetur adipisicing elit. Itaque, fugiat?",
     summary:
@@ -12,6 +13,7 @@ export const emails = [
   {
     from: "User2",
     date: "03/09/2024",
+    to: "Me",
     title:
       "Lorem ipsum dolor sit amet consectetur adipisicing elit. Itaque, fugiat?",
     summary:
@@ -22,6 +24,7 @@ export const emails = [
   {
     from: "User3",
     date: "03/09/2024",
+    to: "Me",
     title:
       "Lorem ipsum dolor sit amet consectetur adipisicing elit. Itaque, fugiat?",
     summary:
@@ -32,6 +35,7 @@ export const emails = [
   {
     from: "User4",
     date: "03/09/2024",
+    to: "Me",
     title:
       "Lorem ipsum dolor sit amet consectetur adipisicing elit. Itaque, fugiat?",
     summary:
@@ -42,6 +46,7 @@ export const emails = [
   {
     from: "User5",
     date: "03/09/2024",
+    to: "Me",
     title:
       "Lorem ipsum dolor sit amet consectetur adipisicing elit. Itaque, fugiat?",
     summary:
@@ -52,6 +57,7 @@ export const emails = [
   {
     from: "User6",
     date: "03/09/2024",
+    to: "Me",
     title:
       "Lorem ipsum dolor sit amet consectetur adipisicing elit. Itaque, fugiat?",
     summary:
@@ -62,6 +68,7 @@ export const emails = [
   {
     from: "User7",
     date: "03/09/2024",
+    to: "Me",
     title:
       "Lorem ipsum dolor sit amet consectetur adipisicing elit. Itaque, fugiat?",
     summary:
@@ -72,6 +79,7 @@ export const emails = [
   {
     from: "User8",
     date: "03/09/2024",
+    to: "Me",
     title:
       "Lorem ipsum dolor sit amet consectetur adipisicing elit. Itaque, fugiat?",
     summary:
@@ -82,6 +90,7 @@ export const emails = [
   {
     from: "User9",
     date: "03/09/2024",
+    to: "Me",
     title:
       "Lorem ipsum dolor sit amet consectetur adipisicing elit. Itaque, fugiat?",
     summary:
@@ -92,6 +101,7 @@ export const emails = [
   {
     from: "User10",
     date: "03/09/2024",
+    to: "Me",
     title:
       "Lorem ipsum dolor sit amet consectetur adipisicing elit. Itaque, fugiat?",
     summary:
@@ -102,6 +112,7 @@ export const emails = [
   {
     from: "User11",
     date: "03/09/2024",
+    to: "Me",
     title:
       "Lorem ipsum dolor sit amet consectetur adipisicing elit. Itaque, fugiat?",
     summary:
@@ -112,6 +123,7 @@ export const emails = [
   {
     from: "User12",
     date: "03/09/2024",
+    to: "Me",
     title:
       "Lorem ipsum dolor sit amet consectetur adipisicing elit. Itaque, fugiat?",
     summary:
@@ -122,6 +134,7 @@ export const emails = [
   {
     from: "User13",
     date: "03/09/2024",
+    to: "Me",
     title:
       "Lorem ipsum dolor sit amet consectetur adipisicing elit. Itaque, fugiat?",
     summary:
@@ -132,6 +145,7 @@ export const emails = [
   {
     from: "User14",
     date: "03/09/2024",
+    to: "Me",
     title:
       "Lorem ipsum dolor sit amet consectetur adipisicing elit. Itaque, fugiat?",
     summary:
@@ -142,6 +156,7 @@ export const emails = [
   {
     from: "User15",
     date: "03/09/2024",
+    to: "Me",
     title:
       "Lorem ipsum dolor sit amet consectetur adipisicing elit. Itaque, fugiat?",
     summary:
@@ -152,6 +167,7 @@ export const emails = [
   {
     from: "User16",
     date: "03/09/2024",
+    to: "Me",
     title:
       "Lorem ipsum dolor sit amet consectetur adipisicing elit. Itaque, fugiat?",
     summary:
@@ -162,6 +178,7 @@ export const emails = [
   {
     from: "User17",
     date: "03/09/2024",
+    to: "Me",
     title:
       "Lorem ipsum dolor sit amet consectetur adipisicing elit. Itaque, fugiat?",
     summary:
@@ -172,6 +189,7 @@ export const emails = [
   {
     from: "User18",
     date: "03/09/2024",
+    to: "Me",
     title:
       "Lorem ipsum dolor sit amet consectetur adipisicing elit. Itaque, fugiat?",
     summary:
@@ -182,6 +200,7 @@ export const emails = [
   {
     from: "User19",
     date: "03/09/2024",
+    to: "Me",
     title:
       "Lorem ipsum dolor sit amet consectetur adipisicing elit. Itaque, fugiat?",
     summary:
@@ -192,6 +211,7 @@ export const emails = [
   {
     from: "User20",
     date: "03/09/2024",
+    to: "Me",
     title:
       "Lorem ipsum dolor sit amet consectetur adipisicing elit. Itaque, fugiat?",
     summary:

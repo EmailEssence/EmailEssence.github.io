@@ -1,9 +1,10 @@
-.email-display {
+.inbox-display {
   display: grid;
   grid-template-columns: 29.5rem 1fr;
+  height: 100vh;
 }
 
-.list {
+.inbox-display .list {
   width: 29.5rem;
   height: 100%;
   display: grid;
@@ -16,7 +17,7 @@
   box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
 }
 
-.inbox-title {
+.inbox-display .inbox-title {
   display: flex;
   width: 9rem;
   height: 3rem;
@@ -33,7 +34,7 @@
   font-weight: 600;
 }
 
-.emails {
+.inbox-display .emails {
   display: grid;
   grid-template-rows: 1fr;
   height: calc(100vh - 5rem);
@@ -44,7 +45,8 @@
 
 /* split between inbox list and email viewer */
 
-.divider {
+.inbox-display .divider {
+  height: 100%;
   grid-row: 1 / -1;
   grid-column: 2 / 2;
   background: #d9d9d9;
