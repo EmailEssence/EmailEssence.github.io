@@ -10,8 +10,8 @@ export default function Login({ forward }) {
         <form className="loginInput">
           <div>
             <label htmlFor="email"></label>
-            <input 
-              className ="inputBox"
+            <input
+              className="inputBox"
               type="email"
               id="email"
               name="email"
@@ -39,6 +39,5 @@ export default function Login({ forward }) {
         </form>
       </div>
     </div>
-
   );
 }
