@@ -110,7 +110,7 @@ class OpenAIEmailSummarizer(AdaptiveSummarizer[EmailSchema]):
     def __init__(
         self,
         api_key: str,
-        model: str = "gpt-4-turbo-preview",
+        model: str = "gpt-4-turbo-preview", # Redundant
         batch_threshold: int = 10,
         max_batch_size: int = 50,
         timeout: float = 30.0
@@ -129,7 +129,7 @@ class OpenAIEmailSummarizer(AdaptiveSummarizer[EmailSchema]):
     async def prepare_content(self, email: EmailSchema) -> str:
         """Transform EmailSchema into processable content."""
         return (
-            f"From: {email.sender}\n"
+            f"From: {email.sender}\n" 
             f"To: {', '.join(email.recipients)}\n"
             f"Subject: {email.subject}\n"
             f"Date: {email.received_at}\n\n"

@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field, ConfigDict
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional
 
 class EmailSchema(BaseModel):
@@ -9,6 +9,6 @@ class EmailSchema(BaseModel):
     recipients: List[str]
     subject: str
     body: str
-    received_at: Optional[datetime] = datetime.now()
+    received_at: Optional[datetime] = datetime.now(timezone.utc)
     category: Optional[str] = "uncategorized"
     is_read: Optional[bool] = False

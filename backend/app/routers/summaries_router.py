@@ -11,7 +11,6 @@ from app.services.summarization import (
   OpenAIEmailSummarizer
 )
 
-
 router = APIRouter()
 
 async def get_summarizer(
