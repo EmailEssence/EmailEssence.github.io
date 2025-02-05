@@ -1,7 +1,7 @@
-import { useState } from "react";
+import React from 'react';
 import "./settings.css";
 
-export default function Settings() {
+export function Settings() {
   return (
     <div className="settings">
       <h1>Settings</h1>
@@ -12,8 +12,8 @@ export default function Settings() {
   );
 }
 
-function SummariesInInbox() {  //globalize
-  const [isChecked, setIsChecked] = useState(false);
+export function SummariesInInbox() {
+  const [isChecked, setIsChecked] = React.useState(false);
   const handleToggle = () => setIsChecked(!isChecked);
 
   return (
@@ -27,7 +27,7 @@ function SummariesInInbox() {  //globalize
   );
 }
 
-function EmailFetchInterval() {
+export function EmailFetchInterval() {
   return (
     <div className="settings-block email-fetch-interval">
       <div className="header-container">
@@ -47,8 +47,8 @@ function EmailFetchInterval() {
   );
 }
 
-function Theme() {
-  const [theme, setTheme] = useState("system");
+export function Theme() {
+  const [theme, setTheme] = React.useState("system");
   const themes = ["light", "system", "dark"];
 
   return (

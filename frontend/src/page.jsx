@@ -1,9 +1,9 @@
-import {useState} from "react";
+import { useState } from "react";
 import Dashboard from "./components/dashboard/dashboard";
-import Settings from "./components/settings/settings";
-import SideBar from "./components/sidebar/sidebar";
 import Inbox from "./components/inbox/inbox";
 import Login from "./components/login/login";
+import { Settings } from "./components/settings/settings";
+import SideBar from "./components/sidebar/sidebar";
 import "./page.css";
 
 export default function Page() {
