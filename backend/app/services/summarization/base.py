@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 import asyncio
 import logging
 
-from models import SummarySchema, EmailSchema
+from app.models import SummarySchema, EmailSchema
 from .types import ModelBackend, ProcessingStrategy, SummaryMetrics, ModelConfig
 
 """ ( Pipeline )
