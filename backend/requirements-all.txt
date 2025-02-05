@@ -116,14 +116,14 @@ oauthlib==3.2.2
     # via requests-oauthlib
 openai==1.61.0
     # via email-essence (pyproject.toml)
-opentelemetry-api==1.29.0
+opentelemetry-api==1.30.0
     # via
     #   email-essence (pyproject.toml)
     #   opentelemetry-sdk
     #   opentelemetry-semantic-conventions
-opentelemetry-sdk==1.29.0
+opentelemetry-sdk==1.30.0
     # via email-essence (pyproject.toml)
-opentelemetry-semantic-conventions==0.50b0
+opentelemetry-semantic-conventions==0.51b0
     # via opentelemetry-sdk
 packaging==24.2
     # via
