@@ -2,11 +2,11 @@
 import "./emailEntry.css";
 import "./emailList.css";
 import {useState} from "react";
+import {emails} from "../../emails/emails";
 
 export default function Inbox() {
   const [curEmail, setCurEmail] = useState(0);
   const handleClick = email => {
-    console.log(email);
     setCurEmail(email);
   };
   return (
@@ -17,22 +17,23 @@ export default function Inbox() {
   );
 }
 
-function EmailEntry({onClick, selected}) {
-  const brColor = selected ? "#000000" : "#FFFFFF";
+function EmailEntry({email, onClick, selected}) {
+  const content = emails[email];
+  const brColor = selected ? "#D9D9D9" : "#FFFFFF";
   return (
     <div className="entry" style={{backgroundColor: brColor}} onClick={onClick}>
       <div className="indicator-container">
         <div className="indicator"></div>
       </div>
       <div className="head">
-        <div className="from"></div>
-        <div className="date"></div>
+        <div className="from">{content.from}</div>
+        <div className="date">{content.date}</div>
       </div>
-      <div className="title"></div>
+      <div className="title">{content.title}</div>
       <div className="separator-container">
         <div className="separator"></div>
       </div>
-      <div className="summary"></div>
+      <div className="summary">{content.summary}</div>
     </div>
   );
 }
@@ -40,10 +41,15 @@ function EmailEntry({onClick, selected}) {
 function InboxEmailList({curEmail, onClick}) {
   const emails = () => {
     const returnBlock = [];
-    for (let i = 0; i < 25; i++) {
+    for (let i = 0; i < 20; i++) {
       let selected = i === curEmail;
       returnBlock.push(
-        <EmailEntry key={i} onClick={() => onClick(i)} selected={selected} />
+        <EmailEntry
+          key={i}
+          email={i}
+          onClick={() => onClick(i)}
+          selected={selected}
+        />
       );
     }
     return returnBlock;
@@ -64,8 +70,7 @@ function InboxEmailList({curEmail, onClick}) {
   );
 }
 
-function EmailDisplay({key, curEmail}) {
-  console.log(key);
+function EmailDisplay({curEmail}) {
   return (
     <div className="email-display">
       <ReaderView curEmail={curEmail} />
