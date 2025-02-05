@@ -1,57 +1,18 @@
 from abc import ABC, abstractmethod
-from enum import Enum, auto
-from typing import Generic, List, Optional, Protocol, TypeVar, Dict
+from typing import Generic, List, Optional, TypeVar
 from datetime import datetime, timezone
 import asyncio
 import logging
-from pydantic import BaseModel, Field, ConfigDict
-from dataclasses import dataclass
 
 from models import SummarySchema, EmailSchema
+from .types import ModelBackend, ProcessingStrategy, SummaryMetrics, ModelConfig
 
 """ ( Pipeline )
     EmailSchema → content preparation → LLM processing → SummarySchema
 """
 
-# Type Definitions
-T = TypeVar('T')  # Input type (typically EmailSchema)
-ModelConfig = Dict[str, any]
-
-class ProcessingStrategy(Enum):
-    SINGLE = auto()
-    BATCH = auto()
-    ADAPTIVE = auto()
-
-@dataclass
-class SummaryMetrics:
-    """Performance metrics for summarization operations"""
-    processing_time: float
-    token_count: int
-    completion_tokens: int
-    total_tokens: int
-    batch_size: Optional[int] = None
-    error_count: int = 0
-    timestamp: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc)
-    )
-
-class ModelBackend(Protocol):
-    """Protocol defining required LLM backend capabilities"""
-    async def generate_summary(
-        self,
-        content: str,
-        config: Optional[ModelConfig] = None
-    ) -> tuple[str, List[str]]: ...
-    
-    async def batch_generate_summaries(
-        self,
-        contents: List[str],
-        config: Optional[ModelConfig] = None
-    ) -> List[tuple[str, List[str]]]: ...
-
 # Constrain generic type to EmailSchema
 T = TypeVar('T', bound=EmailSchema)
-
 class AdaptiveSummarizer(ABC, Generic[T]):
     """
     Abstract base class for adaptive email summarization.
@@ -59,7 +20,6 @@ class AdaptiveSummarizer(ABC, Generic[T]):
     Implements intelligent batch processing with performance monitoring and
     automatic strategy selection based on input characteristics.
     """
-    
     def __init__(
         self,
         model_backend: ModelBackend,
