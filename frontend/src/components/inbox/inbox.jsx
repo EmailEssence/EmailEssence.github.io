@@ -1,5 +1,5 @@
 /* eslint-disable react/prop-types */
-//import "./emailDisplay.css";
+import "./emailDisplay.css";
 import "./emailEntry.css";
 import "./emailList.css";
 import {useState} from "react";
@@ -78,12 +78,14 @@ function EmailDisplay({curEmail}) {
       <div className="header">
         <div className="from">{curContent.from}</div>
         <div className="title">{curContent.title}</div>
-        <div className="to">{curContent.to}</div>
-        <div className="date">{curContent.date}</div>
+        <div className="to">{`To: ${curContent.to}`}</div>
+        <div className="date">{`Date: ${curContent.date}`}</div>
         <ReaderView curEmail={curEmail} />
       </div>
       <div className="body">
-        <div className="content">{curContent.content}</div>
+        <div className="content-container">
+          <div className="content">{curContent.content}</div>
+        </div>
       </div>
     </div>
   );
