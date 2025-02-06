@@ -1,8 +1,6 @@
-# chmod +x setup.sh to make it executable
-
 #!/bin/bash
 
-# Move to backend directory
+# Move to backend directory if not already in
 cd backend
 
 echo "Checking for UV installation..."
@@ -11,6 +9,7 @@ echo "Checking for UV installation..."
 if ! command -v uv &> /dev/null; then
     echo "UV not found, installing..."
     curl -LsSf https://astral.sh/uv/install.sh | sh
+    source $HOME/.local/bin/env
 else
     echo "UV already installed"
 fi
@@ -23,8 +22,8 @@ uv venv
 echo "Activating virtual environment..."
 source .venv/bin/activate
 
-# Install dependencies
+# Install dependencies using pyproject.toml
 echo "Installing dependencies..."
-uv pip install -r requirements.txt
+uv pip sync --python-version 3.12 pyproject.toml
 
 echo "Setup complete!"

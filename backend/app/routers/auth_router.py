@@ -1,11 +1,10 @@
 from fastapi import APIRouter, HTTPException, status, Depends
 from fastapi.security import OAuth2AuthorizationCodeBearer
-from typing import Optional
 
 from google.auth.transport.requests import Request
 from starlette.concurrency import run_in_threadpool
 
-from app.services.auth_service import get_credentials
+from app.services import auth_service
 
 router = APIRouter()
 
@@ -20,7 +19,7 @@ async def authorize():
     Initiates the OAuth2 authorization flow with Google
     """
     try:
-        credentials = await run_in_threadpool(get_credentials)
+        credentials = await run_in_threadpool(auth_service.get_credentials)
         return {"token": credentials.token}
     except Exception as e:
         raise HTTPException(
@@ -34,7 +33,7 @@ async def get_token(token: str = Depends(oauth2_scheme)):
     Returns the current valid token or refreshes if expired
     """
     try:
-        credentials = await run_in_threadpool(get_credentials)
+        credentials = await run_in_threadpool(auth_service.get_credentials)
         if not credentials.valid:
             if credentials.expired and credentials.refresh_token:
                 await run_in_threadpool(lambda: credentials.refresh(Request()))
@@ -57,7 +56,7 @@ async def get_internal_token():
     Not exposed in OpenAPI schema.
     """
     try:
-        credentials = await run_in_threadpool(get_credentials)
+        credentials = await run_in_threadpool(auth_service.get_credentials)
         if not credentials.valid:
             if credentials.expired and credentials.refresh_token:
                 await run_in_threadpool(lambda: credentials.refresh(Request()))
@@ -79,7 +78,7 @@ async def refresh_token():
     Forces a token refresh regardless of current token state
     """
     try:
-        credentials = await run_in_threadpool(get_credentials)
+        credentials = await run_in_threadpool(auth_service.get_credentials)
         if credentials.refresh_token:
             await run_in_threadpool(lambda: credentials.refresh(Request()))
             return {"access_token": credentials.token, "token_type": "bearer"}
@@ -99,7 +98,7 @@ async def auth_status():
     Returns the current authentication status and token validity
     """
     try:
-        credentials = await run_in_threadpool(get_credentials)
+        credentials = await run_in_threadpool(auth_service.get_credentials)
         return {
             "is_authenticated": credentials is not None,
             "token_valid": credentials.valid if credentials else False,
