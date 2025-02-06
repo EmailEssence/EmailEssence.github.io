@@ -4,9 +4,11 @@ import Inbox from "./components/inbox/inbox";
 import Login from "./components/login/login";
 import { Settings } from "./components/settings/settings";
 import SideBar from "./components/sidebar/sidebar";
+import { emailsByDate } from "./emails/emailParse";
 import "./page.css";
 
 export default function Page() {
+  console.log(emailsByDate[0]);
   const [showPage, setShowPage] = useState("dashboard");
   const [placeholder, setPlaceholder] = useState("80px");
   const [loggedIn, setLoggedIn] = useState(false);
