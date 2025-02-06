@@ -1,5 +1,4 @@
 /* eslint-disable react/prop-types */
-import { useState } from "react";
 import InboxIcon from "../../assets/InboxIcon";
 import SettingsIcon from "../../assets/SettingsIcon";
 import "./sidebar.css";
@@ -9,46 +8,34 @@ const selectedColor = "#D9D9D9";
 const unselectedColorInner = "#E9E9E9";
 const selectedColorInner = "#1E1E1E";
 const sideBarContracted = "80px";
-const sideBarExpanded = "180px";
 
-export default function SideBar({ onSettingsClick }) {
-  const [selected, setSelected] = useState("logo");
-  const [containerWidth, setContainerWidth] = useState("80px");
-
-  const handleClick = useStateID => {
-    //expands the sidebar when the logo is clicked
-    if (useStateID === "logo") {
-      containerWidth === sideBarContracted
-        ? setContainerWidth(sideBarExpanded)
-        : setContainerWidth(sideBarContracted);
-    }
-
-    //sets the selected state ID to dashboard after being unselected
-    if (selected === useStateID) {
-      setSelected("logo");
-      return;
-    }
-    setSelected(useStateID);
-  };
-
+export default function SideBar({
+  onLogoClick,
+  containerWidth,
+  getPageComponent,
+  selected,
+}) {
   return (
     <div>
       <div className="sidebar" style={{width: containerWidth}}>
         <LogoButton
           containerWidth={containerWidth}
           curState={selected}
-          onClick={() => handleClick("logo")}
+          onClick={() => {
+            getPageComponent("dashboard");
+            onLogoClick();
+          }}
         />
         <InboxButton
           containerWidth={containerWidth}
           curState={selected}
-          onClick={() => handleClick("inbox")}
+          onClick={() => getPageComponent("inbox")}
         />
         <p></p>
         <SettingsButton
           containerWidth={containerWidth}
           curState={selected}
-          onClick={() => {handleClick("settings"); onSettingsClick();}}
+          onClick={() => getPageComponent("settings")}
         />
       </div>
     </div>
@@ -56,12 +43,12 @@ export default function SideBar({ onSettingsClick }) {
 }
 
 function LogoButton({containerWidth, curState, onClick}) {
-  const color = curState === "logo" ? selectedColor : unselectedColor;
+  const color = curState === "dashboard" ? selectedColor : unselectedColor;
   return (
     <div>
       <div
         className="container"
-        id="logo"
+        id="dashboard"
         onClick={onClick}
         style={{
           backgroundColor: color,
