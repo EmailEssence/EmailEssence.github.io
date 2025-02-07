@@ -5,8 +5,11 @@ export default function Login({ forward }) {
   return (
     <div className="formBox">
       <div className="loginDiv">
+        <div className="loginIcon">
+          <img src="./src/assets/Logo.PNG" alt="Login Icon" className="loginPhoto" />
+        </div>
         <p className="title">Welcome Back</p>
-        <div className="loginImage"> </div>
+        <div className="signUpLink"> Don't have an account yet? <a href="./register">Sign up</a></div>
         <form className="loginInput">
           <div>
             <label htmlFor="email"></label>
