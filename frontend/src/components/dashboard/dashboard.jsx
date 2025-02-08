@@ -14,7 +14,9 @@ function WeightedEmailList({ emailList }) {
   const emails = () => {
     const returnBlock = [];
     for (const email of emailList) {
-      returnBlock.push(<WEListEmail email={email} />);
+      returnBlock.push(
+        <WEListEmail key={emailList.getIndexOf(email)} email={email} />
+      );
     }
     return returnBlock;
   };
@@ -57,7 +59,9 @@ function MiniViewBody({ emailList }) {
   const emails = () => {
     const returnBlock = [];
     for (const email of emailList) {
-      returnBlock.push(<MiniViewEmail email={email} />);
+      returnBlock.push(
+        <MiniViewEmail key={emailList.getIndexOf(email)} email={email} />
+      );
     }
     return returnBlock;
   };
