@@ -37,7 +37,9 @@ export default function Page() {
       case "settings":
         return <Settings />;
       default:
-        return <Dashboard />;
+        return (
+          <Dashboard emailList={emails} getPageComponent={getPageComponent} />
+        );
     }
   };
 
