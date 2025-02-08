@@ -2,52 +2,58 @@
 import "./emailDisplay.css";
 import "./emailEntry.css";
 import "./emailList.css";
-import {useState} from "react";
-import {emails} from "../../emails/emails";
+import { useState } from "react";
 
-export default function Inbox() {
-  const [curEmail, setCurEmail] = useState(0);
-  const handleClick = email => {
-    setCurEmail(email);
+export default function Inbox({ emailList }) {
+  const [curEmail, setCurEmail] = useState(emailList[0]);
+  const handleClick = (email) => {
+    setCurEmail(emailList[email]);
   };
   return (
     <div className="inbox-display">
-      <InboxEmailList curEmail={curEmail} onClick={handleClick} />
+      <InboxEmailList
+        emailList={emailList}
+        curEmail={curEmail}
+        onClick={handleClick}
+      />
       <EmailDisplay key={curEmail} curEmail={curEmail} />
     </div>
   );
 }
 
-function EmailEntry({email, onClick, selected}) {
-  const content = emails[email];
+function EmailEntry({ email, onClick, selected }) {
   const brColor = selected ? "#D9D9D9" : "#FFFFFF";
   return (
-    <div className="entry" style={{backgroundColor: brColor}} onClick={onClick}>
+    <div
+      className="entry"
+      style={{ backgroundColor: brColor }}
+      onClick={onClick}
+    >
       <div className="indicator-container">
         <div className="indicator"></div>
       </div>
       <div className="head">
-        <div className="from">{content.from}</div>
-        <div className="date">{content.date}</div>
+        <div className="from">{email.from}</div>
+        <div className="date">{email.date}</div>
       </div>
-      <div className="title">{content.title}</div>
+      <div className="title">{email.title}</div>
       <div className="separator-container">
         <div className="separator"></div>
       </div>
-      <div className="summary">{content.summary}</div>
+      <div className="summary">{email.summary}</div>
     </div>
   );
 }
 
-function InboxEmailList({curEmail, onClick}) {
+function InboxEmailList({ emailList, curEmail, onClick }) {
   const emails = () => {
     const returnBlock = [];
     for (let i = 0; i < 20; i++) {
-      let selected = i === curEmail;
+      let selected = emailList[i] === curEmail;
       returnBlock.push(
         <EmailEntry
           key={i}
-          email={i}
+          email={emailList[i]}
           onClick={() => onClick(i)}
           selected={selected}
         />
@@ -71,27 +77,26 @@ function InboxEmailList({curEmail, onClick}) {
   );
 }
 
-function EmailDisplay({curEmail}) {
-  const curContent = emails[curEmail];
+function EmailDisplay({ curEmail }) {
   return (
     <div className="email-display">
       <div className="header">
-        <div className="from">{curContent.from}</div>
-        <div className="title">{curContent.title}</div>
-        <div className="to">{`To: ${curContent.to}`}</div>
-        <div className="date">{`Date: ${curContent.date}`}</div>
+        <div className="from">{curEmail.from}</div>
+        <div className="title">{curEmail.title}</div>
+        <div className="to">{`To: ${curEmail.to}`}</div>
+        <div className="date">{`Date: ${curEmail.date}`}</div>
         <ReaderView curEmail={curEmail} />
       </div>
       <div className="body">
         <div className="content-container">
-          <div className="content">{curContent.content}</div>
+          <div className="content">{curEmail.content}</div>
         </div>
       </div>
     </div>
   );
 }
 
-function ReaderView({curEmail}) {
-  console.log(curEmail);
+// eslint-disable-next-line no-unused-vars
+function ReaderView({ curEmail }) {
   return <div></div>;
 }

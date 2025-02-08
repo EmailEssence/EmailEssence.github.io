@@ -6,6 +6,7 @@ import Register from "./components/register/register";
 import { Settings } from "./components/settings/settings";
 import SideBar from "./components/sidebar/sidebar";
 import { emailsByDate } from "./emails/emailParse";
+import { emails } from "./emails/emails";
 import "./page.css";
 
 export default function Page() {
@@ -13,7 +14,7 @@ export default function Page() {
   const [showPage, setShowPage] = useState("dashboard");
   const [placeholder, setPlaceholder] = useState("80px");
   const [loggedIn, setLoggedIn] = useState(false);
-  const [currentPage, setCurrentPage] = useState("login"); 
+  const [currentPage, setCurrentPage] = useState("login");
   const gridTempCol = `${placeholder} 1fr`;
 
   const handleLogin = () => {
@@ -25,14 +26,14 @@ export default function Page() {
     placeholder === "80px" ? setPlaceholder("180px") : setPlaceholder("80px");
   };
 
-  const getPageComponent = pageName => {
+  const getPageComponent = (pageName) => {
     showPage === pageName ? setShowPage("dashboard") : setShowPage(pageName);
   };
 
   const getPage = () => {
     switch (showPage) {
       case "inbox":
-        return <Inbox />;
+        return <Inbox emailList={emails} />;
       case "settings":
         return <Settings />;
       default:
@@ -55,7 +56,12 @@ export default function Page() {
   };
 
   const loginPage = () => {
-    return <Login forward={handleLogin} onSignUpClick={() => setCurrentPage("register")} />;
+    return (
+      <Login
+        forward={handleLogin}
+        onSignUpClick={() => setCurrentPage("register")}
+      />
+    );
   };
 
   const registerPage = () => {
@@ -65,7 +71,11 @@ export default function Page() {
   return (
     <>
       <div className="page">
-        {loggedIn ? emailClient() : currentPage === "login" ? loginPage() : registerPage()}
+        {loggedIn
+          ? emailClient()
+          : currentPage === "login"
+          ? loginPage()
+          : registerPage()}
       </div>
     </>
   );
