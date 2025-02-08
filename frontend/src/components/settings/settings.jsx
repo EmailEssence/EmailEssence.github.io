@@ -12,9 +12,14 @@ export function Settings() {
   );
 }
 
-export function SummariesInInbox() {
+export function SummariesInInbox({ onClicked }) {
   const [isChecked, setIsChecked] = React.useState(false);
-  const handleToggle = () => setIsChecked(!isChecked);
+  const handleToggle = () => {
+    setIsChecked(!isChecked);
+    if (onClicked) {
+      onClicked();
+    }
+  };
 
   return (
     <div className="settings-block">
