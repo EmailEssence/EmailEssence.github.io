@@ -11,7 +11,23 @@ export default function Dashboard({ emailList, onPageComponent }) {
 }
 
 function WeightedEmailList({ emailList }) {
-  return <div></div>;
+  const emails = () => {
+    const returnBlock = [];
+    for (const email of emailList) {
+      returnBlock.push(<WEListEmail email={email} />);
+    }
+    return returnBlock;
+  };
+  return <div className="weighted-email-list-container">{emails()}</div>;
+}
+
+function WEListEmail({ email }) {
+  return (
+    <div className="welist-email-container">
+      <div className="summary">{email.summary}</div>
+      <div className="email-link"></div>
+    </div>
+  );
 }
 
 function MiniViewPanel({ emailList, onPageComponent }) {
@@ -24,9 +40,36 @@ function MiniViewPanel({ emailList, onPageComponent }) {
 }
 
 function MiniViewHead({ onPageComponent }) {
-  return <div className="head-container"></div>;
+  return (
+    <div className="head-container">
+      <div className="inbox-text-container">
+        <div className="inbox-text"></div>
+      </div>
+      <div
+        className="expand-button"
+        onClick={() => onPageComponent("inbox")}
+      ></div>
+    </div>
+  );
 }
 
 function MiniViewBody({ emailList }) {
-  return <div></div>;
+  const emails = () => {
+    const returnBlock = [];
+    for (const email of emailList) {
+      returnBlock.push(<MiniViewEmail email={email} />);
+    }
+    return returnBlock;
+  };
+  return <div className="body-container">{emails()}</div>;
+}
+
+function MiniViewEmail({ email }) {
+  return (
+    <div className="miniview-email-container">
+      <div className="from">{email.from}</div>
+      <div className="median"></div>
+      <div className="summary">{email.summary}</div>
+    </div>
+  );
 }
