@@ -9,9 +9,10 @@
   justify-content: center;
   align-items: center;
 }
+
 .loginDiv {
-  height: clamp(300px, 40%, 300px);
-  width: clamp(250px, 30%, 250px);
+  height: clamp(250px, 40%, 250px);
+  width: clamp(240px, 30%, 240px);
   border-radius: 10px;
   padding: 20px;
   box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.3);
@@ -46,17 +47,18 @@
   font-weight: bold;
 }
 
-.inputBox {
+.loginDiv .inputBox {
   padding: 5px;
-  width: 100%;
+  width: 200px;
   margin: 5px 0;
   border: 1px solid #161616;
   background-color: #161616;
   border-radius: 5px;
   font-size: 8px;
+
 }
 
-.loginButton {
+.loginDiv .loginButton {
   padding: 5px;
   width: 100%;
   margin: 10px 0;
@@ -67,6 +69,6 @@
   font-size: 8px;
 }
 
-.loginButton:hover {
+.loginDiv .loginButton:hover {
   background-color: lightgray;
 }

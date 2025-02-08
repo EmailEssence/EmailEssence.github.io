@@ -2,6 +2,7 @@ import { useState } from "react";
 import Dashboard from "./components/dashboard/dashboard";
 import Inbox from "./components/inbox/inbox";
 import Login from "./components/login/login";
+import Register from "./components/register/register";
 import { Settings } from "./components/settings/settings";
 import SideBar from "./components/sidebar/sidebar";
 import { emailsByDate } from "./emails/emailParse";
@@ -12,6 +13,7 @@ export default function Page() {
   const [showPage, setShowPage] = useState("dashboard");
   const [placeholder, setPlaceholder] = useState("80px");
   const [loggedIn, setLoggedIn] = useState(false);
+  const [currentPage, setCurrentPage] = useState("login"); 
   const gridTempCol = `${placeholder} 1fr`;
 
   const handleLogin = () => {
@@ -40,7 +42,7 @@ export default function Page() {
 
   const emailClient = () => {
     return (
-      <div className="client" style={{gridTemplateColumns: gridTempCol}}>
+      <div className="client" style={{ gridTemplateColumns: gridTempCol }}>
         <SideBar
           onLogoClick={handleLogoClick}
           containerWidth={placeholder}
@@ -53,12 +55,18 @@ export default function Page() {
   };
 
   const loginPage = () => {
-    return <Login forward={handleLogin} />;
+    return <Login forward={handleLogin} onSignUpClick={() => setCurrentPage("register")} />;
+  };
+
+  const registerPage = () => {
+    return <Register onLoginClick={() => setCurrentPage("login")} />;
   };
 
   return (
     <>
-      <div className="page">{loggedIn ? emailClient() : loginPage()}</div>
+      <div className="page">
+        {loggedIn ? emailClient() : currentPage === "login" ? loginPage() : registerPage()}
+      </div>
     </>
   );
 }
