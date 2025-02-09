@@ -33,15 +33,26 @@ export default function SideBar({
           name="inbox"
         >
           <InboxIcon
-            color={selected === "inbox" ? selectedColor : unselectedColor}
+            color={
+              selected === "inbox" ? selectedColorInner : unselectedColorInner
+            }
           />
         </Button>
         <p></p>
-        <SettingsButton
+        <Button
           containerWidth={containerWidth}
           curState={selected}
           onClick={() => getPageComponent("settings")}
-        />
+          name="settings"
+        >
+          <SettingsIcon
+            color={
+              selected === "settings"
+                ? selectedColorInner
+                : unselectedColorInner
+            }
+          />
+        </Button>
       </div>
     </div>
   );
@@ -66,58 +77,7 @@ function LogoButton({ containerWidth, curState, onClick }) {
   );
 }
 
-// function InboxButton({ containerWidth, curState, onClick }) {
-//   const text = containerWidth === sideBarContracted ? "" : "Inbox";
-//   const color = curState === "inbox" ? selectedColor : unselectedColor;
-//   const innerColor =
-//     curState === "inbox" ? selectedColorInner : unselectedColorInner;
-//   return (
-//     <div>
-//       <div
-//         className="container"
-//         id="inbox"
-//         onClick={onClick}
-//         style={{ backgroundColor: color, width: containerWidth }}
-//       >
-//         <div className="icon">
-//           <div>
-//             <InboxIcon color={innerColor} />
-//           </div>
-//           <p style={{ color: innerColor }}>{text}</p>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// }
-
-function SettingsButton({ containerWidth, curState, onClick }) {
-  const text = containerWidth === sideBarContracted ? "" : "Settings";
-  const color = curState === "settings" ? selectedColor : unselectedColor;
-  const innerColor =
-    curState === "settings" ? selectedColorInner : unselectedColorInner;
-  return (
-    <div>
-      <div
-        className="container"
-        id="settings"
-        onClick={onClick}
-        style={{
-          backgroundColor: color,
-          width: containerWidth,
-        }}
-      >
-        <div className="icon">
-          <div>
-            <SettingsIcon color={innerColor} />
-          </div>
-          <p style={{ color: innerColor }}>{text}</p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function Button({ containerWidth, curState, onClick, children, name }) {
+function Button({ containerWidth, curState, onClick, name, children }) {
   const buttonText = `${name[0].toUpperCase()}${name.slice(1)}`;
   const text = containerWidth === sideBarContracted ? "" : buttonText;
   const color = curState === name ? selectedColor : unselectedColor;
