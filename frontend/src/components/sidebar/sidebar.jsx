@@ -5,9 +5,8 @@ import "./sidebar.css";
 
 const unselectedColor = "#1E1E1E";
 const selectedColor = "#D9D9D9";
-const unselectedColorInner = "#E9E9E9";
-const selectedColorInner = "#1E1E1E";
-const sideBarContracted = "80px";
+const eColorSelected = "#E9E9E9";
+const eColorUnselected = "#1E1E1E";
 
 export default function SideBar({
   onLogoClick,
@@ -33,12 +32,10 @@ export default function SideBar({
           name="inbox"
         >
           <InboxIcon
-            color={
-              selected === "inbox" ? selectedColorInner : unselectedColorInner
-            }
+            color={selected === "inbox" ? eColorSelected : eColorUnselected}
           />
         </Button>
-        <p></p>
+        <div></div>
         <Button
           containerWidth={containerWidth}
           curState={selected}
@@ -46,11 +43,7 @@ export default function SideBar({
           name="settings"
         >
           <SettingsIcon
-            color={
-              selected === "settings"
-                ? selectedColorInner
-                : unselectedColorInner
-            }
+            color={selected === "settings" ? eColorSelected : eColorUnselected}
           />
         </Button>
       </div>
@@ -79,10 +72,9 @@ function LogoButton({ containerWidth, curState, onClick }) {
 
 function Button({ containerWidth, curState, onClick, name, children }) {
   const buttonText = `${name[0].toUpperCase()}${name.slice(1)}`;
-  const text = containerWidth === sideBarContracted ? "" : buttonText;
+  const text = containerWidth === "80px" ? "" : buttonText;
   const color = curState === name ? selectedColor : unselectedColor;
-  const innerColor =
-    curState === name ? selectedColorInner : unselectedColorInner;
+  const eColor = curState === name ? eColorSelected : eColorUnselected;
   return (
     <div>
       <div
@@ -96,7 +88,7 @@ function Button({ containerWidth, curState, onClick, name, children }) {
       >
         <div className="icon">
           <div>{children}</div>
-          <p style={{ color: innerColor }}>{text}</p>
+          <p style={{ color: eColor }}>{text}</p>
         </div>
       </div>
     </div>
