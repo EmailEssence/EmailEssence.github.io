@@ -17,7 +17,7 @@ export default function SideBar({
 }) {
   return (
     <div>
-      <div className="sidebar" style={{width: containerWidth}}>
+      <div className="sidebar" style={{ width: containerWidth }}>
         <LogoButton
           containerWidth={containerWidth}
           curState={selected}
@@ -26,11 +26,16 @@ export default function SideBar({
             onLogoClick();
           }}
         />
-        <InboxButton
+        <Button
           containerWidth={containerWidth}
           curState={selected}
           onClick={() => getPageComponent("inbox")}
-        />
+          name="inbox"
+        >
+          <InboxIcon
+            color={selected === "inbox" ? selectedColor : unselectedColor}
+          />
+        </Button>
         <p></p>
         <SettingsButton
           containerWidth={containerWidth}
@@ -42,7 +47,7 @@ export default function SideBar({
   );
 }
 
-function LogoButton({containerWidth, curState, onClick}) {
+function LogoButton({ containerWidth, curState, onClick }) {
   const color = curState === "dashboard" ? selectedColor : unselectedColor;
   return (
     <div>
@@ -61,31 +66,31 @@ function LogoButton({containerWidth, curState, onClick}) {
   );
 }
 
-function InboxButton({containerWidth, curState, onClick}) {
-  const text = containerWidth === sideBarContracted ? "" : "Inbox";
-  const color = curState === "inbox" ? selectedColor : unselectedColor;
-  const innerColor =
-    curState === "inbox" ? selectedColorInner : unselectedColorInner;
-  return (
-    <div>
-      <div
-        className="container"
-        id="inbox"
-        onClick={onClick}
-        style={{backgroundColor: color, width: containerWidth}}
-      >
-        <div className="icon">
-          <div>
-            <InboxIcon color={innerColor} />
-          </div>
-          <p style={{color: innerColor}}>{text}</p>
-        </div>
-      </div>
-    </div>
-  );
-}
+// function InboxButton({ containerWidth, curState, onClick }) {
+//   const text = containerWidth === sideBarContracted ? "" : "Inbox";
+//   const color = curState === "inbox" ? selectedColor : unselectedColor;
+//   const innerColor =
+//     curState === "inbox" ? selectedColorInner : unselectedColorInner;
+//   return (
+//     <div>
+//       <div
+//         className="container"
+//         id="inbox"
+//         onClick={onClick}
+//         style={{ backgroundColor: color, width: containerWidth }}
+//       >
+//         <div className="icon">
+//           <div>
+//             <InboxIcon color={innerColor} />
+//           </div>
+//           <p style={{ color: innerColor }}>{text}</p>
+//         </div>
+//       </div>
+//     </div>
+//   );
+// }
 
-function SettingsButton({containerWidth, curState, onClick}) {
+function SettingsButton({ containerWidth, curState, onClick }) {
   const text = containerWidth === sideBarContracted ? "" : "Settings";
   const color = curState === "settings" ? selectedColor : unselectedColor;
   const innerColor =
@@ -105,7 +110,33 @@ function SettingsButton({containerWidth, curState, onClick}) {
           <div>
             <SettingsIcon color={innerColor} />
           </div>
-          <p style={{color: innerColor}}>{text}</p>
+          <p style={{ color: innerColor }}>{text}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Button({ containerWidth, curState, onClick, children, name }) {
+  const buttonText = `${name[0].toUpperCase()}${name.slice(1)}`;
+  const text = containerWidth === sideBarContracted ? "" : buttonText;
+  const color = curState === name ? selectedColor : unselectedColor;
+  const innerColor =
+    curState === name ? selectedColorInner : unselectedColorInner;
+  return (
+    <div>
+      <div
+        className="container"
+        id={name}
+        onClick={onClick}
+        style={{
+          backgroundColor: color,
+          width: containerWidth,
+        }}
+      >
+        <div className="icon">
+          <div>{children}</div>
+          <p style={{ color: innerColor }}>{text}</p>
         </div>
       </div>
     </div>
