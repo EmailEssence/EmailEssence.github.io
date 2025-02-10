@@ -6,11 +6,9 @@ import Register from "./components/register/register";
 import { Settings } from "./components/settings/settings";
 import SideBar from "./components/sidebar/sidebar";
 import emailsByDate from "./emails/emailParse";
-import { emails } from "./emails/emails";
 import "./page.css";
 
 export default function Page() {
-  console.log(emailsByDate[0]);
   const [showPage, setShowPage] = useState("dashboard");
   const [placeholder, setPlaceholder] = useState("80px");
   const [loggedIn, setLoggedIn] = useState(false);
@@ -33,12 +31,15 @@ export default function Page() {
   const getPage = () => {
     switch (showPage) {
       case "inbox":
-        return <Inbox emailList={emails} />;
+        return <Inbox emailList={emailsByDate} />;
       case "settings":
         return <Settings />;
       default:
         return (
-          <Dashboard emailList={emails} getPageComponent={getPageComponent} />
+          <Dashboard
+            emailList={emailsByDate}
+            getPageComponent={getPageComponent}
+          />
         );
     }
   };

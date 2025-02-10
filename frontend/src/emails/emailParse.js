@@ -9,7 +9,34 @@ arr1.map((element, index) => {
   const keywords = arr2[index].keywords;
   element.summary_text = sumText;
   element.keywords = keywords;
+  const date = element.received_at;
+  element.received_at = parseDate(date);
   return element;
 });
 
+function parseDate(date) {
+  const dateArr = [];
+  const time = date.slice(11, 16);
+  const year = date.slice(0, 4);
+  const month = date.slice(5, 7);
+  const day = date.slice(8, 10);
+  dateArr.push(year);
+  dateArr.push(month);
+  dateArr.push(day);
+  dateArr.push(time);
+  return dateArr;
+}
+
 export default arr1;
+
+// "user_id" ID of the user
+// "email_id" ID of the email (unique to each email)
+// "sender" email of the sender
+// "recipients" emails of the users that have received this email
+// "subject" title of the email
+// "body" content of the email
+// "received_at" [year, month, day, time]
+// "category" category of email
+// "is_read" has the email been read
+// "summary_text" summary of the email
+// "keywords": [] keywords used to describe email
