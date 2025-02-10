@@ -13,13 +13,9 @@ export default function SideBar({
   return (
     <div>
       <div className="sidebar" style={{ width: containerWidth }}>
-        <LogoButton
-          containerWidth={containerWidth}
-          curState={selected}
-          onClick={() => {
-            onLogoClick();
-          }}
-        />
+        <Button containerWidth={containerWidth} onClick={onLogoClick} name="">
+          <img src="./src/assets/Logo.svg" alt="Login Icon" />
+        </Button>
         <Button
           containerWidth={containerWidth}
           curState={selected}
@@ -42,26 +38,9 @@ export default function SideBar({
   );
 }
 
-function LogoButton({ containerWidth, onClick }) {
-  return (
-    <div>
-      <div
-        className="container"
-        id="dashboard"
-        onClick={onClick}
-        style={{
-          backgroundColor: color1E,
-          width: containerWidth,
-        }}
-      >
-        <p>EmailESSENCE</p>
-      </div>
-    </div>
-  );
-}
-
-function Button({ containerWidth, curState, onClick, name, children }) {
-  const buttonText = `${name[0].toUpperCase()}${name.slice(1)}`;
+function Button({ containerWidth, curState = "N", onClick, name, children }) {
+  const buttonText =
+    name.length > 0 ? `${name[0].toUpperCase()}${name.slice(1)}` : "";
   const text = containerWidth === "80px" ? "" : buttonText;
   const color = curState === name ? colorD9 : color1E;
   const eColor = curState === name ? color1E : colorE9;
@@ -69,7 +48,6 @@ function Button({ containerWidth, curState, onClick, name, children }) {
     <div>
       <div
         className="container"
-        id={name}
         onClick={onClick}
         style={{
           backgroundColor: color,
