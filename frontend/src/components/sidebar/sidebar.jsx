@@ -17,7 +17,6 @@ export default function SideBar({
           containerWidth={containerWidth}
           curState={selected}
           onClick={() => {
-            getPageComponent("dashboard");
             onLogoClick();
           }}
         />
