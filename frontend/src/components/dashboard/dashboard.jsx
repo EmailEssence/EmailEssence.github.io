@@ -14,9 +14,7 @@ function WeightedEmailList({ emailList }) {
   const emails = () => {
     const returnBlock = [];
     for (const email of emailList) {
-      returnBlock.push(
-        <WEListEmail key={emailList.indexOf(email)} email={email} />
-      );
+      returnBlock.push(<WEListEmail key={email.email_id} email={email} />);
     }
     return returnBlock;
   };
@@ -26,7 +24,7 @@ function WeightedEmailList({ emailList }) {
 function WEListEmail({ email }) {
   return (
     <div className="welist-email-container">
-      <div className="summary">{email.summary}</div>
+      <div className="summary">{email.summary_text}</div>
       <div className="email-link"></div>
     </div>
   );
@@ -59,9 +57,7 @@ function MiniViewBody({ emailList }) {
   const emails = () => {
     const returnBlock = [];
     for (const email of emailList) {
-      returnBlock.push(
-        <MiniViewEmail key={emailList.indexOf(email)} email={email} />
-      );
+      returnBlock.push(<MiniViewEmail key={email.email_id} email={email} />);
     }
     return returnBlock;
   };
@@ -71,9 +67,9 @@ function MiniViewBody({ emailList }) {
 function MiniViewEmail({ email }) {
   return (
     <div className="miniview-email-container">
-      <div className="from">{email.from}</div>
+      <div className="from">{email.sender}</div>
       <div className="median"></div>
-      <div className="summary">{email.summary}</div>
+      <div className="summary">{email.summary_text}</div>
     </div>
   );
 }
