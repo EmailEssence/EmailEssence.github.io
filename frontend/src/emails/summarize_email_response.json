@@ -133,13 +133,7 @@
   {
     "email_id": "14",
     "summary_text": "Joseph updated the SCRUM-7 issue regarding MVP Testing & Debugging.",
-    "keywords": [
-      "MVP Testing",
-      "Debugging",
-      "SCRUM-7",
-      "Update",
-      "Jira"
-    ],
+    "keywords": ["MVP Testing", "Debugging", "SCRUM-7", "Update", "Jira"],
     "generated_at": "2025-02-05T22:57:22.491477Z"
   },
   {
@@ -157,25 +151,13 @@
   {
     "email_id": "16",
     "summary_text": "An update has been made to the SCRUM-12 Inbox in Jira.",
-    "keywords": [
-      "Jira",
-      "SCRUM-12",
-      "update",
-      "EmailEssence",
-      "Inbox"
-    ],
+    "keywords": ["Jira", "SCRUM-12", "update", "EmailEssence", "Inbox"],
     "generated_at": "2025-02-05T22:57:22.491477Z"
   },
   {
     "email_id": "17",
     "summary_text": "An update has been made to the SCRUM-30 Inbox in Jira by ariaS.",
-    "keywords": [
-      "Jira",
-      "SCRUM-30",
-      "update",
-      "Inbox",
-      "EmailEssence"
-    ],
+    "keywords": ["Jira", "SCRUM-30", "update", "Inbox", "EmailEssence"],
     "generated_at": "2025-02-05T22:57:22.491477Z"
   },
   {

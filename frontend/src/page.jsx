@@ -5,7 +5,7 @@ import Login from "./components/login/login";
 import Register from "./components/register/register";
 import { Settings } from "./components/settings/settings";
 import SideBar from "./components/sidebar/sidebar";
-import { emailsByDate } from "./emails/emailParse";
+import emailsByDate from "./emails/emailParse";
 import { emails } from "./emails/emails";
 import "./page.css";
 
