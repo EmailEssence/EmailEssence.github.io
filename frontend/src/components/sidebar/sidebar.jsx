@@ -1,12 +1,8 @@
 /* eslint-disable react/prop-types */
+import { color1E, colorD9, colorE9 } from "../../assets/constants";
 import InboxIcon from "../../assets/InboxIcon";
 import SettingsIcon from "../../assets/SettingsIcon";
 import "./sidebar.css";
-
-const unselectedColor = "#1E1E1E";
-const selectedColor = "#D9D9D9";
-const eColorSelected = "#E9E9E9";
-const eColorUnselected = "#1E1E1E";
 
 export default function SideBar({
   onLogoClick,
@@ -31,9 +27,7 @@ export default function SideBar({
           onClick={() => getPageComponent("inbox")}
           name="inbox"
         >
-          <InboxIcon
-            color={selected === "inbox" ? eColorSelected : eColorUnselected}
-          />
+          <InboxIcon color={selected === "inbox" ? color1E : colorE9} />
         </Button>
         <div></div>
         <Button
@@ -42,17 +36,14 @@ export default function SideBar({
           onClick={() => getPageComponent("settings")}
           name="settings"
         >
-          <SettingsIcon
-            color={selected === "settings" ? eColorSelected : eColorUnselected}
-          />
+          <SettingsIcon color={selected === "settings" ? color1E : colorE9} />
         </Button>
       </div>
     </div>
   );
 }
 
-function LogoButton({ containerWidth, curState, onClick }) {
-  const color = curState === "dashboard" ? selectedColor : unselectedColor;
+function LogoButton({ containerWidth, onClick }) {
   return (
     <div>
       <div
@@ -60,7 +51,7 @@ function LogoButton({ containerWidth, curState, onClick }) {
         id="dashboard"
         onClick={onClick}
         style={{
-          backgroundColor: color,
+          backgroundColor: color1E,
           width: containerWidth,
         }}
       >
@@ -73,8 +64,8 @@ function LogoButton({ containerWidth, curState, onClick }) {
 function Button({ containerWidth, curState, onClick, name, children }) {
   const buttonText = `${name[0].toUpperCase()}${name.slice(1)}`;
   const text = containerWidth === "80px" ? "" : buttonText;
-  const color = curState === name ? selectedColor : unselectedColor;
-  const eColor = curState === name ? eColorSelected : eColorUnselected;
+  const color = curState === name ? colorD9 : color1E;
+  const eColor = curState === name ? color1E : colorE9;
   return (
     <div>
       <div
