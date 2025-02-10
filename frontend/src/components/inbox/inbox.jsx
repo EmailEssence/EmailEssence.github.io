@@ -4,10 +4,18 @@ import "./emailEntry.css";
 import "./emailList.css";
 import { useState } from "react";
 
+const getDate = (date) => {
+  return `${date[1]}/${date[2]}/${date[0]}`;
+};
+
+const getSenderName = (sender) => {
+  return sender.slice(0, sender.indexOf("<"));
+};
+
 export default function Inbox({ emailList }) {
   const [curEmail, setCurEmail] = useState(emailList[0]);
   const handleClick = (email) => {
-    setCurEmail(emailList[email]);
+    setCurEmail(email);
   };
   return (
     <div className="inbox-display">
@@ -23,6 +31,7 @@ export default function Inbox({ emailList }) {
 
 function EmailEntry({ email, onClick, selected }) {
   const brColor = selected ? "#D9D9D9" : "#FFFFFF";
+  const date = getDate(email.received_at);
   return (
     <div
       className="entry"
@@ -33,14 +42,14 @@ function EmailEntry({ email, onClick, selected }) {
         <div className="indicator"></div>
       </div>
       <div className="head">
-        <div className="from">{email.from}</div>
-        <div className="date">{email.date}</div>
+        <div className="from">{getSenderName(email.sender)}</div>
+        <div className="date">{date}</div>
       </div>
-      <div className="title">{email.title}</div>
+      <div className="title">{email.subject}</div>
       <div className="separator-container">
         <div className="separator"></div>
       </div>
-      <div className="summary">{email.summary}</div>
+      <div className="summary">{email.summary_text}</div>
     </div>
   );
 }
@@ -48,13 +57,13 @@ function EmailEntry({ email, onClick, selected }) {
 function InboxEmailList({ emailList, curEmail, onClick }) {
   const emails = () => {
     const returnBlock = [];
-    for (let i = 0; i < 20; i++) {
-      let selected = emailList[i] === curEmail;
+    for (const email of emailList) {
+      let selected = email === curEmail;
       returnBlock.push(
         <EmailEntry
-          key={i}
-          email={emailList[i]}
-          onClick={() => onClick(i)}
+          key={email.email_id}
+          email={email}
+          onClick={() => onClick(email)}
           selected={selected}
         />
       );
@@ -78,18 +87,19 @@ function InboxEmailList({ emailList, curEmail, onClick }) {
 }
 
 function EmailDisplay({ curEmail }) {
+  const date = getDate(curEmail.received_at);
   return (
     <div className="email-display">
       <div className="header">
-        <div className="from">{curEmail.from}</div>
-        <div className="title">{curEmail.title}</div>
-        <div className="to">{`To: ${curEmail.to}`}</div>
-        <div className="date">{`Date: ${curEmail.date}`}</div>
+        <div className="from">{curEmail.sender}</div>
+        <div className="title">{curEmail.subject}</div>
+        <div className="to">{`To: ${curEmail.recipients}`}</div>
+        <div className="date">{`Date: ${date}`}</div>
         <ReaderView curEmail={curEmail} />
       </div>
       <div className="body">
         <div className="content-container">
-          <div className="content">{curEmail.content}</div>
+          <div className="content">{curEmail.body}</div>
         </div>
       </div>
     </div>
