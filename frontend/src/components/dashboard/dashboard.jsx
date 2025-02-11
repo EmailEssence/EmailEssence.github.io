@@ -16,8 +16,10 @@ export default function Dashboard({ emailList, getPageComponent }) {
 function WeightedEmailList({ emailList }) {
   const emails = () => {
     const returnBlock = [];
-    for (const email of emailList) {
-      returnBlock.push(<WEListEmail key={email.email_id} email={email} />);
+    for (let i = 0; i < 5; i++) {
+      returnBlock.push(
+        <WEListEmail key={emailList[i].email_id} email={emailList[i]} />
+      );
     }
     return returnBlock;
   };
@@ -88,7 +90,7 @@ function MiniViewEmail({ email }) {
     <div className="miniview-email-container">
       <div className="from">{email.sender}</div>
       <div className="median"></div>
-      <div className="summary">{email.summary_text}</div>
+      <div className="subject">{email.subject}</div>
     </div>
   );
 }
