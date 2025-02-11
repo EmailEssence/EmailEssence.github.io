@@ -1,0 +1,37 @@
+.dashboard {
+  padding: 5rem 5vw;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5vw;
+}
+
+.dashboard .mini-view {
+  display: grid;
+  grid-template-rows: 4rem 1fr;
+}
+
+.dashboard .head-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
+  padding: 0.5rem 1rem;
+}
+
+.dashboard .inbox-text-container {
+  margin-bottom: 0.5rem;
+  height: 2.5rem;
+  width: 8rem;
+  background-color: #d9d9d9bf;
+  box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.dashboard .inbox-text-container div {
+  font-size: 1.4rem;
+  font-weight: 600;
+}
