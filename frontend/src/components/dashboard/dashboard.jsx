@@ -1,6 +1,7 @@
 /* eslint-disable react/prop-types */
 import FullScreenIcon from "../../assets/FullScreenIcon";
-import "./dashboard.css";
+import "./miniview.css";
+import "./weightedEmailList.css";
 
 const getSenderName = (sender) => {
   return sender.slice(0, sender.indexOf("<"));
