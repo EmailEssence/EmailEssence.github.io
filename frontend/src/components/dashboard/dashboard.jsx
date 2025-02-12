@@ -1,6 +1,10 @@
 /* eslint-disable react/prop-types */
-import FullScreenIcon from "../../assets/fullScreenIcon";
+import FullScreenIcon from "../../assets/FullScreenIcon";
 import "./dashboard.css";
+
+const getSenderName = (sender) => {
+  return sender.slice(0, sender.indexOf("<"));
+};
 
 export default function Dashboard({ emailList, getPageComponent }) {
   return (
@@ -73,8 +77,10 @@ function MiniViewBody({ emailList }) {
 function MiniViewEmail({ email }) {
   return (
     <div className="miniview-email-container">
-      <div className="from">{email.sender}</div>
-      <div className="median"></div>
+      <div className="from">{getSenderName(email.sender)}</div>
+      <div className="median">
+        <div className="medianfill"></div>
+      </div>
       <div className="subject">{email.subject}</div>
     </div>
   );
