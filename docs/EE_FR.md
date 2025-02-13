@@ -93,7 +93,7 @@ add deployment specification/requirements
 `Completion → ?June 7th 2025?; ahead of MidQ Presentation`
 
 `Full test coverage→ ?June 14th 2025?; ahead of FinalQ Presentation`
-### FR01.3 -> 1.4 Email/Summary Caching
+### FR01.3 -> 1.4 Email/Summaries 
 - [ ] **Status**: In Progress
 
 **Owner**: Ritesh, Joseph
@@ -102,7 +102,7 @@ add deployment specification/requirements
 #### Sub-requirements:
 - FR01.3 - Caching Setup (Redis) - **Not Started**
 - FR01.4 - Caching Integration - **Not Started**
-
+- FR01.5 - Email Sending via Transactional Email Service - **Not Started**
 
 ### FR04 - Extended Web Interface
 **Status**: Not Started
@@ -130,6 +130,15 @@ add deployment specification/requirements
 **User Story**: As a user, I want my emails to be analyzed so that important keywords or topics are highlighted.
 
 **Acceptance Criteria**: The system identifies and highlights important keywords within the email summary or reader view.
+
+### FR06 - Email Replying/Sending
+- [ ] **Status**: Not Started
+
+**Owner**: 
+- Integration with email sending service
+- Compose/Reply email functionality
+
+**User Story**: As a user, I want to send emails from my account so that I can share important information with others.
 
 ### FR07 - Cross-Platform Desktop Support
 **Status**: Not Started
