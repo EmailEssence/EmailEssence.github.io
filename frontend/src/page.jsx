@@ -10,11 +10,11 @@ import "./page.css";
 
 export default function Page() {
   const [showPage, setShowPage] = useState("dashboard");
-  const [placeholder, setPlaceholder] = useState("80px");
+  const [sideBarSize, setSideBarSize] = useState(80);
   const [loggedIn, setLoggedIn] = useState(false);
   const [currentPage, setCurrentPage] = useState("login");
   const [curEmail, setCurEmail] = useState(emailsByDate[0]);
-  const gridTempCol = `${placeholder} 1fr`;
+  const gridTempCol = `${sideBarSize}px 1fr`;
 
   const handleLogin = () => {
     setLoggedIn(true);
@@ -22,10 +22,10 @@ export default function Page() {
 
   // Function to handle expanding and collapsing of sidebar
   const handleLogoClick = () => {
-    placeholder === "80px" ? setPlaceholder("180px") : setPlaceholder("80px");
+    setSideBarSize(sideBarSize === 80 ? 180 : 80);
   };
 
-  const getPageComponent = (pageName) => {
+  const handlePageChange = (pageName) => {
     showPage === pageName ? setShowPage("dashboard") : setShowPage(pageName);
   };
 
@@ -49,7 +49,7 @@ export default function Page() {
         return (
           <Dashboard
             emailList={emailsByDate}
-            getPageComponent={getPageComponent}
+            handlePageChange={handlePageChange}
           />
         );
     }
@@ -60,8 +60,8 @@ export default function Page() {
       <div className="client" style={{ gridTemplateColumns: gridTempCol }}>
         <SideBar
           onLogoClick={handleLogoClick}
-          containerWidth={placeholder}
-          getPageComponent={getPageComponent}
+          containerWidth={`${sideBarSize}px`}
+          handlePageChange={handlePageChange}
           selected={showPage}
         />
         {getPage()}

@@ -7,7 +7,7 @@ import "./sidebar.css";
 export default function SideBar({
   onLogoClick,
   containerWidth,
-  getPageComponent,
+  handlePageChange,
   selected,
 }) {
   return (
@@ -19,7 +19,7 @@ export default function SideBar({
         <Button
           containerWidth={containerWidth}
           curState={selected}
-          onClick={() => getPageComponent("inbox")}
+          onClick={() => handlePageChange("inbox")}
           name="inbox"
         >
           <InboxIcon color={selected === "inbox" ? color1E : colorE9} />
@@ -28,7 +28,7 @@ export default function SideBar({
         <Button
           containerWidth={containerWidth}
           curState={selected}
-          onClick={() => getPageComponent("settings")}
+          onClick={() => handlePageChange("settings")}
           name="settings"
         >
           <SettingsIcon color={selected === "settings" ? color1E : colorE9} />

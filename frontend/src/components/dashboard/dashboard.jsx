@@ -7,13 +7,13 @@ const getSenderName = (sender) => {
   return sender.slice(0, sender.indexOf("<"));
 };
 
-export default function Dashboard({ emailList, getPageComponent }) {
+export default function Dashboard({ emailList, handlePageChange }) {
   return (
     <div className="dashboard">
       <WeightedEmailList emailList={emailList} />
       <MiniViewPanel
         emailList={emailList}
-        getPageComponent={getPageComponent}
+        handlePageChange={handlePageChange}
       />
     </div>
   );
@@ -41,23 +41,23 @@ function WEListEmail({ email }) {
   );
 }
 
-function MiniViewPanel({ emailList, getPageComponent }) {
+function MiniViewPanel({ emailList, handlePageChange }) {
   return (
     <div className="mini-view">
-      <MiniViewHead getPageComponent={getPageComponent} />
+      <MiniViewHead handlePageChange={handlePageChange} />
       <MiniViewBody emailList={emailList} />
     </div>
   );
 }
 
-function MiniViewHead({ getPageComponent }) {
+function MiniViewHead({ handlePageChange }) {
   return (
     <div className="head-container">
       <div className="inbox-text-container">
         <div className="inbox-icon">IN</div>
         <div className="inbox-text">Inbox</div>
       </div>
-      <div className="expand-button" onClick={() => getPageComponent("inbox")}>
+      <div className="expand-button" onClick={() => handlePageChange("inbox")}>
         <FullScreenIcon />
       </div>
     </div>
