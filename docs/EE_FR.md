@@ -3,17 +3,17 @@ Broken down by development checkpoint
 
 #### TODO
 review acceptance criteria
-solidify MVP requirements → move to FC where applicable
-- caching
-- email weights
+add deployment specification/requirements
 
 ## MVP
 `Completion → February 17th 2025; ahead of MidQ Presentation`
+
 `Full test coverage→ March 21st 2025; ahead of FinalQ Presentation`
 
 ### FR01 - Email Retrieval System
-**Status**: Completed
-**Owner**: Joseph
+- [ ] **Status**: Completed, pending update to query parameters
+
+**Owner**: Joseph , Ritesh
 - System must implement secure email retrieval using Gmail API/IMAP
 - OAuth 2.0 authentication required for secure access
 - Includes database integration (MongoDB) for email storage
@@ -24,11 +24,12 @@ solidify MVP requirements → move to FC where applicable
 **Acceptance Criteria**: The system retrieves emails after the user authorizes access via OAuth 2.0 and displays them in the inbox view.
 
 #### Sub-requirements:
-- FR01.1 - Database Setup (MongoDB) - **Completed**
-- FR01.2 - Database Integration - **In Progress**
+- [x] FR01.1 - Database Setup (MongoDB) - **Completed** (Ritesh)
+- [ ] FR01.2 - Database Integration - **In Progress** (Ritesh)
 
 ### FR02 - AI-Powered Email Summarization
-**Status**: Completed
+- [ ] **Status**: Completed, pending other model integrations
+
 **Owner**: Joseph
 - Automatic generation of concise email summaries (1-2 sentences) and key topics
 - Integration with LLM for high-quality summarization
@@ -42,7 +43,8 @@ solidify MVP requirements → move to FC where applicable
 - Summaries are displayed in the inbox list view with key points visible at a glance
 
 ### FR03 - Minimal Web Interface
-**Status**: In Progress
+- [ ] **Status**: In Progress
+
 **Owner**: Shayan, Emma
 - Implementation of core UI components and layout
 - React-based frontend architecture
@@ -50,33 +52,34 @@ solidify MVP requirements → move to FC where applicable
 **User Story**: As a user, I want to see an overview of my inbox and manage my preferences so that I can efficiently handle my emails.
 
 #### Dashboard (FR03.1):
-- FR03.1.1 - Email List - **In Progress**
-- FR03.1.2 - Miniview - **In Progress**
+- [ ] FR03.1.1 - Email List - **In Progress**
+- [ ] FR03.1.2 - Miniview - **In Progress**
 
 **Acceptance Criteria**: The dashboard displays a list of emails with sender information and timestamps.
 
 #### Inbox View (FR03.2):
-- FR03.2.1 - Email Entry Component - **In Progress**
-- FR03.2.2 - Inbox Box - **In Progress**
-- FR03.2.3 - Email Component - **In Progress**
-- FR03.2.4 - Reader View - **In Progress**
+- [ ] FR03.2.1 - Email Entry Component - **In Progress**
+- [ ] FR03.2.2 - Inbox Box - **In Progress**
+- [ ] FR03.2.3 - Email Component - **In Progress**
+- [ ] FR03.2.4 - Reader View - **In Progress**
 
 **Acceptance Criteria**: The system displays emails in a simplified format when opened, removing extraneous formatting.
 
 #### Navigation (FR03.3):
-- FR03.3.1 - Logo Button - **In Progress**
-- FR03.3.2 - Inbox Button - **In Progress**
-- FR03.3.3 - Settings Button - **In Progress**
+- [ ] FR03.3.1 - Logo Button - **In Progress**
+- [ ] FR03.3.2 - Inbox Button - **In Progress**
+- [ ] FR03.3.3 - Settings Button - **In Progress**
 
 #### Settings Interface (FR03.4):
-- FR03.4.1 - Summaries Toggle - **In Progress**
-- FR03.4.2 - Email Fetch Interval - **In Progress**
-- FR03.4.3 - Theme Selector - **In Progress**
+- [ ] FR03.4.1 - Summaries Toggle - **In Progress**
+- [ ] FR03.4.2 - Email Fetch Interval - **In Progress**
+- [ ] FR03.4.3 - Theme Selector - **In Progress**
 
 **Acceptance Criteria**: Users can modify preferences including email fetch frequency, ?summary generation settings, and ?theme through the settings interface.
 
 ### FR06 - OAuth 2.0 Authentication
-**Status**: Completed (Part of FR01) pending integration with user management
+- [ ] **Status**: Completed (Part of FR01) pending integration with user management
+
 **Owner**: Joseph
 - Secure integration with external email services
 - Protection of user credentials
@@ -88,10 +91,12 @@ solidify MVP requirements → move to FC where applicable
 
 ## Post-MVP Requirements
 `Completion → ?June 7th 2025?; ahead of MidQ Presentation`
+
 `Full test coverage→ ?June 14th 2025?; ahead of FinalQ Presentation`
 ### FR01.3 -> 1.4 Email/Summary Caching
-**Status**: In Progress
-**Owner**: Ritesh Joseph
+- [ ] **Status**: In Progress
+
+**Owner**: Ritesh, Joseph
 - Redis caching implementation for performance optimization
 
 #### Sub-requirements:
@@ -101,6 +106,7 @@ solidify MVP requirements → move to FC where applicable
 
 ### FR04 - Extended Web Interface
 **Status**: Not Started
+
 **Owner**: Shayan, Emma
 - More dynamic, modular dashboard
 - Customizable inbox views
@@ -115,6 +121,7 @@ solidify MVP requirements → move to FC where applicable
 
 ### FR05 - Keyword Analysis
 **Status**: Not Started
+
 **Owner**:  Ritesh / Joseph
 - Implementation of NLP-based keyword extraction
 - Highlight key phrases and topics within emails
@@ -126,6 +133,7 @@ solidify MVP requirements → move to FC where applicable
 
 ### FR07 - Cross-Platform Desktop Support
 **Status**: Not Started
+
 **Owner**: Shayan, Emma
 - Tauri-based desktop application development
 - Ensure feature parity with web version
