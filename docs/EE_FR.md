@@ -8,8 +8,8 @@ solidify MVP requirements → move to FC where applicable
 - email weights
 
 ## MVP
-Completion → February 17th 2025; ahead of MidQ Presentation
-Full test coverage→ March 21st 2025; ahead of FinalQ Presentation
+`Completion → February 17th 2025; ahead of MidQ Presentation`
+`Full test coverage→ March 21st 2025; ahead of FinalQ Presentation`
 
 ### FR01 - Email Retrieval System
 **Status**: Completed
@@ -26,8 +26,6 @@ Full test coverage→ March 21st 2025; ahead of FinalQ Presentation
 #### Sub-requirements:
 - FR01.1 - Database Setup (MongoDB) - **Completed**
 - FR01.2 - Database Integration - **In Progress**
-- !! FR01.3 - Caching Setup (Redis) - **Not Started**
-- !! FR01.4 - Caching Integration - **Not Started**
 
 ### FR02 - AI-Powered Email Summarization
 **Status**: Completed
@@ -35,7 +33,7 @@ Full test coverage→ March 21st 2025; ahead of FinalQ Presentation
 - Automatic generation of concise email summaries (1-2 sentences) and key topics
 - Integration with LLM for high-quality summarization
 - Summaries displayed in inbox list view
-- Current implementation uses OpenAI with an abstraction in place to support other models including a local model
+- Current implementation uses OpenAI with an abstraction layer in place to support other models including a local model
 
 **User Story**: As a user I want my emails summarized using AI, so that I can quickly understand important information without needing to read the full email.
 
@@ -52,7 +50,7 @@ Full test coverage→ March 21st 2025; ahead of FinalQ Presentation
 **User Story**: As a user, I want to see an overview of my inbox and manage my preferences so that I can efficiently handle my emails.
 
 #### Dashboard (FR03.1):
-- !! FR03.1.1 - Weighted Email List - **In Progress**
+- FR03.1.1 - Email List - **In Progress**
 - FR03.1.2 - Miniview - **In Progress**
 
 **Acceptance Criteria**: The dashboard displays a list of emails with sender information and timestamps.
@@ -75,10 +73,10 @@ Full test coverage→ March 21st 2025; ahead of FinalQ Presentation
 - FR03.4.2 - Email Fetch Interval - **In Progress**
 - FR03.4.3 - Theme Selector - **In Progress**
 
-**Acceptance Criteria**: Users can modify preferences including email fetch frequency, summary generation settings, and theme through the settings interface.
+**Acceptance Criteria**: Users can modify preferences including email fetch frequency, ?summary generation settings, and ?theme through the settings interface.
 
 ### FR06 - OAuth 2.0 Authentication
-**Status**: Completed (Part of FR01)
+**Status**: Completed (Part of FR01) pending integration with user management
 **Owner**: Joseph
 - Secure integration with external email services
 - Protection of user credentials
@@ -89,6 +87,17 @@ Full test coverage→ March 21st 2025; ahead of FinalQ Presentation
 **Acceptance Criteria**: The system uses OAuth 2.0 to authenticate users and access their email data securely.
 
 ## Post-MVP Requirements
+`Completion → ?June 7th 2025?; ahead of MidQ Presentation`
+`Full test coverage→ ?June 14th 2025?; ahead of FinalQ Presentation`
+### FR01.3 -> 1.4 Email/Summary Caching
+**Status**: In Progress
+**Owner**: Ritesh Joseph
+- Redis caching implementation for performance optimization
+
+#### Sub-requirements:
+- FR01.3 - Caching Setup (Redis) - **Not Started**
+- FR01.4 - Caching Integration - **Not Started**
+
 
 ### FR04 - Extended Web Interface
 **Status**: Not Started
@@ -96,6 +105,7 @@ Full test coverage→ March 21st 2025; ahead of FinalQ Presentation
 - More dynamic, modular dashboard
 - Customizable inbox views
 - Advanced user settings and preferences
+- Weighted Email List (FR05)
 
 **User Story**: As a user, I want to customize my dashboard view by organizing emails based on importance, categories, or tags.
 
@@ -105,7 +115,7 @@ Full test coverage→ March 21st 2025; ahead of FinalQ Presentation
 
 ### FR05 - Keyword Analysis
 **Status**: Not Started
-**Owner**: Joseph
+**Owner**:  Ritesh / Joseph
 - Implementation of NLP-based keyword extraction
 - Highlight key phrases and topics within emails
 - Integration with summary generation system
@@ -129,9 +139,25 @@ Full test coverage→ March 21st 2025; ahead of FinalQ Presentation
 - No test results available for any components
 - Test implementation is in progress for React components
 - Backend testing framework is being established
+#### Frontend Testing Coverage
+|Classification | Test Coverage |
+|-------|---------------|
+
+#### Backend Testing Coverage
+|Module | Test Coverage |
+|-------|---------------|
+|Email Routes | 0% |
+|Summary Routes | 0% |
+|Auth Routes | 0% |
+|User Routes | 0% |
+|Email Service | 0% |
+|Summary Service | 0% |
+|Auth Service | 0% |
+|User Service | 0% |
+
 
 ## Notes
-- All frontend components are individually tested using React testing framework
+- All frontend components are individually tested
 - Backend components require persistent storage implementation
 - Initial deployment will focus on web interface before desktop support
-- Local LLM implementation is being explored as an alternative to OpenAI
+- Local LLM implementation is being explored as an alternative to paid APIs
