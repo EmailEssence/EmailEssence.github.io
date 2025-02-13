@@ -13,6 +13,7 @@ export default function Page() {
   const [placeholder, setPlaceholder] = useState("80px");
   const [loggedIn, setLoggedIn] = useState(false);
   const [currentPage, setCurrentPage] = useState("login");
+  const [curEmail, setCurEmail] = useState(emailsByDate[0]);
   const gridTempCol = `${placeholder} 1fr`;
 
   const handleLogin = () => {
@@ -28,10 +29,20 @@ export default function Page() {
     showPage === pageName ? setShowPage("dashboard") : setShowPage(pageName);
   };
 
+  const handleSetCurEmail = (email) => {
+    setCurEmail(email);
+  };
+
   const getPage = () => {
     switch (showPage) {
       case "inbox":
-        return <Inbox emailList={emailsByDate} />;
+        return (
+          <Inbox
+            emailList={emailsByDate}
+            setCurEmail={handleSetCurEmail}
+            curEmail={curEmail}
+          />
+        );
       case "settings":
         return <Settings />;
       default:

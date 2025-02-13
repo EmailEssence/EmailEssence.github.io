@@ -2,27 +2,14 @@
 import "./emailDisplay.css";
 import "./emailEntry.css";
 import "./emailList.css";
-import { useState } from "react";
 
-const getDate = (date) => {
-  return `${date[1]}/${date[2]}/${date[0]}`;
-};
-
-const getSenderName = (sender) => {
-  return sender.slice(0, sender.indexOf("<"));
-};
-
-export default function Inbox({ emailList }) {
-  const [curEmail, setCurEmail] = useState(emailList[0]);
-  const handleClick = (email) => {
-    setCurEmail(email);
-  };
+export default function Inbox({ emailList, setCurEmail, curEmail }) {
   return (
     <div className="inbox-display">
       <InboxEmailList
         emailList={emailList}
         curEmail={curEmail}
-        onClick={handleClick}
+        onClick={setCurEmail}
       />
       <EmailDisplay key={curEmail} curEmail={curEmail} />
     </div>
@@ -110,3 +97,11 @@ function EmailDisplay({ curEmail }) {
 function ReaderView({ curEmail }) {
   return <div></div>;
 }
+
+const getDate = (date) => {
+  return `${date[1]}/${date[2]}/${date[0]}`;
+};
+
+const getSenderName = (sender) => {
+  return sender.slice(0, sender.indexOf("<"));
+};
