@@ -14,7 +14,11 @@ export default function Dashboard({
 }) {
   return (
     <div className="dashboard">
-      <WeightedEmailList emailList={emailList} setCurEmail={setCurEmail} />
+      <WeightedEmailList
+        emailList={emailList}
+        setCurEmail={setCurEmail}
+        handlePageChange={handlePageChange}
+      />
       <MiniViewPanel
         emailList={emailList}
         handlePageChange={handlePageChange}
@@ -24,7 +28,7 @@ export default function Dashboard({
   );
 }
 
-function WeightedEmailList({ emailList, setCurEmail }) {
+function WeightedEmailList({ emailList, setCurEmail, handlePageChange }) {
   const emails = () => {
     const returnBlock = [];
     for (let i = 0; i < 5; i++) {
@@ -33,6 +37,7 @@ function WeightedEmailList({ emailList, setCurEmail }) {
           key={emailList[i].email_id}
           email={emailList[i]}
           setCurEmail={setCurEmail}
+          handlePageChange={handlePageChange}
         />
       );
     }
@@ -41,11 +46,17 @@ function WeightedEmailList({ emailList, setCurEmail }) {
   return <div className="weighted-email-list-container">{emails()}</div>;
 }
 
-function WEListEmail({ email, setCurEmail }) {
+function WEListEmail({ email, setCurEmail, handlePageChange }) {
   return (
     <div className="welist-email-container">
       <div className="summary">{email.summary_text}</div>
-      <div className="email-link" onClick={() => setCurEmail(email)}></div>
+      <div
+        className="email-link"
+        onClick={() => {
+          setCurEmail(email);
+          handlePageChange("inbox");
+        }}
+      ></div>
     </div>
   );
 }
@@ -54,7 +65,11 @@ function MiniViewPanel({ emailList, handlePageChange, setCurEmail }) {
   return (
     <div className="mini-view">
       <MiniViewHead handlePageChange={handlePageChange} />
-      <MiniViewBody emailList={emailList} setCurEmail={setCurEmail} />
+      <MiniViewBody
+        emailList={emailList}
+        setCurEmail={setCurEmail}
+        handlePageChange={handlePageChange}
+      />
     </div>
   );
 }
@@ -73,7 +88,7 @@ function MiniViewHead({ handlePageChange }) {
   );
 }
 
-function MiniViewBody({ emailList, setCurEmail }) {
+function MiniViewBody({ emailList, setCurEmail, handlePageChange }) {
   const emails = () => {
     const returnBlock = [];
     for (const email of emailList) {
@@ -82,6 +97,7 @@ function MiniViewBody({ emailList, setCurEmail }) {
           key={email.email_id}
           email={email}
           setCurEmail={setCurEmail}
+          handlePageChange={handlePageChange}
         />
       );
     }
@@ -90,11 +106,14 @@ function MiniViewBody({ emailList, setCurEmail }) {
   return <div className="body-container">{emails()}</div>;
 }
 
-function MiniViewEmail({ email, setCurEmail }) {
+function MiniViewEmail({ email, setCurEmail, handlePageChange }) {
   return (
     <div
       className="miniview-email-container"
-      onClick={() => setCurEmail(email)}
+      onClick={() => {
+        setCurEmail(email);
+        handlePageChange("inbox");
+      }}
     >
       <div className="from">{getSenderName(email.sender)}</div>
       <div className="median">
