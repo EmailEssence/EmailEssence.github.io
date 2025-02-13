@@ -7,24 +7,33 @@ const getSenderName = (sender) => {
   return sender.slice(0, sender.indexOf("<"));
 };
 
-export default function Dashboard({ emailList, handlePageChange }) {
+export default function Dashboard({
+  emailList,
+  handlePageChange,
+  setCurEmail,
+}) {
   return (
     <div className="dashboard">
-      <WeightedEmailList emailList={emailList} />
+      <WeightedEmailList emailList={emailList} setCurEmail={setCurEmail} />
       <MiniViewPanel
         emailList={emailList}
         handlePageChange={handlePageChange}
+        setCurEmail={setCurEmail}
       />
     </div>
   );
 }
 
-function WeightedEmailList({ emailList }) {
+function WeightedEmailList({ emailList, setCurEmail }) {
   const emails = () => {
     const returnBlock = [];
     for (let i = 0; i < 5; i++) {
       returnBlock.push(
-        <WEListEmail key={emailList[i].email_id} email={emailList[i]} />
+        <WEListEmail
+          key={emailList[i].email_id}
+          email={emailList[i]}
+          setCurEmail={setCurEmail}
+        />
       );
     }
     return returnBlock;
@@ -32,20 +41,20 @@ function WeightedEmailList({ emailList }) {
   return <div className="weighted-email-list-container">{emails()}</div>;
 }
 
-function WEListEmail({ email }) {
+function WEListEmail({ email, setCurEmail }) {
   return (
     <div className="welist-email-container">
       <div className="summary">{email.summary_text}</div>
-      <div className="email-link"></div>
+      <div className="email-link" onClick={() => setCurEmail(email)}></div>
     </div>
   );
 }
 
-function MiniViewPanel({ emailList, handlePageChange }) {
+function MiniViewPanel({ emailList, handlePageChange, setCurEmail }) {
   return (
     <div className="mini-view">
       <MiniViewHead handlePageChange={handlePageChange} />
-      <MiniViewBody emailList={emailList} />
+      <MiniViewBody emailList={emailList} setCurEmail={setCurEmail} />
     </div>
   );
 }
@@ -64,20 +73,29 @@ function MiniViewHead({ handlePageChange }) {
   );
 }
 
-function MiniViewBody({ emailList }) {
+function MiniViewBody({ emailList, setCurEmail }) {
   const emails = () => {
     const returnBlock = [];
     for (const email of emailList) {
-      returnBlock.push(<MiniViewEmail key={email.email_id} email={email} />);
+      returnBlock.push(
+        <MiniViewEmail
+          key={email.email_id}
+          email={email}
+          setCurEmail={setCurEmail}
+        />
+      );
     }
     return returnBlock;
   };
   return <div className="body-container">{emails()}</div>;
 }
 
-function MiniViewEmail({ email }) {
+function MiniViewEmail({ email, setCurEmail }) {
   return (
-    <div className="miniview-email-container">
+    <div
+      className="miniview-email-container"
+      onClick={() => setCurEmail(email)}
+    >
       <div className="from">{getSenderName(email.sender)}</div>
       <div className="median">
         <div className="medianfill"></div>

@@ -30,6 +30,7 @@ export default function Page() {
   };
 
   const handleSetCurEmail = (email) => {
+    console.log("setting cur email to ");
     setCurEmail(email);
   };
 
@@ -50,6 +51,7 @@ export default function Page() {
           <Dashboard
             emailList={emailsByDate}
             handlePageChange={handlePageChange}
+            setCurEmail={handleSetCurEmail}
           />
         );
     }
