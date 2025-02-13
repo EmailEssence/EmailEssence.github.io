@@ -8,6 +8,7 @@ from database import db
 from datetime import datetime
 from app.services.auth_service import get_credentials
 from fastapi import HTTPException, status
+import pymongo
 
 from starlette.concurrency import run_in_threadpool
 
@@ -110,6 +111,8 @@ def fetch_from_imap(token: str, email_account: str):
             email_data = parse_email_message(uid, email_message, body)
 
             # Store email in MongoDB if it doesn't exist
+            client = pymongo.MongoClient("mongodb+srv://riteshsamal:Emailmongo@emailsummarization.1coye.mongodb.net/")
+            db = client.email_system
             existing_email = db.emails.find_one({"email_id": str(uid)})
             if not existing_email:
                 db.emails.insert_one(email_data)
@@ -118,6 +121,7 @@ def fetch_from_imap(token: str, email_account: str):
 
         return emails
 
+
 async def fetch_emails():
     try:
         # Check if emails exist in MongoDB first
@@ -125,7 +129,6 @@ async def fetch_emails():
         if stored_emails:
             return stored_emails
 
-        # If MongoDB is empty, fetch from IMAP and store them
         token = await get_auth_token()
         email_account = os.getenv('EMAIL_ACCOUNT')
         if not email_account:
