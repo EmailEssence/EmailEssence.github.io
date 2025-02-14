@@ -44,6 +44,12 @@
 
 .email-display .content-container {
   height: 100%;
+  max-height: calc(100vh - 11rem);
+  /* does not work when sidebar extended */
+  max-width: calc(100vw - 80px - 31.5rem);
+  overflow: auto;
+  overflow-y: scroll;
+  word-wrap: break-word;
   border-radius: 1rem;
   border: 2px solid #d9d9d9;
   padding: 2rem 4rem;
