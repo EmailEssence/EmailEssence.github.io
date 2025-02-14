@@ -8,7 +8,6 @@ from database import db
 from datetime import datetime
 from app.services.auth_service import get_credentials
 from fastapi import HTTPException, status
-import pymongo
 
 from starlette.concurrency import run_in_threadpool
 
@@ -93,6 +92,7 @@ def fetch_from_imap(token: str, email_account: str):
         messages = server.search('ALL')
 
         emails = []
+        
         for uid in messages:
             raw_message = server.fetch(uid, ['RFC822'])[uid][b'RFC822']
             email_message = email.message_from_bytes(raw_message)
@@ -111,22 +111,32 @@ def fetch_from_imap(token: str, email_account: str):
             email_data = parse_email_message(uid, email_message, body)
 
             # Store email in MongoDB if it doesn't exist
-            client = pymongo.MongoClient("mongodb+srv://riteshsamal:Emailmongo@emailsummarization.1coye.mongodb.net/")
-            db = client.email_system
-            existing_email = db.emails.find_one({"email_id": str(uid)})
-            if not existing_email:
-                db.emails.insert_one(email_data)
-
             emails.append(email_data)
 
         return emails
 
+async def store_mongo(email_data, uid):
+    """Store email in MongoDB asynchronously if it does not already exist"""
+    try:
+        print(f"🔍 Checking if email {uid} already exists in MongoDB...")
+        existing_email = await db.emails.find_one({"email_id": str(uid)})  # ✅ Needs await
+
+        if existing_email:
+            print(f"⚠️ Email {uid} already exists, skipping insert.")
+        else:
+            print(f"📌 Inserting email {uid} into MongoDB...")
+            result = await db.emails.insert_one(email_data)  # ✅ Needs await
+            print(f"✅ Email {uid} inserted successfully with ID: {result.inserted_id}")
+
+    except Exception as e:
+        print(f"❌ Error inserting email {uid} into MongoDB: {e}")
 
 async def fetch_emails():
     try:
         # Check if emails exist in MongoDB first
         stored_emails = await db.emails.find().to_list(100)
         if stored_emails:
+            print(f"✅ Returning {len(stored_emails)} stored emails from MongoDB")
             return stored_emails
 
         token = await get_auth_token()
@@ -136,9 +146,16 @@ async def fetch_emails():
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Email account not configured"
             )
-        
-        emails = await run_in_threadpool(lambda: fetch_from_imap(token, email_account))
+
+        # ✅ Run fetch_from_imap() in a threadpool (since it's sync)
+        emails = await run_in_threadpool(fetch_from_imap, token, email_account)
+
+        # ✅ Now insert emails asynchronously into MongoDB
+        for email_data in emails:
+            await store_mongo(email_data, email_data["email_id"])
+
         return emails
+
     except Exception as e:
         if isinstance(e, HTTPException):
             raise e
