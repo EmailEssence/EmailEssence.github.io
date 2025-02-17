@@ -1,7 +1,7 @@
 //import emails from "./retrieve_emails_response.json";
 //import summaries from "./summarize_email_response.json";
 
-const baseUrl = "";
+export const baseUrl = "";
 
 async function getAllEmails() {
   try {

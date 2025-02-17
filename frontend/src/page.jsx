@@ -6,6 +6,7 @@ import Register from "./components/register/register";
 import { Settings } from "./components/settings/settings";
 import SideBar from "./components/sidebar/sidebar";
 import emailsByDate from "./emails/emailParse";
+import { markEmailAsRead } from "./emails/emailHandler";
 import "./page.css";
 
 export default function Page() {
@@ -30,8 +31,8 @@ export default function Page() {
   };
 
   const handleSetCurEmail = (email) => {
-    console.log("setting cur email to ");
     setCurEmail(email);
+    if (!email.is_read) markEmailAsRead(email);
   };
 
   const getPage = () => {
