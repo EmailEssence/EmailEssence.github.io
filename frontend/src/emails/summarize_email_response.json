@@ -1,0 +1,433 @@
+[
+  {
+    "email_id": "1",
+    "summary_text": "A new sign-in to your Google Account on a Windows device has been detected; if it was not you, follow the provided link to secure your account.",
+    "keywords": [
+      "security alert",
+      "new sign-in",
+      "Google Account",
+      "Windows device",
+      "account security"
+    ],
+    "generated_at": "2025-02-05T22:57:22.491477Z"
+  },
+  {
+    "email_id": "2",
+    "summary_text": "Joseph sent a friendly email with an attached image.",
+    "keywords": [
+      "friendly communication",
+      "image attachment",
+      "Proton Mail",
+      "email exchange"
+    ],
+    "generated_at": "2025-02-05T22:57:22.491477Z"
+  },
+  {
+    "email_id": "3",
+    "summary_text": "Google has detected a new sign-in to your account from a Windows device and provides options to secure your account if this was not you.",
+    "keywords": [
+      "security alert",
+      "new sign-in",
+      "Google Account",
+      "Windows device",
+      "account security"
+    ],
+    "generated_at": "2025-02-05T22:57:22.491477Z"
+  },
+  {
+    "email_id": "4",
+    "summary_text": "Google welcomes EmailEssence to their services on a new PC and encourages reviewing account settings, using Google Chrome, and subscribing for personalized tips.",
+    "keywords": [
+      "Google Account settings",
+      "privacy and security",
+      "Google Chrome",
+      "personalized tips",
+      "new PC setup"
+    ],
+    "generated_at": "2025-02-05T22:57:22.491477Z"
+  },
+  {
+    "email_id": "6",
+    "summary_text": "MongoDB welcomes you and provides essential resources and steps to set up your first cluster.",
+    "keywords": [
+      "MongoDB",
+      "cluster setup",
+      "resources",
+      "user creation",
+      "sample datasets"
+    ],
+    "generated_at": "2025-02-05T22:57:22.491477Z"
+  },
+  {
+    "email_id": "7",
+    "summary_text": "MongoDB invites EmailEssence to explore various resources, including guides, tutorials, and courses, to get started with Python and MongoDB Atlas.",
+    "keywords": [
+      "MongoDB Atlas",
+      "Python resources",
+      "Quickstart guides",
+      "Tutorials",
+      "Online courses"
+    ],
+    "generated_at": "2025-02-05T22:57:22.491477Z"
+  },
+  {
+    "email_id": "9",
+    "summary_text": "Atlassian informs Emma Melkumian that her site is set up and ready for use, encouraging her to start building with it.",
+    "keywords": [
+      "Atlassian",
+      "site setup",
+      "team potential",
+      "password reset",
+      "support contact"
+    ],
+    "generated_at": "2025-02-05T22:57:22.491477Z"
+  },
+  {
+    "email_id": "10",
+    "summary_text": "Emma Melkumian has started a free 30-day trial of Jira Premium, which ends on February 5, 2025, and needs to add payment details to continue the subscription.",
+    "keywords": [
+      "Jira Premium trial",
+      "subscription details",
+      "payment information",
+      "trial period",
+      "Atlassian"
+    ],
+    "generated_at": "2025-02-05T22:57:22.491477Z"
+  },
+  {
+    "email_id": "11",
+    "summary_text": "You have started a 30-day trial of Jira Premium, which provides tools for planning and tracking cross-functional work.",
+    "keywords": [
+      "Jira Premium trial",
+      "planning tools",
+      "tracking work",
+      "create issues",
+      "team collaboration"
+    ],
+    "generated_at": "2025-02-05T22:57:22.491477Z"
+  },
+  {
+    "email_id": "12",
+    "summary_text": "ariaS has requested access to join Jira for team collaboration.",
+    "keywords": [
+      "ariaS",
+      "Jira",
+      "access request",
+      "team collaboration",
+      "Atlassian"
+    ],
+    "generated_at": "2025-02-05T22:57:22.491477Z"
+  },
+  {
+    "email_id": "13",
+    "summary_text": "Atlassian provides a link to create a top-level planning template in Jira to help teams coordinate efforts and track work across multiple projects.",
+    "keywords": [
+      "Jira",
+      "top-level planning",
+      "template",
+      "team coordination",
+      "project tracking"
+    ],
+    "generated_at": "2025-02-05T22:57:22.491477Z"
+  },
+  {
+    "email_id": "14",
+    "summary_text": "Joseph updated the SCRUM-7 issue regarding MVP Testing & Debugging.",
+    "keywords": [
+      "MVP Testing",
+      "Debugging",
+      "SCRUM-7",
+      "Update",
+      "Jira"
+    ],
+    "generated_at": "2025-02-05T22:57:22.491477Z"
+  },
+  {
+    "email_id": "15",
+    "summary_text": "Joseph has made two updates regarding the MVP Testing & Debugging task in JIRA, with a due date of February 11, 2025.",
+    "keywords": [
+      "MVP Testing",
+      "Debugging",
+      "JIRA Updates",
+      "SCRUM-7",
+      "Due Date"
+    ],
+    "generated_at": "2025-02-05T22:57:22.491477Z"
+  },
+  {
+    "email_id": "16",
+    "summary_text": "An update has been made to the SCRUM-12 Inbox in Jira.",
+    "keywords": [
+      "Jira",
+      "SCRUM-12",
+      "update",
+      "EmailEssence",
+      "Inbox"
+    ],
+    "generated_at": "2025-02-05T22:57:22.491477Z"
+  },
+  {
+    "email_id": "17",
+    "summary_text": "An update has been made to the SCRUM-30 Inbox in Jira by ariaS.",
+    "keywords": [
+      "Jira",
+      "SCRUM-30",
+      "update",
+      "Inbox",
+      "EmailEssence"
+    ],
+    "generated_at": "2025-02-05T22:57:22.491477Z"
+  },
+  {
+    "email_id": "18",
+    "summary_text": "Atlassian announces the availability of AI features in Jira Premium and Enterprise plans, encouraging users to activate AI to enhance productivity.",
+    "keywords": [
+      "Atlassian",
+      "AI features",
+      "Jira Premium",
+      "productivity",
+      "activation"
+    ],
+    "generated_at": "2025-02-05T22:57:22.491477Z"
+  },
+  {
+    "email_id": "19",
+    "summary_text": "Your Atlassian site is set up and ready for use, and you can reset your password if needed.",
+    "keywords": [
+      "Atlassian",
+      "site setup",
+      "password reset",
+      "team potential",
+      "support contact"
+    ],
+    "generated_at": "2025-02-05T22:57:22.491477Z"
+  },
+  {
+    "email_id": "20",
+    "summary_text": "The email welcomes the recipient to Jira and provides resources to help them get started with creating their first issue.",
+    "keywords": [
+      "Jira",
+      "Onboarding",
+      "Resources",
+      "Creating Issues",
+      "Atlassian"
+    ],
+    "generated_at": "2025-02-05T22:57:22.491477Z"
+  },
+  {
+    "email_id": "21",
+    "summary_text": "Atlassian encourages users to automate repetitive tasks in Jira by utilizing popular automation templates to improve efficiency.",
+    "keywords": [
+      "Jira",
+      "automation",
+      "task management",
+      "efficiency",
+      "templates"
+    ],
+    "generated_at": "2025-02-05T22:57:22.491477Z"
+  },
+  {
+    "email_id": "22",
+    "summary_text": "The email welcomes the recipient to Jira and provides links to resources for getting started, including creating their first issue.",
+    "keywords": [
+      "Jira",
+      "getting started",
+      "resources",
+      "create an issue",
+      "Atlassian University"
+    ],
+    "generated_at": "2025-02-05T22:57:22.491477Z"
+  },
+  {
+    "email_id": "23",
+    "summary_text": "A security alert was issued regarding a new sign-in to the Google Account emailessencellc@gmail.com on a Windows device, prompting the recipient to verify if it was authorized.",
+    "keywords": [
+      "security alert",
+      "new sign-in",
+      "Google Account",
+      "Windows device",
+      "account security"
+    ],
+    "generated_at": "2025-02-05T22:57:22.491477Z"
+  },
+  {
+    "email_id": "24",
+    "summary_text": "Atlassian reminds you that you are halfway through your Premium trial and encourages you to create your first plan in Jira to utilize its advanced planning features.",
+    "keywords": [
+      "Atlassian",
+      "Jira Premium trial",
+      "advanced planning capabilities",
+      "create plan",
+      "team alignment"
+    ],
+    "generated_at": "2025-02-05T22:57:22.491477Z"
+  },
+  {
+    "email_id": "25",
+    "summary_text": "Atlassian welcomes you to Jira and provides resources to help you get started by creating your first issue.",
+    "keywords": [
+      "Jira",
+      "Atlassian",
+      "getting started",
+      "resources",
+      "create issue"
+    ],
+    "generated_at": "2025-02-05T22:57:22.491477Z"
+  },
+  {
+    "email_id": "26",
+    "summary_text": "Atlassian invites users to create a project in Jira using pre-built templates for various types of work.",
+    "keywords": [
+      "Jira",
+      "project templates",
+      "Atlassian",
+      "software learning",
+      "user support"
+    ],
+    "generated_at": "2025-02-05T22:57:22.491477Z"
+  },
+  {
+    "email_id": "27",
+    "summary_text": "Atlassian invites you to invite your team to use Jira for enhanced collaboration and project management, with an option to integrate with Slack.",
+    "keywords": [
+      "Jira",
+      "team collaboration",
+      "Slack integration",
+      "project management",
+      "Atlassian"
+    ],
+    "generated_at": "2025-02-05T22:57:22.491477Z"
+  },
+  {
+    "email_id": "28",
+    "summary_text": "Your Atlassian site is set up and ready for use, encouraging you to start your project and providing links for password reset and support.",
+    "keywords": [
+      "Atlassian site setup",
+      "team potential",
+      "password reset",
+      "support contact",
+      "project initiation"
+    ],
+    "generated_at": "2025-02-05T22:57:22.491477Z"
+  },
+  {
+    "email_id": "29",
+    "summary_text": "Atlassian invites you to expand your projects using pre-configured Jira templates for easy setup.",
+    "keywords": [
+      "Jira",
+      "project management",
+      "templates",
+      "Atlassian",
+      "project setup"
+    ],
+    "generated_at": "2025-02-05T22:57:22.491477Z"
+  },
+  {
+    "email_id": "30",
+    "summary_text": "Atlassian provides three steps to customize Jira for better team collaboration: configuring issues, workflows, and inviting team members.",
+    "keywords": [
+      "Jira customization",
+      "team collaboration",
+      "configure issues",
+      "configure workflows",
+      "Atlassian Community"
+    ],
+    "generated_at": "2025-02-05T22:57:22.491477Z"
+  },
+  {
+    "email_id": "31",
+    "summary_text": "Atlassian promotes Jira automation features that simplify task management through drag-and-drop rules and pre-built templates.",
+    "keywords": [
+      "Jira automation",
+      "task management",
+      "pre-built templates",
+      "automation rules",
+      "Atlassian"
+    ],
+    "generated_at": "2025-02-05T22:57:22.491477Z"
+  },
+  {
+    "email_id": "32",
+    "summary_text": "Atlassian promotes Jira as a collaborative platform to enhance team alignment and communication for project management and DevOps practices.",
+    "keywords": [
+      "Atlassian",
+      "Jira",
+      "team collaboration",
+      "project management",
+      "DevOps"
+    ],
+    "generated_at": "2025-02-05T22:57:22.491477Z"
+  },
+  {
+    "email_id": "33",
+    "summary_text": "Your 30-day Jira Premium trial is ending soon, and you need to add payment details to retain access to Premium features.",
+    "keywords": [
+      "Jira Premium trial",
+      "payment details",
+      "subscription",
+      "features",
+      "downgrade"
+    ],
+    "generated_at": "2025-02-05T22:57:22.491477Z"
+  },
+  {
+    "email_id": "34",
+    "summary_text": "Atlassian encourages users to explore over 3,000 apps and integrations available on the Atlassian Marketplace to enhance productivity with Jira.",
+    "keywords": [
+      "Jira",
+      "integrations",
+      "Atlassian Marketplace",
+      "productivity",
+      "apps"
+    ],
+    "generated_at": "2025-02-05T22:57:22.491477Z"
+  },
+  {
+    "email_id": "35",
+    "summary_text": "Atlassian outlines three strategies to enhance your Jira experience through roadmaps, insights, and the Agile Coach.",
+    "keywords": [
+      "Jira",
+      "Agile practices",
+      "roadmaps",
+      "insights",
+      "Agile Coach"
+    ],
+    "generated_at": "2025-02-05T22:57:22.491477Z"
+  },
+  {
+    "email_id": "36",
+    "summary_text": "The email reminds the recipient to add payment details for their Jira Premium subscription before the trial ends on February 5, 2025, to avoid being moved to the Free plan or deactivated.",
+    "keywords": [
+      "Jira Premium",
+      "payment details",
+      "trial expiration",
+      "subscription",
+      "billing cycle"
+    ],
+    "generated_at": "2025-02-05T22:57:22.491477Z"
+  },
+  {
+    "email_id": "37",
+    "summary_text": "Google alerts the user of a new sign-in to their account on a Windows device and provides steps to secure the account if the sign-in was unauthorized.",
+    "keywords": [
+      "security alert",
+      "new sign-in",
+      "Google Account",
+      "Windows device",
+      "account security"
+    ],
+    "generated_at": "2025-02-05T22:57:22.491477Z"
+  },
+  {
+    "email_id": "38",
+    "summary_text": "Starting May 12, 2025, multi-factor authentication (MFA) will be mandatory for accessing Google Cloud console, gcloud CLI, and Firebase console.",
+    "keywords": [
+      "multi-factor authentication",
+      "2-Step Verification",
+      "Google Cloud",
+      "mandatory requirement",
+      "account security"
+    ],
+    "generated_at": "2025-02-05T22:57:22.491477Z"
+  }
+]

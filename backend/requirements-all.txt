@@ -34,8 +34,10 @@ colorama==0.4.6
     #   pytest
     #   sphinx
     #   tqdm
-coverage==7.6.10
+coverage==7.6.12
     # via pytest-cov
+datetime==5.5
+    # via email-essence (pyproject.toml)
 deprecated==1.2.18
     # via
     #   opentelemetry-api
@@ -106,7 +108,7 @@ markupsafe==3.0.2
     # via jinja2
 motor==3.7.0
     # via email-essence (pyproject.toml)
-mypy==1.14.1
+mypy==1.15.0
     # via email-essence (pyproject.toml)
 mypy-extensions==1.0.0
     # via
@@ -114,7 +116,7 @@ mypy-extensions==1.0.0
     #   mypy
 oauthlib==3.2.2
     # via requests-oauthlib
-openai==1.61.0
+openai==1.61.1
     # via email-essence (pyproject.toml)
 opentelemetry-api==1.30.0
     # via
@@ -156,11 +158,14 @@ pydantic==2.10.6
     #   email-essence (pyproject.toml)
     #   fastapi
     #   openai
+    #   pydantic-settings
 pydantic-core==2.27.2
     # via pydantic
+pydantic-settings==2.7.1
+    # via email-essence (pyproject.toml)
 pygments==2.19.1
     # via sphinx
-pymongo==4.11
+pymongo==4.11.1
     # via motor
 pyparsing==3.2.1
     # via httplib2
@@ -174,7 +179,11 @@ pytest-asyncio==0.25.3
 pytest-cov==6.0.0
     # via email-essence (pyproject.toml)
 python-dotenv==1.0.1
-    # via email-essence (pyproject.toml)
+    # via
+    #   email-essence (pyproject.toml)
+    #   pydantic-settings
+pytz==2025.1
+    # via datetime
 requests==2.32.3
     # via
     #   google-api-core
@@ -184,8 +193,10 @@ requests-oauthlib==2.0.0
     # via google-auth-oauthlib
 rsa==4.9
     # via google-auth
-ruff==0.9.4
+ruff==0.9.6
     # via email-essence (pyproject.toml)
+setuptools==75.8.0
+    # via zope-interface
 sniffio==1.3.1
     # via
     #   anyio
@@ -216,8 +227,12 @@ sphinxcontrib-serializinghtml==2.0.0
     # via sphinx
 starlette==0.45.3
     # via fastapi
+tenacity==9.0.0
+    # via email-essence (pyproject.toml)
 tqdm==4.67.1
     # via openai
+typing==3.10.0.0
+    # via email-essence (pyproject.toml)
 typing-extensions==4.12.2
     # via
     #   anyio
@@ -237,3 +252,5 @@ wrapt==1.17.2
     # via deprecated
 zipp==3.21.0
     # via importlib-metadata
+zope-interface==7.2
+    # via datetime
