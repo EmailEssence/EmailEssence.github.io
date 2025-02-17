@@ -1,5 +1,6 @@
 import os
 import email
+from typing import List, Optional
 import httpx
 import re
 from email.header import decode_header
@@ -7,7 +8,7 @@ from imapclient import IMAPClient
 from database import db
 from datetime import datetime
 from app.services.auth_service import get_credentials
-from fastapi import HTTPException, status
+from fastapi import HTTPException, status, Query
 
 from starlette.concurrency import run_in_threadpool
 
@@ -40,45 +41,138 @@ def clean_body(body: str) -> str:
     
     return body
 
-def parse_email_message(uid: int, email_message, raw_body: str) -> dict:
-    """Parse email message into schema-compliant format"""
-    # Decode email fields
-    subject, encoding = decode_header(email_message['Subject'])[0]
-    if isinstance(subject, bytes):
-        subject = subject.decode(encoding or 'utf-8', errors='ignore')
+def decode_email_field(field_value: Optional[str], default: str = '') -> str:
+    """
+    Safely decode email header fields with proper encoding handling.
     
-    from_, encoding = decode_header(email_message.get('From'))[0]
-    if isinstance(from_, bytes):
-        from_ = from_.decode(encoding or 'utf-8', errors='ignore')
+    Args:
+        field_value: Raw header field value
+        default: Default value if field is None
+        
+    Returns:
+        str: Decoded field value
+    """
+    if not field_value:
+        return default
+    
+    decoded, encoding = decode_header(field_value)[0]
+    if isinstance(decoded, bytes):
+        decoded = decoded.decode(encoding or 'utf-8', errors='ignore')
+    return decoded
+
+def extract_email_body(email_message: email.message.Message) -> str:
+    """
+    Extract email body with fallback content type handling.
+    
+    Args:
+        email_message: Email message object
+        
+    Returns:
+        str: Extracted and decoded email body
+    """
+    body = ""
+    if email_message.is_multipart():
+        # plaintext body
+        for part in email_message.walk():
+            if (part.get_content_type() == 'text/plain' and 
+                'attachment' not in str(part.get('Content-Disposition'))):
+                try:
+                    charset = part.get_content_charset() or 'utf-8'
+                    body = part.get_payload(decode=True).decode(charset, errors='replace')
+                    break
+                except Exception as e:
+                    print(f"Error decoding text/plain part: {e}")
+                    continue
+        # If no text/plain, try text/html
+        if not body:
+            for part in email_message.walk():
+                if (part.get_content_type() == 'text/html' and 
+                    'attachment' not in str(part.get('Content-Disposition'))):
+                    try:
+                        charset = part.get_content_charset() or 'utf-8'
+                        body = part.get_payload(decode=True).decode(charset, errors='replace')
+                        break
+                    except Exception as e:
+                        print(f"Error decoding text/html part: {e}")
+                        continue
+    else:
+        try:
+            charset = email_message.get_content_charset() or 'utf-8'
+            body = email_message.get_payload(decode=True).decode(charset, errors='replace')
+        except Exception as e:
+            print(f"Error decoding non-multipart message: {e}")
+            body = ""
+            
+    return clean_body(body)
+
+
+def parse_email_message(
+    uid: int,
+    email_message: email.message.Message,
+    body: str,
+    received_date: datetime,
+    user_id: str = 'default'
+) -> dict:
+    """
+    Parse email message into schema-compliant format.
+    
+    Args:
+        uid: Email UID
+        email_message: Email message object
+        body: Extracted email body
+        received_date: Server-provided received date
+        user_id: User ID for the email owner
+        
+    Returns:
+        dict: Parsed email data matching EmailSchema
+    """
+    # Decode header fields
+    subject = decode_email_field(email_message.get('Subject'))
+    from_ = decode_email_field(email_message.get('From'))
     
     # Parse recipients
-    to_field = email_message.get('To', '')
-    if to_field:
-        to_decoded, encoding = decode_header(to_field)[0]
-        if isinstance(to_decoded, bytes):
-            to_decoded = to_decoded.decode(encoding or 'utf-8', errors='ignore')
-        recipients = [addr.strip() for addr in to_decoded.split(',')]
-    else:
-        recipients = []
-
-    # Clean and process the body
-    clean_body_text = clean_body(raw_body)
+    to_field = decode_email_field(email_message.get('To'))
+    recipients = [addr.strip() for addr in to_field.split(',')] if to_field else []
 
     return {
-        'user_id': 'default',  # You should get this from authentication
+        'user_id': user_id,
         'email_id': str(uid),
         'sender': from_,
         'recipients': recipients,
-        'subject': subject or '',
-        'body': clean_body_text,
-        'received_at': datetime.now(),
+        'subject': subject,
+        'body': body,
+        'received_at': received_date,
         'category': 'uncategorized',
         'is_read': False
     }
 
-def fetch_from_imap(token: str, email_account: str):
-    imap_host = 'imap.gmail.com'
+def fetch_from_imap(
+    token: str,
+    email_account: str,
+    user_id: str = 'default',
+    limit: Optional[int] = None,
+    since_date: Optional[datetime] = None,
+    folder: str = 'INBOX',
+    criteria: str = 'ALL'
+) -> List[dict]:
+    """
+    Fetch emails from an IMAP server with support for pagination and date filtering.
     
+    Args:
+        token (str): OAuth2 token for authentication
+        email_account (str): Email account to fetch from
+        limit (Optional[int]): Maximum number of emails to fetch
+        since_date (Optional[datetime]): Only fetch emails received after this date
+        folder (str): IMAP folder to fetch from (default: 'INBOX')
+        criteria (str): IMAP search criteria (default: 'ALL')
+        
+    Returns:
+        List[dict]: List of fetched emails in schema-compliant format
+        
+    Raises:
+        Exception: If authentication or fetching fails
+    """
+    imap_host = 'imap.gmail.com'
     with IMAPClient(imap_host, use_uid=True, ssl=True) as server:
         try:
             server.oauth2_login(email_account, token)
@@ -88,44 +182,86 @@ def fetch_from_imap(token: str, email_account: str):
                 print(f"Additional error info: {e.args}")
             raise
 
-        server.select_folder('INBOX')
-        messages = server.search('ALL')
+        server.select_folder(folder)
+
+        # Build search criteria
+        search_criteria = [criteria]
+        if since_date:
+            # Convert to IMAP date format and add to criteria
+            date_str = since_date.strftime('%d-%b-%Y')
+            search_criteria.extend(['SINCE', date_str])        
+
+        messages = server.search(search_criteria)
+
+        # Apply limit if specified
+        if limit:
+            messages = messages[-limit:] # up to limit
 
         emails = []
+        
         for uid in messages:
-            raw_message = server.fetch(uid, ['RFC822'])[uid][b'RFC822']
-            email_message = email.message_from_bytes(raw_message)
-
-            # Get email body
-            body = ""
-            if email_message.is_multipart():
-                for part in email_message.walk():
-                    if part.get_content_type() == 'text/plain' and 'attachment' not in str(part.get('Content-Disposition')):
-                        body = part.get_payload(decode=True).decode(part.get_content_charset() or 'utf-8', errors='replace')
-                        break
-            else:
-                body = email_message.get_payload(decode=True).decode(email_message.get_content_charset() or 'utf-8', errors='replace')
-
-            # Parse into schema-compliant format
-            email_data = parse_email_message(uid, email_message, body)
-
-            # Store email in MongoDB if it doesn't exist
-            existing_email = db.emails.find_one({"email_id": str(uid)})
-            if not existing_email:
-                db.emails.insert_one(email_data)
-
-            emails.append(email_data)
+            try:
+                # Fetch both RFC822 and INTERNALDATE
+                fetch_data = server.fetch(uid, ['RFC822', 'INTERNALDATE'])
+                raw_message = fetch_data[uid][b'RFC822']
+                received_date = fetch_data[uid][b'INTERNALDATE']
+                
+                email_message = email.message_from_bytes(raw_message)
+                
+                # Extract and clean body
+                body = extract_email_body(email_message)
+                
+                # Parse into schema-compliant format
+                email_data = parse_email_message(
+                    uid=uid,
+                    email_message=email_message,
+                    body=body,
+                    received_date=received_date,
+                    user_id=user_id
+                )
+                
+                emails.append(email_data)
+                
+            except Exception as e:
+                print(f"Error processing email {uid}: {e}")
+                continue
 
         return emails
 
-async def fetch_emails():
+async def save_email_to_db(email_data, uid):
+    """Store email in Database asynchronously if it does not already exist"""
     try:
-        # Check if emails exist in MongoDB first
+        print(f"🔍 Checking if email {uid} already exists in MongoDB...")
+        existing_email = await db.emails.find_one({"email_id": str(uid)})  # ✅ Needs await
+
+        if existing_email:
+            print(f"⚠️ Email {uid} already exists, skipping insert.")
+        else:
+            print(f"📌 Inserting email {uid} into MongoDB...")
+            result = await db.emails.insert_one(email_data)  # ✅ Needs await
+            print(f"✅ Email {uid} inserted successfully with ID: {result.inserted_id}")
+
+    except Exception as e:
+        print(f"❌ Error inserting email {uid} into MongoDB: {e}")
+
+async def get_emails_from_db():
         stored_emails = await db.emails.find().to_list(100)
         if stored_emails:
+            print(f"✅ Returning {len(stored_emails)} stored emails from MongoDB")
             return stored_emails
 
-        # If MongoDB is empty, fetch from IMAP and store them
+
+async def fetch_emails():
+    try:
+        # Fetch 1 email from imap
+        # compare with 1st email in db
+        # if not equal, fetch next n emails
+        stored_emails=get_emails_from_db()
+        if(stored_emails):
+            latest_email = await db.emails.find_one(sort=[("_id", -1)])
+            
+                        
+ 
         token = await get_auth_token()
         email_account = os.getenv('EMAIL_ACCOUNT')
         if not email_account:
@@ -133,9 +269,16 @@ async def fetch_emails():
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Email account not configured"
             )
-        
-        emails = await run_in_threadpool(lambda: fetch_from_imap(token, email_account))
+
+        # ✅ Run fetch_from_imap() in a threadpool (since it's sync)
+        emails = await run_in_threadpool(fetch_from_imap, token, email_account)
+
+        # ✅ Now insert emails asynchronously into MongoDB
+        for email_data in emails:
+            await save_email_to_db(email_data, email_data["email_id"])
+
         return emails
+
     except Exception as e:
         if isinstance(e, HTTPException):
             raise e
