@@ -1,5 +1,36 @@
-import emails from "./retrieve_emails_response.json";
-import summaries from "./summarize_email_response.json";
+//import emails from "./retrieve_emails_response.json";
+//import summaries from "./summarize_email_response.json";
+
+const baseUrl = "";
+
+async function getAllEmails() {
+  try {
+    const response = await fetch(baseUrl);
+    if (!response.ok) {
+      throw new Error(`Failed to retrieve emails: ${response.statusText}`);
+    }
+    const emails = await response.json();
+    return emails;
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+async function getAllSummaries() {
+  try {
+    const response = await fetch(baseUrl);
+    if (!response.ok) {
+      throw new Error(`Failed to retrieve summaries: ${response.statusText}`);
+    }
+    const summaries = await response.json();
+    return summaries;
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+const emails = getAllEmails();
+const summaries = getAllSummaries();
 
 let arr1 = JSON.parse(JSON.stringify(emails));
 const arr2 = JSON.parse(JSON.stringify(summaries));
