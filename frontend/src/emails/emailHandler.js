@@ -1,6 +1,6 @@
 import { baseUrl } from "./emailParse";
 
-export default async function markEmailAsRead(emailId) {
+export async function markEmailAsRead(emailId) {
   try {
     const response = await fetch(`${baseUrl}/${emailId}/read`, {
       method: "PUT",
