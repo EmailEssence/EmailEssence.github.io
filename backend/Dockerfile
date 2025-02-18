@@ -1,18 +1,27 @@
 # Builder stage
 FROM python:3.12-slim-bookworm AS builder
 
-WORKDIR /app/backend
+# Install uv (using the recommended copy method)
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
 
-# Copy only necessary backend files (relative to /backend)
-COPY pyproject.toml requirements.txt requirements-dev.txt requirements-all.txt README.md /app/backend/
-COPY app /app/backend/app
-COPY main.py config.py database.py /app/backend/
+WORKDIR /app
 
-# Install uv package manager
-RUN pip install uv
+# Copy ONLY the requirements files first
+COPY backend/pyproject.toml backend/requirements*.txt ./
 
-# Install dependencies using uv
-RUN uv pip install --system -r requirements.txt .
+# Create a virtual environment
+RUN uv venv
+
+# Install dependencies into the virtual environment
+RUN --mount=type=cache,target=/root/.cache/uv \
+    . .venv/bin/activate && uv pip install -r requirements.txt
+
+# Copy the rest of the project
+COPY backend/ ./
+
+# Install the project itself into the virtual environment
+RUN --mount=type=cache,target=/root/.cache/uv \
+    . .venv/bin/activate && uv pip install .
 
 # Runner stage
 FROM python:3.12-slim-bookworm
@@ -22,11 +31,15 @@ WORKDIR /app
 # Create a non-root user and group
 RUN addgroup --system nonroot && adduser --system --ingroup nonroot nonroot
 
-# Copy installed packages from builder stage
-COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
+# Copy the virtual environment from the builder stage
+COPY --from=builder /app/.venv /app/.venv
 
-# Copy the backend application code
-COPY --from=builder /app/backend .
+# Copy the backend application code from builder stage (We still need this!)
+COPY --from=builder /app .
+
+
+# Activate the virtual environment by setting PATH
+ENV PATH="/app/.venv/bin:$PATH"
 
 # Expose the port
 EXPOSE 8000
