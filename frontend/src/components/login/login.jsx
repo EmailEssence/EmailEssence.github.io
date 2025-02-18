@@ -1,6 +1,32 @@
 import styles from "./login.module.css";
 
 export default function Login({ forward, onSignUpClick }) {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+
+  // // Function to handle form submission
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+
+  //   // Send a POST request to the server
+  //   const response = await fetch("", {
+  //     method: "POST",
+  //     headers: {
+  //       "Content-Type": "application/json",
+  //     },
+  //     body: JSON.stringify({ email, password }),
+  //   });
+
+  //   // Handle the response
+  //   const data = await response.json();
+  //   if (data.error) {
+  //     setError(data.error);
+  //   } else {
+  //     forward(data); // forward to the next page
+  //   }
+  // }
+
   return (
     <div className={styles.page}>
       <div className={styles.formBox}>
@@ -12,7 +38,8 @@ export default function Login({ forward, onSignUpClick }) {
           <div className={styles.signUpLink}>
             Don't have an account yet? <a href="#" onClick={onSignUpClick}>Sign up</a>
           </div>
-          <form className={styles.loginInput}>
+          {/* {error && <div className={styles.error}>{error}</div>}  */}
+          <form className={styles.loginInput}  /*onSubmit={handleSubmit}*/> 
             <div>
               <label htmlFor="email"></label>
               <input
@@ -21,6 +48,8 @@ export default function Login({ forward, onSignUpClick }) {
                 id="email"
                 name="email"
                 placeholder="Email Address"
+                // value={email}
+                // onChange={(e) => setEmail(e.target.value)}
               />
             </div>
             <div>
@@ -31,11 +60,13 @@ export default function Login({ forward, onSignUpClick }) {
                 id="password"
                 name="password"
                 placeholder="Password"
+                // value={password}
+                // onChange={(e) => setPassword(e.target.value)}
               />
             </div>
             <div>
               <input
-                onClick={forward}
+                onClick={forward} //forwards to dashboard for the meantime
                 className={styles.loginButton}
                 type="submit"
                 value="Login"
