@@ -5,8 +5,8 @@ import Login from "./components/login/login";
 import Register from "./components/register/register";
 import { Settings } from "./components/settings/settings";
 import SideBar from "./components/sidebar/sidebar";
-import emailsByDate from "./emails/emailParse";
 import { markEmailAsRead } from "./emails/emailHandler";
+import emailsByDate from "./emails/emailParse";
 import "./page.css";
 
 export default function Page() {
@@ -88,12 +88,11 @@ export default function Page() {
   return (
     <>
       <div className="page">
-        {emailClient()}
-        {/* {loggedIn
+        {loggedIn
           ? emailClient()
           : currentPage === "login"
           ? loginPage()
-          : registerPage()} */}
+          : registerPage()}
       </div>
     </>
   );
