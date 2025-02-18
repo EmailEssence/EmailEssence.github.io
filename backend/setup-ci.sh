@@ -1,49 +1,39 @@
 #!/bin/bash
 set -e
 
-# cd backend
-
 echo "Checking for UV installation..."
 
-# Set UV path
-UV_PATH="$HOME/.local/bin"
-mkdir -p "$UV_PATH"
+UV_PATH="$HOME/.local/bin" # Correct path within Render: /opt/render/.local/bin
 
-# Check if UV is installed
-if ! command -v uv &> /dev/null; then
+# Check if UV is installed (using full path in case PATH isn't set yet)
+if ! test -x "$UV_PATH/uv"; then # Check if executable exists and is executable
     echo "UV not found, installing..."
     curl -LsSf https://astral.sh/uv/install.sh | sh
 
-    # Add UV to PATH if not already there
-    if [[ ":$PATH:" != *":$UV_PATH:"* ]]; then
-        export PATH="$PATH:$UV_PATH"
-        echo 'export PATH="$PATH:$HOME/.local/bin"' >> ~/.bashrc
-    fi
-
-    # Verify UV installation
-    if ! command -v uv &> /dev/null; then
-        echo "Error: UV installation failed or PATH not updated correctly"
+    # Verify UV installation (using full path)
+    if ! test -x "$UV_PATH/uv"; then
+        echo "Error: UV installation failed at $UV_PATH/uv"
         exit 1
     fi
 fi
 
-echo "UV is ready"
+echo "UV is ready at $UV_PATH/uv"
 
-# Create virtual environment
+# Create virtual environment (using full path to uv)
 echo "Creating virtual environment..."
-uv venv
+"$UV_PATH/uv" venv
 
 # Activate virtual environment
 echo "Activating virtual environment..."
 source .venv/bin/activate
 
-# Generate requirements file
+# Generate requirements file (using full path to uv)
 echo "Generating requirements from pyproject.toml..."
-uv pip compile --extra dev --extra docs --extra monitoring pyproject.toml > requirements-all.txt
+"$UV_PATH/uv" pip compile --extra dev --extra docs --extra monitoring pyproject.toml > requirements-all.txt
 
-# Install dependencies
+# Install dependencies (using full path to uv)
 echo "Installing dependencies..."
-uv pip sync --python-version 3.12 requirements-all.txt
+"$UV_PATH/uv" pip sync --python-version 3.12 requirements-all.txt
 
 # Run tests
 echo "Running tests..."
