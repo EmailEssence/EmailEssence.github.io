@@ -1,5 +1,5 @@
-//import emails from "./retrieve_emails_response.json";
-//import summaries from "./summarize_email_response.json";
+import emails from "./retrieve_emails_response.json";
+import summaries from "./summarize_email_response.json";
 
 export const baseUrl = "";
 
@@ -29,8 +29,8 @@ async function getAllSummaries() {
   }
 }
 
-const emails = getAllEmails();
-const summaries = getAllSummaries();
+// const emails = getAllEmails();
+// const summaries = getAllSummaries();
 
 let arr1 = JSON.parse(JSON.stringify(emails));
 const arr2 = JSON.parse(JSON.stringify(summaries));
