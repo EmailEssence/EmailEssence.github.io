@@ -6,7 +6,7 @@ from starlette.concurrency import run_in_threadpool
 
 from app.routers import emails_router, summaries_router, auth_router, user_router
 from app.models import EmailSchema, SummarySchema, UserSchema
-from database import db  # Ensure MongoDB is connected
+from database import db  
 
 
 # from app.models.user_model import User
@@ -19,14 +19,20 @@ app = FastAPI(
     # contact={"name": "Support", "url": "https://example.com/support"},
 )
 
+
+
 @app.on_event("startup")
 async def startup_db_client():
     print("Connecting to MongoDB...")
     try:
-        await db.command("ping")
+        await db.command("ping")  
+        collections = await db.list_collection_names()
+        print(f"✅ Collections in DB: {collections}")
+
         print("MongoDB connection successful!")
     except Exception as e:
-        print(f"Failed to connect to MongoDB: {str(e)}")
+        print(f"❌ Failed to connect to MongoDB: {str(e)}")
+
 
 # Register routers
 app.include_router(emails_router, prefix="/emails", tags=["Emails"])
