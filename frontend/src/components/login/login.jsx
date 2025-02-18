@@ -1,7 +1,9 @@
 import styles from "./login.module.css";
 
 export default function Login({ forward, onSignUpClick }) {
-
+  const handleGoogleLogin= () =>{
+    window.location.href = "GoogleOAuthURL";
+  };
 
   return (
     <div className={styles.page}>
@@ -45,6 +47,9 @@ export default function Login({ forward, onSignUpClick }) {
               />
             </div>
           </form>
+          <button onClick={handleGoogleLogin} className={styles.googleButton}>
+            Login with Google
+          </button>
         </div>
       </div>
     </div>

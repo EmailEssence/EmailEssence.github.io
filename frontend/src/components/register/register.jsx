@@ -1,6 +1,10 @@
 import styles from "./register.module.css";
 
 export default function Register({ onLoginClick }) {
+  const handleGoogleRegister = () => {
+    window.location.href = "GoogleOAuthAuthorizationURL";
+  };
+
   return (
     <div className={styles.page}>
       <div className={styles.formBox}>
@@ -20,7 +24,7 @@ export default function Register({ onLoginClick }) {
                 type="email"
                 id="email"
                 name="email"
-                placeholder="Email Address"
+                placeholder="Enter your Email Address"
               />
             </div>
             <div>
@@ -37,7 +41,18 @@ export default function Register({ onLoginClick }) {
               <input
                 className={styles.registerButton}
                 type="submit"
-                value="Register"
+                value="Continue"
+              />
+            </div>
+            <div className={styles.orContinueWith}>
+              <span>or continue with:</span>
+            </div>
+            <div>
+              <input
+                onClick={handleGoogleRegister}
+                className={styles.registerButton}
+                type="submit"
+                value="Google"
               />
             </div>
           </form>
