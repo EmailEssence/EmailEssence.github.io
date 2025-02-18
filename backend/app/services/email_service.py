@@ -256,10 +256,14 @@ async def fetch_emails():
         # Fetch 1 email from imap
         # compare with 1st email in db
         # if not equal, fetch next n emails
-        stored_emails=get_emails_from_db()
-        if(stored_emails):
-            latest_email = await db.emails.find_one(sort=[("_id", -1)])
+        # stored_emails=get_emails_from_db()
+        # if(stored_emails):
+        #     latest_email = await db.emails.find_one(sort=[("_id", -1)])
+
             
+        stored_emails = await db.emails.find().to_list(100)
+        if stored_emails:
+            return stored_emails    
                         
  
         token = await get_auth_token()

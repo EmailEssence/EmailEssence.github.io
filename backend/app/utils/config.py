@@ -25,6 +25,7 @@ class Settings(BaseSettings):
     # AI Providers
     openai_api_key: str
     deepseek_api_key: str | None = None
+    gemini_api_key: str | None = None
     
     # Summarizer settings
     summarizer_provider: SummarizerProvider = SummarizerProvider.OPENAI
