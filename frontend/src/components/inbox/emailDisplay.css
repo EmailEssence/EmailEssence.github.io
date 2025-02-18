@@ -11,6 +11,12 @@
   text-align: left;
 }
 
+.email-display div {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .email-display .from {
   grid-row: 1 / 1;
   grid-column: 1 / 1;

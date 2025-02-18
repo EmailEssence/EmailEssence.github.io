@@ -1,6 +1,8 @@
 /* main grid */
 /* create space [0, 0] to [3, 1] */
 .entry {
+  overflow: hidden;
+  text-overflow: ellipsis;
   width: 460px;
   height: 4rem;
   display: grid;
@@ -60,6 +62,9 @@
 }
 
 .entry .head > .from {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   grid-column: 1 / 1;
   text-align: left;
   font-size: 0.8rem;
