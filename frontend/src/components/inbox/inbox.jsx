@@ -1,4 +1,5 @@
 /* eslint-disable react/prop-types */
+import Icon from "../../assets/InboxArrow";
 import "./emailDisplay.css";
 import "./emailEntry.css";
 import "./emailList.css";
@@ -17,12 +18,11 @@ export default function Inbox({ emailList, setCurEmail, curEmail }) {
 }
 
 function EmailEntry({ email, onClick, selected }) {
-  const brColor = selected ? "#D9D9D9" : "#FFFFFF";
   const date = getDate(email.received_at);
   return (
     <div
       className="entry"
-      style={{ backgroundColor: brColor }}
+      style={{ backgroundColor: selected ? "#D9D9D9" : "transparent" }}
       onClick={onClick}
     >
       <div className="indicator-container">
@@ -34,7 +34,10 @@ function EmailEntry({ email, onClick, selected }) {
       </div>
       <div className="title">{email.subject}</div>
       <div className="separator-container">
-        <div className="separator"></div>
+        <div
+          className="separator"
+          style={{ backgroundColor: selected ? "#000000" : "#B0B0B0" }}
+        ></div>
       </div>
       <div className="summary">{email.summary_text}</div>
     </div>
@@ -61,7 +64,9 @@ function InboxEmailList({ emailList, curEmail, onClick }) {
     <div className="list">
       <div className="inbox-title-container">
         <div className="inbox-title">
-          <div className="inbox-icon">IN</div>
+          <div className="inbox-icon">
+            <Icon />
+          </div>
           <div className="inbox-word">Inbox</div>
         </div>
       </div>

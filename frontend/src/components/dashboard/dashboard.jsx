@@ -1,5 +1,6 @@
 /* eslint-disable react/prop-types */
 import FullScreenIcon from "../../assets/FullScreenIcon";
+import InboxIcon from "../../assets/InboxArrow";
 import "./miniview.css";
 import "./weightedEmailList.css";
 
@@ -78,7 +79,9 @@ function MiniViewHead({ handlePageChange }) {
   return (
     <div className="head-container">
       <div className="inbox-text-container">
-        <div className="inbox-icon">IN</div>
+        <div className="inbox-icon">
+          <InboxIcon />
+        </div>
         <div className="inbox-text">Inbox</div>
       </div>
       <div className="expand-button" onClick={() => handlePageChange("inbox")}>

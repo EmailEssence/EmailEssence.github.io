@@ -88,11 +88,12 @@ export default function Page() {
   return (
     <>
       <div className="page">
-        {loggedIn
+        {emailClient()}
+        {/* {loggedIn
           ? emailClient()
           : currentPage === "login"
           ? loginPage()
-          : registerPage()}
+          : registerPage()} */}
       </div>
     </>
   );
