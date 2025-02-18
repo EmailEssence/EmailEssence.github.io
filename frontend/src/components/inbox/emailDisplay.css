@@ -11,7 +11,7 @@
   text-align: left;
 }
 
-.email-display div {
+.email-display .header div {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
