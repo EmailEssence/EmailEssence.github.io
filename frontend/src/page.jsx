@@ -10,18 +10,19 @@ import emailsByDate from "./emails/emailParse";
 import "./page.css";
 
 export default function Page() {
-  const [showPage, setShowPage] = useState("dashboard");
+  const [curPage, setCurPage] = useState("login");
   const [sideBarSize, setSideBarSize] = useState(80);
   const [loggedIn, setLoggedIn] = useState(false);
-  const [currentPage, setCurrentPage] = useState("login");
   const [curEmail, setCurEmail] = useState(emailsByDate[0]);
-  const gridTempCol = `${sideBarSize}px 1fr`;
   const [isChecked, setIsChecked] = useState(false);
   const [emailFetchInterval, setEmailFetchInterval] = useState(0);
   const [theme, setTheme] = useState("system");
 
+  const gridTempCol = `${sideBarSize}px 1fr`;
+
   const handleLogin = () => {
     setLoggedIn(true);
+    setCurPage("dashboard");
   };
 
   // Function to handle expanding and collapsing of sidebar
@@ -30,7 +31,7 @@ export default function Page() {
   };
 
   const handlePageChange = (pageName) => {
-    showPage === pageName ? setShowPage("dashboard") : setShowPage(pageName);
+    curPage === pageName ? setCurPage("dashboard") : setCurPage(pageName);
   };
 
   const handleSetCurEmail = (email) => {
@@ -38,7 +39,7 @@ export default function Page() {
     if (!email.is_read) markEmailAsRead(email);
   };
 
-  const handleToggleSummariesInInbox = () =>{
+  const handleToggleSummariesInInbox = () => {
     setIsChecked(!isChecked);
   };
 
@@ -51,7 +52,7 @@ export default function Page() {
   };
 
   const getPage = () => {
-    switch (showPage) {
+    switch (curPage) {
       case "inbox":
         return (
           <Inbox
@@ -62,14 +63,14 @@ export default function Page() {
         );
       case "settings":
         return (
-        <Settings 
-          isChecked={isChecked}
-          handleToggleSummariesInInbox={handleToggleSummariesInInbox}
-          emailFetchInterval={emailFetchInterval}
-          handleSetEmailFetchInterval={handleSetEmailFetchInterval}
-          theme={theme}
-          handleSetTheme={handleSetTheme}
-        />
+          <Settings
+            isChecked={isChecked}
+            handleToggleSummariesInInbox={handleToggleSummariesInInbox}
+            emailFetchInterval={emailFetchInterval}
+            handleSetEmailFetchInterval={handleSetEmailFetchInterval}
+            theme={theme}
+            handleSetTheme={handleSetTheme}
+          />
         );
       default:
         return (
@@ -89,7 +90,7 @@ export default function Page() {
           onLogoClick={handleLogoClick}
           containerWidth={`${sideBarSize}px`}
           handlePageChange={handlePageChange}
-          selected={showPage}
+          selected={curPage}
         />
         {getPage()}
       </div>
@@ -100,13 +101,13 @@ export default function Page() {
     return (
       <Login
         forward={handleLogin}
-        onSignUpClick={() => setCurrentPage("register")}
+        onSignUpClick={() => setCurPage("register")}
       />
     );
   };
 
   const registerPage = () => {
-    return <Register onLoginClick={() => setCurrentPage("login")} />;
+    return <Register onLoginClick={() => setCurPage("login")} />;
   };
 
   return (
@@ -114,7 +115,7 @@ export default function Page() {
       <div className="page">
         {loggedIn
           ? emailClient()
-          : currentPage === "login"
+          : curPage === "login"
           ? loginPage()
           : registerPage()}
       </div>
