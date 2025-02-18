@@ -1,1 +1,14 @@
- 
+version: "3.9" 
+
+services:
+  backend:
+    build:
+      context: ./backend  # Path to the directory containing the Dockerfile
+      dockerfile: Dockerfile 
+    ports:
+      - "8000:8000"  # Map host port 8000 to container port 8000
+    environment:
+      # Define any environment variables you want to pass to the container
+      # Example:
+      # DATABASE_URL: "mongodb://..."
+      pass
