@@ -11,14 +11,14 @@ import "./page.css";
 
 export default function Page() {
   const [curPage, setCurPage] = useState("login");
-  const [sideBarSize, setSideBarSize] = useState(80);
+  const [expandedSideBar, setExpandedSideBar] = useState(false);
   const [loggedIn, setLoggedIn] = useState(false);
   const [curEmail, setCurEmail] = useState(emailsByDate[0]);
   const [isChecked, setIsChecked] = useState(false);
   const [emailFetchInterval, setEmailFetchInterval] = useState(0);
   const [theme, setTheme] = useState("system");
 
-  const gridTempCol = `${sideBarSize}px 1fr`;
+  const gridTempCol = `${expandedSideBar ? "180" : "80"}px 1fr`;
 
   const handleLogin = () => {
     setLoggedIn(true);
@@ -27,7 +27,7 @@ export default function Page() {
 
   // Function to handle expanding and collapsing of sidebar
   const handleLogoClick = () => {
-    setSideBarSize(sideBarSize === 80 ? 180 : 80);
+    setExpandedSideBar(!expandedSideBar);
   };
 
   const handlePageChange = (pageName) => {
@@ -88,7 +88,7 @@ export default function Page() {
       <div className="client" style={{ gridTemplateColumns: gridTempCol }}>
         <SideBar
           onLogoClick={handleLogoClick}
-          containerWidth={`${sideBarSize}px`}
+          expanded={expandedSideBar}
           handlePageChange={handlePageChange}
           selected={curPage}
         />

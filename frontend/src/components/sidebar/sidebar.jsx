@@ -6,18 +6,18 @@ import "./sidebar.css";
 
 export default function SideBar({
   onLogoClick,
-  containerWidth,
+  expanded,
   handlePageChange,
   selected,
 }) {
   return (
     <div>
-      <div className="sidebar" style={{ width: containerWidth }}>
-        <Button containerWidth={containerWidth} onClick={onLogoClick} name="">
+      <div className="sidebar" style={{ width: expanded ? "180px" : "80px" }}>
+        <Button expanded={expanded} onClick={onLogoClick} name="">
           <img src="./src/assets/Logo.svg" alt="Login Icon" />
         </Button>
         <Button
-          containerWidth={containerWidth}
+          expanded={expanded}
           curState={selected}
           onClick={() => handlePageChange("inbox")}
           name="inbox"
@@ -26,7 +26,7 @@ export default function SideBar({
         </Button>
         <div></div>
         <Button
-          containerWidth={containerWidth}
+          expanded={expanded}
           curState={selected}
           onClick={() => handlePageChange("settings")}
           name="settings"
@@ -38,10 +38,10 @@ export default function SideBar({
   );
 }
 
-function Button({ containerWidth, curState = "N", onClick, name, children }) {
+function Button({ expanded, curState = "N", onClick, name, children }) {
   const buttonText =
     name.length > 0 ? `${name[0].toUpperCase()}${name.slice(1)}` : "";
-  const text = containerWidth === "80px" ? "" : buttonText;
+  const text = expanded ? buttonText : "";
   const color = curState === name ? colorD9 : color1E;
   const eColor = curState === name ? color1E : colorE9;
   return (
@@ -51,7 +51,7 @@ function Button({ containerWidth, curState = "N", onClick, name, children }) {
         onClick={onClick}
         style={{
           backgroundColor: color,
-          width: containerWidth,
+          width: expanded ? "180px" : "80px",
         }}
       >
         <div className="icon">
