@@ -84,7 +84,11 @@ function MiniViewHead({ handlePageChange }) {
         </div>
         <div className="inbox-text">Inbox</div>
       </div>
-      <div className="expand-button" onClick={() => handlePageChange("inbox")}>
+      <div
+        className="expand-button"
+        role="button"
+        onClick={() => handlePageChange("inbox")}
+      >
         <FullScreenIcon />
       </div>
     </div>
