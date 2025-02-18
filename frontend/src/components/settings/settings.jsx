@@ -1,23 +1,14 @@
-import React, { useState } from 'react';
 import "./settings.css";
 
-export function Settings() {
-  const [isChecked, setIsChecked] = useState(false);
-  const [emailFetchInterval, setEmailFetchInterval] = useState(0);
-  const [theme, setTheme] = useState("system");
-
-  const handleToggleSummariesInInbox = () => {
-    setIsChecked(!isChecked);
-  };
-
-  const handleSetEmailFetchInterval = (interval) => {
-    setEmailFetchInterval(interval);
-  };
-
-  const handleSetTheme = (theme) => {
-    setTheme(theme);
-  };
-
+export function Settings ({
+  isChecked,
+  handleToggleSummariesInInbox,
+  emailFetchInterval,
+  handleSetEmailFetchInterval,
+  theme,
+  handleSetTheme,
+ 
+}) {
   return (
     <div className="settings">
       <h1>Settings</h1>

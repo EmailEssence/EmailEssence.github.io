@@ -16,6 +16,9 @@ export default function Page() {
   const [currentPage, setCurrentPage] = useState("login");
   const [curEmail, setCurEmail] = useState(emailsByDate[0]);
   const gridTempCol = `${sideBarSize}px 1fr`;
+  const [isChecked, setIsChecked] = useState(false);
+  const [emailFetchInterval, setEmailFetchInterval] = useState(0);
+  const [theme, setTheme] = useState("system");
 
   const handleLogin = () => {
     setLoggedIn(true);
@@ -35,6 +38,18 @@ export default function Page() {
     if (!email.is_read) markEmailAsRead(email);
   };
 
+  const handleToggleSummariesInInbox = () =>{
+    setIsChecked(!isChecked);
+  };
+
+  const handleSetEmailFetchInterval = (interval) => {
+    setEmailFetchInterval(interval);
+  };
+
+  const handleSetTheme = (theme) => {
+    setTheme(theme);
+  };
+
   const getPage = () => {
     switch (showPage) {
       case "inbox":
@@ -46,7 +61,16 @@ export default function Page() {
           />
         );
       case "settings":
-        return <Settings />;
+        return (
+        <Settings 
+          isChecked={isChecked}
+          handleToggleSummariesInInbox={handleToggleSummariesInInbox}
+          emailFetchInterval={emailFetchInterval}
+          handleSetEmailFetchInterval={handleSetEmailFetchInterval}
+          theme={theme}
+          handleSetTheme={handleSetTheme}
+        />
+        );
       default:
         return (
           <Dashboard
