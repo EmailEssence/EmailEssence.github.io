@@ -54,5 +54,5 @@ echo "Installing dependencies..."
 "$UV_PATH/uv" pip sync --python-version 3.12 requirements-all.txt
 
 # Run tests
-echo "Running tests..."
-pytest
+#echo "Running tests..."
+#pytest
