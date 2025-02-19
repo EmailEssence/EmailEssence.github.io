@@ -4,7 +4,6 @@ from google_auth_oauthlib.flow import Flow
 from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
 from dotenv import load_dotenv
-from flask import url_for
 
 load_dotenv()
 
