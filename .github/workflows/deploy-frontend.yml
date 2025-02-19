@@ -2,7 +2,7 @@ name: Deploy React Frontend to GitHub Pages
 
 on:
   push:
-    branches: [main] # Trigger workflow on pushes to the 'main' branch
+    branches: [main]
 
 jobs:
   build-and-deploy:
@@ -14,27 +14,31 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 'lts/*' # Use the latest LTS version of Node.js
+          node-version: 'lts/*'
 
-      - name: List files (before cd)
-        run: ls -la  # List all files in the current directory (root)
+      - name: List files (before cd)  # Diagnostic - can be removed after it works
+        run: ls -la
 
-      - name: Change directory to frontend
-        run: cd frontend
+      - name: Change directory to frontend (with error handling)
+        run: |
+          cd frontend || { echo "Error: Could not change directory to frontend. Check the directory name and path."; exit 1; }
 
-      - name: Verify current directory
+      - name: List files (after cd) # Diagnostic - can be removed after it works
+        run: ls -la
+
+      - name: Verify current directory  # Diagnostic - can be removed after it works
         run: pwd
 
       - name: Install dependencies
         run: npm install
 
       - name: Build React App
-        run: npm run build 
+        run: npm run build
 
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
         with:
-          folder: frontend/build # The folder containing your React build output (usually 'build' or 'dist')
-          branch: gh-pages # The branch to deploy to (must match your GitHub Pages source branch)
-          repository-name: ${{ github.repository }} # Optional, but good practice to be explicit
-          token: ${{ secrets.GITHUB_TOKEN }} # Use the built-in GITHUB_TOKEN secret
+          folder: frontend/build
+          branch: gh-pages
+          repository-name: ${{ github.repository }}
+          token: ${{ secrets.GITHUB_TOKEN }}
