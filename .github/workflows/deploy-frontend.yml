@@ -19,6 +19,9 @@ jobs:
       - name: Change directory to frontend
         run: cd frontend
 
+      - name: Verify current directory
+        run: pwd
+
       - name: Install dependencies
         run: npm install
 
