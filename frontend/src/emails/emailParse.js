@@ -5,7 +5,7 @@ export const baseUrl = "https://ee-backend-w86t.onrender.com";
 
 async function getAllEmails() {
   try {
-    const response = await fetch(baseUrl + "emails/");
+    const response = await fetch(baseUrl + "/emails/");
     if (!response.ok) {
       throw new Error(`Failed to retrieve emails: ${response.statusText}`);
     }
@@ -18,7 +18,7 @@ async function getAllEmails() {
 
 async function getAllSummaries() {
   try {
-    const response = await fetch(baseUrl + "summaries/");
+    const response = await fetch(baseUrl + "/summaries/");
     if (!response.ok) {
       throw new Error(`Failed to retrieve summaries: ${response.statusText}`);
     }
