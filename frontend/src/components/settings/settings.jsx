@@ -1,33 +1,46 @@
-import React from 'react';
 import "./settings.css";
 
-export function Settings() {
+export function Settings ({
+  isChecked,
+  handleToggleSummariesInInbox,
+  emailFetchInterval,
+  handleSetEmailFetchInterval,
+  theme,
+  handleSetTheme,
+ 
+}) {
   return (
     <div className="settings">
       <h1>Settings</h1>
-      <SummariesInInbox />
-      <EmailFetchInterval />
-      <Theme />
+      <SummariesInInbox
+        isChecked={isChecked}
+        onToggle={handleToggleSummariesInInbox}
+      />
+      <EmailFetchInterval
+        emailFetchInterval={emailFetchInterval}
+        onSetEmailFetchInterval={handleSetEmailFetchInterval}
+      />
+      <Theme
+        theme={theme}
+        onSetTheme={handleSetTheme}
+      />
     </div>
   );
 }
 
-export function SummariesInInbox() {
-  const [isChecked, setIsChecked] = React.useState(false);
-  const handleToggle = () => setIsChecked(!isChecked);
-
+export function SummariesInInbox({ isChecked, onToggle }) {
   return (
     <div className="settings-block">
       <h2>Summaries in Inbox</h2>
       <label className="switch">
-        <input type="checkbox" checked={isChecked} onChange={handleToggle} />
+        <input type="checkbox" checked={isChecked} onChange={onToggle} />
         <span className="toggle"></span>
       </label>
     </div>
   );
 }
 
-export function EmailFetchInterval() {
+export function EmailFetchInterval({ emailFetchInterval, onSetEmailFetchInterval }) {
   return (
     <div className="settings-block email-fetch-interval">
       <div className="header-container">
@@ -40,15 +53,15 @@ export function EmailFetchInterval() {
         min="0"
         max="600"
         step="5"
-        onInput={(inputEvent) => inputEvent.target.nextSibling.textContent = `${inputEvent.target.value}`}
+        value={emailFetchInterval}
+        onChange={(e) => onSetEmailFetchInterval(e.target.value)}
       />
-      <p className="count-display"> </p>
+      <p className="count-display">{emailFetchInterval}</p>
     </div>
   );
 }
 
-export function Theme() {
-  const [theme, setTheme] = React.useState("system");
+export function Theme({ theme, onSetTheme }) {
   const themes = ["light", "system", "dark"];
 
   return (
@@ -59,7 +72,7 @@ export function Theme() {
           <button
             key={t}
             className={`theme-toggle-item ${theme === t ? "selected" : ""}`}
-            onClick={() => setTheme(t)}
+            onClick={() => onSetTheme(t)}
           >
             {t.charAt(0).toUpperCase() + t.slice(1)}
           </button>

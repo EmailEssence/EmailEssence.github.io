@@ -1,45 +1,73 @@
 import emails from "./retrieve_emails_response.json";
 import summaries from "./summarize_email_response.json";
 
-const arr1 = emails;
-const arr2 = summaries;
+export const baseUrl = "";
 
-export function emailsByDate () {
-  return arr1.map((element, index) => {
-    const sumText = arr2[index].summary_text;
-    const keywords = arr2[index].keywords;
-    element.summary_text = sumText;
-    element.keywords = keywords;
-
-    
-  });
+async function getAllEmails() {
+  try {
+    const response = await fetch(baseUrl);
+    if (!response.ok) {
+      throw new Error(`Failed to retrieve emails: ${response.statusText}`);
+    }
+    const emails = await response.json();
+    return emails;
+  } catch (error) {
+    console.error(error);
+  }
 }
 
-// --------------------------------------------------------------------
+async function getAllSummaries() {
+  try {
+    const response = await fetch(baseUrl);
+    if (!response.ok) {
+      throw new Error(`Failed to retrieve summaries: ${response.statusText}`);
+    }
+    const summaries = await response.json();
+    return summaries;
+  } catch (error) {
+    console.error(error);
+  }
+}
 
-// const fs = require("fs");
+// const emails = getAllEmails();
+// const summaries = getAllSummaries();
 
-// // Read the JSON file
-// fs.readFile("retrieve_emails_response.json", "utf8", (err, data) => {
-//   if (err) {
-//     console.error("Error reading file:", err);
-//     return;
-//   }
+let arr1 = JSON.parse(JSON.stringify(emails));
+const arr2 = JSON.parse(JSON.stringify(summaries));
 
-//   try {
-//     // Parse the JSON data
-//     const emails = JSON.parse(data);
-//     const summaries = JSON.parse(data);
+arr1.map((element, index) => {
+  const sumText = arr2[index].summary_text;
+  const keywords = arr2[index].keywords;
+  element.summary_text = sumText;
+  element.keywords = keywords;
+  const date = element.received_at;
+  element.received_at = parseDate(date);
+  return element;
+});
 
-//     // Process the emails
-//     emails.forEach((email) => {
-//       console.log(`Email ID: ${email.email_id}`);
-//       console.log(`Sender: ${email.sender}`);
-//       console.log(`Subject: ${email.subject}`);
-//       console.log(`Received At: ${email.received_at}`);
-//       console.log("---");
-//     });
-//   } catch (err) {
-//     console.error("Error parsing JSON:", err);
-//   }
-// });
+function parseDate(date) {
+  const dateArr = [];
+  const time = date.slice(11, 16);
+  const year = date.slice(0, 4);
+  const month = date.slice(5, 7);
+  const day = date.slice(8, 10);
+  dateArr.push(year);
+  dateArr.push(month);
+  dateArr.push(day);
+  dateArr.push(time);
+  return dateArr;
+}
+
+export default arr1;
+
+// "user_id" ID of the user
+// "email_id" ID of the email (unique to each email)
+// "sender" email of the sender
+// "recipients" emails of the users that have received this email
+// "subject" title of the email
+// "body" content of the email
+// "received_at" [year, month, day, time]
+// "category" category of email
+// "is_read" has the email been read
+// "summary_text" summary of the email
+// "keywords": [] keywords used to describe email

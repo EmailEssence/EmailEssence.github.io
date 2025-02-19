@@ -1,42 +1,56 @@
-import "./login.css";
+import styles from "./login.module.css";
 
-// eslint-disable-next-line react/prop-types
-export default function Login({ forward }) {
+export default function Login({ forward, onSignUpClick }) {
+  const handleGoogleLogin= () =>{
+    window.location.href = "GoogleOAuthURL";
+  };
+
   return (
-    <div className="formBox">
-      <div className="loginDiv">
-        <p className="title">Welcome Back</p>
-        <div className="loginImage"> </div>
-        <form className="loginInput">
-          <div>
-            <label htmlFor="email"></label>
-            <input
-              className="inputBox"
-              type="email"
-              id="email"
-              name="email"
-              placeholder="Email Address"
-            />
+    <div className={styles.page}>
+      <div className={styles.formBox}>
+        <div className={styles.loginDiv}>
+          <div className={styles.loginIcon}>
+            <img src="./src/assets/Logo.PNG" alt="Login Icon" className={styles.loginPhoto} />
           </div>
-          <div>
-            <label htmlFor="password"></label>
-            <input
-              className="inputBox"
-              type="password"
-              id="password"
-              name="password"
-              placeholder="Password"
-            />
+          <p className={styles.title}>Welcome Back</p>
+          <div className={styles.signUpLink}>
+            Don't have an account yet? <a href="#" onClick={onSignUpClick}>Sign up</a>
           </div>
-          <div>
-            <input
-              onClick={forward}
-              className="loginButton"
-              type="submit"
-              value="Login"
-            />
-          </div>
-        </form>
+        
+          <form className={styles.loginInput}  >
+            <div>
+              <label htmlFor="email"></label>
+              <input
+                className={styles.inputBox}
+                type="email"
+                id="email"
+                name="email"
+                placeholder="Email Address"
+              />
+            </div>
+            <div>
+              <label htmlFor="password"></label>
+              <input
+                className={styles.inputBox}
+                type="password"
+                id="password"
+                name="password"
+                placeholder="Password"
+              />
+            </div>
+            <div>
+              <input
+                onClick={forward} //forwards to dashboard for the meantime
+                className={styles.loginButton}
+                type="submit"
+                value="Login"
+              />
+            </div>
+          </form>
+          <button onClick={handleGoogleLogin} className={styles.googleButton}>
+            Login with Google
+          </button>
+        </div>
       </div>
     </div>
   );

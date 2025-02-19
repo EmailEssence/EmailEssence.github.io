@@ -1,12 +1,18 @@
+.page {
+  background-color: #1E1E1E;
+  color: #E9E9E9;
+}
+
 .formBox {
   height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
 }
+
 .loginDiv {
-  height: 60%;
-  width: 40%;
+  height: clamp(300px, 40%, 300px);
+  width: clamp(240px, 30%, 240px);
   border-radius: 10px;
   padding: 20px;
   box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.3);
@@ -16,34 +22,53 @@
   align-items: center;
 }
 
+.loginDiv .loginPhoto {
+  width: 30px;
+  height: 30px;
+  margin: 10px;
+  border-radius: 4px;
+  box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2);
+}
+
 .loginDiv .title {
-  padding-bottom: 30px;
   text-align: center;
   font-size: 15px;
   font-weight: bold;
-  background-color: white;
 }
 
-.inputBox {
+.loginDiv .signUpLink {
+  padding: 10px;
+  text-align: center;
+  font-size: 8px;
+  text-decoration: none;
+}
+
+.loginDiv .signUpLink a {
+  font-weight: bold;
+}
+
+.loginDiv .inputBox {
   padding: 5px;
-  width: 100%;
+  width: 200px;
   margin: 5px 0;
-  border: 1px solid black;
+  border: 1px solid #161616;
+  background-color: #161616;
   border-radius: 5px;
   font-size: 8px;
+
 }
 
-.loginButton {
+.loginDiv .loginButton {
   padding: 5px;
   width: 100%;
   margin: 10px 0;
-  background-color: white;
+  background-color: #E9E9E9;
   border: 1px solid black;
   border-radius: 5px;
   box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2);
   font-size: 8px;
 }
 
-.loginButton:hover {
+.loginDiv .loginButton:hover {
   background-color: lightgray;
 }

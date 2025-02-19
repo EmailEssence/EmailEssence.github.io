@@ -28,12 +28,6 @@ click==8.1.8
     # via
     #   black
     #   uvicorn
-colorama==0.4.6
-    # via
-    #   click
-    #   pytest
-    #   sphinx
-    #   tqdm
 coverage==7.6.12
     # via pytest-cov
 datetime==5.5
@@ -58,7 +52,7 @@ fastapi==0.115.8
     # via email-essence (pyproject.toml)
 google-api-core==2.24.1
     # via google-api-python-client
-google-api-python-client==2.160.0
+google-api-python-client==2.161.0
     # via email-essence (pyproject.toml)
 google-auth==2.38.0
     # via
@@ -70,7 +64,7 @@ google-auth-httplib2==0.2.0
     # via google-api-python-client
 google-auth-oauthlib==1.2.1
     # via email-essence (pyproject.toml)
-googleapis-common-protos==1.66.0
+googleapis-common-protos==1.67.0
     # via google-api-core
 h11==0.14.0
     # via
@@ -116,7 +110,7 @@ mypy-extensions==1.0.0
     #   mypy
 oauthlib==3.2.2
     # via requests-oauthlib
-openai==1.61.1
+openai==1.63.2
     # via email-essence (pyproject.toml)
 opentelemetry-api==1.30.0
     # via

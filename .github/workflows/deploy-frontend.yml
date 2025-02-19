@@ -2,11 +2,13 @@ name: Deploy React Frontend to GitHub Pages
 
 on:
   push:
-    branches: [main]
+  
+    branches: [main] # Trigger workflow on pushes to the 'main' branch
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+
     defaults:
       run:
         working-directory: ./frontend  # Set the working directory for all 'run' steps
@@ -18,18 +20,21 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 'lts/*'
+        
+          node-version: 'lts/*' # Use the latest LTS version of Node.js
 
       - name: Install dependencies
-        run: npm install  # No 'cd' needed!
+        run: npm install # Or yarn install, depending on your project
 
       - name: Build React App
-        run: npm run build  # No 'cd' needed!
+        run: npm run build # Or yarn build, depending on your project
 
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
         with:
-          folder: frontend/build 
-          branch: gh-pages
-          repository-name: ${{ github.repository }}
-          token: ${{ secrets.GITHUB_TOKEN }}
+       
+          folder: build # The folder containing your React build output (usually 'build' or 'dist')
+          branch: gh-pages # The branch to deploy to (must match your GitHub Pages source branch)
+          repository-name: ${{ github.repository }} # Optional, but good practice to be explicit
+          token: ${{ secrets.GITHUB_TOKEN }} # Use the built-in GITHUB_TOKEN secret
+

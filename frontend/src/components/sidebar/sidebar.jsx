@@ -1,111 +1,62 @@
 /* eslint-disable react/prop-types */
+import { color1E, colorD9, colorE9 } from "../../assets/constants";
 import InboxIcon from "../../assets/InboxIcon";
 import SettingsIcon from "../../assets/SettingsIcon";
 import "./sidebar.css";
 
-const unselectedColor = "#1E1E1E";
-const selectedColor = "#D9D9D9";
-const unselectedColorInner = "#E9E9E9";
-const selectedColorInner = "#1E1E1E";
-const sideBarContracted = "80px";
-
 export default function SideBar({
   onLogoClick,
-  containerWidth,
-  getPageComponent,
+  expanded,
+  handlePageChange,
   selected,
 }) {
   return (
     <div>
-      <div className="sidebar" style={{width: containerWidth}}>
-        <LogoButton
-          containerWidth={containerWidth}
+      <div className="sidebar" style={{ width: expanded ? "180px" : "80px" }}>
+        <Button expanded={expanded} onClick={onLogoClick} name="">
+          <img src="./src/assets/Logo.svg" alt="Logo Icon" />
+        </Button>
+        <Button
+          expanded={expanded}
           curState={selected}
-          onClick={() => {
-            getPageComponent("dashboard");
-            onLogoClick();
-          }}
-        />
-        <InboxButton
-          containerWidth={containerWidth}
+          onClick={() => handlePageChange("inbox")}
+          name="inbox"
+        >
+          <InboxIcon color={selected === "inbox" ? color1E : colorE9} />
+        </Button>
+        <div></div>
+        <Button
+          expanded={expanded}
           curState={selected}
-          onClick={() => getPageComponent("inbox")}
-        />
-        <p></p>
-        <SettingsButton
-          containerWidth={containerWidth}
-          curState={selected}
-          onClick={() => getPageComponent("settings")}
-        />
+          onClick={() => handlePageChange("settings")}
+          name="settings"
+        >
+          <SettingsIcon color={selected === "settings" ? color1E : colorE9} />
+        </Button>
       </div>
     </div>
   );
 }
 
-function LogoButton({containerWidth, curState, onClick}) {
-  const color = curState === "dashboard" ? selectedColor : unselectedColor;
+function Button({ expanded, curState = "N", onClick, name, children }) {
+  const buttonText =
+    name.length > 0 ? `${name[0].toUpperCase()}${name.slice(1)}` : "";
+  const text = expanded ? buttonText : "";
+  const color = curState === name ? colorD9 : color1E;
+  const eColor = curState === name ? color1E : colorE9;
   return (
     <div>
       <div
         className="container"
-        id="dashboard"
         onClick={onClick}
         style={{
           backgroundColor: color,
-          width: containerWidth,
-        }}
-      >
-        <p>EmailESSENCE</p>
-      </div>
-    </div>
-  );
-}
-
-function InboxButton({containerWidth, curState, onClick}) {
-  const text = containerWidth === sideBarContracted ? "" : "Inbox";
-  const color = curState === "inbox" ? selectedColor : unselectedColor;
-  const innerColor =
-    curState === "inbox" ? selectedColorInner : unselectedColorInner;
-  return (
-    <div>
-      <div
-        className="container"
-        id="inbox"
-        onClick={onClick}
-        style={{backgroundColor: color, width: containerWidth}}
-      >
-        <div className="icon">
-          <div>
-            <InboxIcon color={innerColor} />
-          </div>
-          <p style={{color: innerColor}}>{text}</p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function SettingsButton({containerWidth, curState, onClick}) {
-  const text = containerWidth === sideBarContracted ? "" : "Settings";
-  const color = curState === "settings" ? selectedColor : unselectedColor;
-  const innerColor =
-    curState === "settings" ? selectedColorInner : unselectedColorInner;
-  return (
-    <div>
-      <div
-        className="container"
-        id="settings"
-        onClick={onClick}
-        style={{
-          backgroundColor: color,
-          width: containerWidth,
+          width: expanded ? "180px" : "80px",
         }}
       >
         <div className="icon">
-          <div>
-            <SettingsIcon color={innerColor} />
-          </div>
-          <p style={{color: innerColor}}>{text}</p>
+          <div>{children}</div>
+          <p style={{ color: eColor }}>{text}</p>
         </div>
       </div>
     </div>
