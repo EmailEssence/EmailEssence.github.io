@@ -1,3 +1,6 @@
+import json
+import urllib.parse
+
 from fastapi import APIRouter, HTTPException, status, Depends, Request
 from fastapi.security import OAuth2AuthorizationCodeBearer
 from fastapi.responses import RedirectResponse
@@ -34,9 +37,23 @@ async def callback(code: str):
     """
     try:
         tokens = await run_in_threadpool(lambda: get_tokens_from_code(code))
-        # After processing the token, redirect to frontend
-        frontend_url = "https://emailessence.github.io/"  # or your actual frontend URL
-        return RedirectResponse(url=f"{frontend_url}")
+        
+        # Get the appropriate frontend URL
+        frontend_url = "https://emailessence.github.io"  # or use environment variable
+        
+        # Add token to redirect URL as a hash parameter
+        # Using hash (#) instead of query (?) parameters for client-side only access
+        auth_state = {
+            "authenticated": True,
+            "token": tokens['token']
+        }
+        
+        # URL encode the state
+        encoded_state = urllib.parse.quote(json.dumps(auth_state))
+        # example output: urllib.parse.quote(json.dumps(auth_state))
+        return RedirectResponse(
+            url=f"{frontend_url}/#auth={encoded_state}"
+        )
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
