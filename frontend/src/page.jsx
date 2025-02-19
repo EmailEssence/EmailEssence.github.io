@@ -23,25 +23,30 @@ export default function Page() {
   const [loading, setLoading] = useState(false);
   const gridTempCol = `${expandedSideBar ? "180" : "80"}px 1fr`;
 
-
+// TODO: Actually handle emails..
   const handleLogin = async (token) => {
     try {
       setLoading(true);
       setToken(token);
       
-      // Fetch emails before changing view state
+      // Await email fetch before state transitions
       const emails = await fetchEmails();
-      setEmailsByDate(emails);
-      if (emails?.length) {
-        setCurEmail(emails[0]);
+      const emailArray = Array.isArray(emails) ? emails : [];
+      
+      // Batch state updates
+      await Promise.resolve(); // Microtask boundary
+      setEmailsByDate(emailArray);
+      if (emailArray.length > 0) {
+        setCurEmail(emailArray[0]);
       }
       
-      // Update view state after data is ready
+      // Navigation updates last
       setLoggedIn(true);
       setCurPage("dashboard");
     } catch (error) {
-      console.error("Error in auth flow:", error);
-      setToken(null);
+      console.error("Auth flow error:", error);
+      setEmailsByDate([]);
+      setCurEmail(null);
     } finally {
       setLoading(false);
     }
@@ -135,13 +140,13 @@ export default function Page() {
   return (
     <div className="page">
       {loading ? (
-        <div>Loading...</div>
-      ) : loggedIn ? (
-        emailClient()
-      ) : curPage === "login" ? (
-        loginPage()
+        <div>Loading emails...</div>
+      ) : !loggedIn ? (
+        curPage === "login" ? loginPage() : registerPage()
+      ) : emailsByDate === null ? (
+        <div>Initializing dashboard...</div>
       ) : (
-        registerPage()
+        emailClient()
       )}
     </div>
   );
