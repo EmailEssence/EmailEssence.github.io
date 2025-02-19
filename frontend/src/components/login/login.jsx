@@ -15,20 +15,20 @@ export const OAuthCallback = ({ forward }) => {
           const authState = JSON.parse(decodeURIComponent(encodedState));
 
           if (authState.authenticated && authState.token) {
-            // check auth
-            const statusResponse = await fetch(`${baseUrl}/auth/status`);
-            const statusData = await statusResponse.json();
+          // First verify the token
+            const verifyResponse = await fetch(`${baseUrl}/auth/verify`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ token: authState.token })
+            });
 
-            if (statusData.is_authenticated) {
-              // :)
-              forward(authState.token); // Pass the token to forward
-              window.location.hash = ""; // Clear the hash
-            } else {
-              console.error("Authentication check failed");
+            if (verifyResponse.ok) {
+              // token is valid, proceed with forwarding
+              forward(authState.token);
+              window.location.hash = "";
             }
-
-            // ~.io/#auth={"authenticated"%3A true%2C "token"%3A "ya29.a0AXeO80QTFy3oQBh9U388oFBMeWfKeXtlPA7xDtJwgyvI11q9pborOhhhM0meWmbaUSx3pPyG3I6a0Aa4jXzKfj8_699t4Xbhb-Bdx0YX9GP2QFtJ0moixSIwphlXaQsSVYBtpxas4UKUgjXPLU6IyUnQKTu1-0naM4w7wAvtRwaCgYKAcwSARMSFQHGX2MiKJ_nWI2bcb5uTKCjxZ8ZGA0177"}
-            // Check auth status
           }
         } catch (error) {
           console.error("Error parsing auth state:", error);
