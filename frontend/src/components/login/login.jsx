@@ -4,33 +4,41 @@ import styles from "./login.module.css";
 import { baseUrl } from "../../emails/emailParse";
 import { useEffect } from "react";
 
-export const OAuthCallback = (forward, code) => {
+export const OAuthCallback = ({ forward }) => {
   useEffect(() => {
     const handleCallback = async () => {
-      if (code) {
+      const hash = window.location.hash;
+      if (hash && hash.startsWith("#auth=")) {
         try {
-          // Exchange code for token
-          const response = await fetch(`${baseUrl}/auth/callback?code=${code}`);
-          // const data = await response.json();
+          // Decode the auth state from URL hash
+          const encodedState = hash.substring(6);
+          const authState = JSON.parse(decodeURIComponent(encodedState));
 
-          // Check auth status
-          const statusResponse = await fetch(`${baseUrl}/auth/status`);
-          const statusData = await statusResponse.json();
-          if (statusData.is_authenticated) {
-            // :)
-            forward();
-          } else {
-            console.error("Authentication failed");
+          if (authState.authenticated && authState.token) {
+            // check auth
+            const statusResponse = await fetch(`${baseUrl}/auth/status`);
+            const statusData = await statusResponse.json();
+
+            if (statusData.is_authenticated) {
+              // :)
+              forward(authState.token);
+              window.location.hash = "";
+            } else {
+              console.error("Authentication check failed");
+            }
+
+            // ~.io/#auth={"authenticated"%3A true%2C "token"%3A "ya29.a0AXeO80QTFy3oQBh9U388oFBMeWfKeXtlPA7xDtJwgyvI11q9pborOhhhM0meWmbaUSx3pPyG3I6a0Aa4jXzKfj8_699t4Xbhb-Bdx0YX9GP2QFtJ0moixSIwphlXaQsSVYBtpxas4UKUgjXPLU6IyUnQKTu1-0naM4w7wAvtRwaCgYKAcwSARMSFQHGX2MiKJ_nWI2bcb5uTKCjxZ8ZGA0177"}
+            // Check auth status
           }
         } catch (error) {
-          console.error("Auth callback Error", error);
+          console.error("Error parsing auth state:", error);
         }
       } else {
-        console.error("No code found in URL");
+        console.error("No hash found in URL");
       }
     };
     handleCallback();
-  }, [forward, code]);
+  }, [forward]);
 
   return <div>Completing sign in...</div>;
 };
@@ -41,8 +49,7 @@ export const Login = ({ forward }) => {
       const response = await fetch(`${baseUrl}/auth/login`);
       const data = await response.json();
       if (data.authorization_url) {
-        window.open(data.authorization_url, "_blank");
-        //https://ee-backend-w86t.onrender.com/auth/callback?state=3kcnwylQpcgVHUziNLC6rDcYcPyoRB&code=4%2F0ASVgi3JA0nLePkt6ii6OtB4_P1O9TlnwPNbd_-0ZDs7DSGGPH0TpCL1EOIHlZcxS9bzIYQ&scope=https%3A%2F%2Fmail.google.com%2F
+        window.location.href = data.authorization_url;
       }
     } catch (error) {
       console.error("Login Error", error);

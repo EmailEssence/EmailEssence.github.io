@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { useState } from "react";
 import Dashboard from "./components/dashboard/dashboard";
 import Inbox from "./components/inbox/inbox";
@@ -18,13 +19,19 @@ export default function Page() {
   const [emailFetchInterval, setEmailFetchInterval] = useState(0);
   const [theme, setTheme] = useState("system");
   const [emailsByDate, setEmailsByDate] = useState(null);
+  const [token, setToken] = useState(null);
   const gridTempCol = `${expandedSideBar ? "180" : "80"}px 1fr`;
 
-  const handleLogin = () => {
+  const handleLogin = (token) => {
+    setToken(token);
     setLoggedIn(true);
-    setEmailsByDate(fetchEmails());
-    setCurEmail(emailsByDate[0]);
-    setCurPage("dashboard");
+    try {
+      setEmailsByDate(fetchEmails());
+      setCurEmail(emailsByDate[0]);
+      setCurPage("dashboard");
+    } catch (error) {
+      console.error("Error fetching emails:", error);
+    }
   };
 
   // Function to handle expanding and collapsing of sidebar
