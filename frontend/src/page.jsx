@@ -1,7 +1,7 @@
 import { useState } from "react";
 import Dashboard from "./components/dashboard/dashboard";
 import Inbox from "./components/inbox/inbox";
-import Login from "./components/login/login";
+import { Login } from "./components/login/login";
 import Register from "./components/register/register";
 import { Settings } from "./components/settings/settings";
 import SideBar from "./components/sidebar/sidebar";
