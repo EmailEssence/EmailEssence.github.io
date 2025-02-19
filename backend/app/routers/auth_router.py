@@ -24,7 +24,7 @@ async def login():
     """
     try:
         auth_url, state = await run_in_threadpool(create_authorization_url)
-        return RedirectResponse(url=auth_url)
+        return {"authorization_url": auth_url}
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
