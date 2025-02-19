@@ -80,29 +80,30 @@ async def get_token(token: str = Depends(oauth2_scheme)):
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f"Token retrieval failed: {str(e)}"
         )
-    
-@router.get("/internal/token", include_in_schema=False)
-async def get_internal_token():
-    """
-    Internal endpoint for service-to-service communication.
-    Not exposed in OpenAPI schema.
-    """
-    try:
-        credentials = await run_in_threadpool(auth_service.get_credentials)
-        if not credentials.valid:
-            if credentials.expired and credentials.refresh_token:
-                await run_in_threadpool(lambda: credentials.refresh(GoogleRequest()))
-            else:
-                raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Token expired and cannot be refreshed"
-                )
-        return {"access_token": credentials.token, "token_type": "bearer"}
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Internal token retrieval failed: {str(e)}"
-        )    
+
+# Deprecated internal token endpoint    
+# @router.get("/internal/token", include_in_schema=False)
+# async def get_internal_token():
+#     """
+#     Internal endpoint for service-to-service communication.
+#     Not exposed in OpenAPI schema.
+#     """
+#     try:
+#         credentials = await run_in_threadpool(auth_service.get_credentials)
+#         if not credentials.valid:
+#             if credentials.expired and credentials.refresh_token:
+#                 await run_in_threadpool(lambda: credentials.refresh(GoogleRequest()))
+#             else:
+#                 raise HTTPException(
+#                     status_code=status.HTTP_401_UNAUTHORIZED,
+#                     detail="Token expired and cannot be refreshed"
+#                 )
+#         return {"access_token": credentials.token, "token_type": "bearer"}
+#     except Exception as e:
+#         raise HTTPException(
+#             status_code=status.HTTP_401_UNAUTHORIZED,
+#             detail=f"Internal token retrieval failed: {str(e)}"
+#         )    
 
 @router.post("/refresh")
 async def refresh_token():

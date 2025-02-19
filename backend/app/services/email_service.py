@@ -7,21 +7,25 @@ from email.header import decode_header
 from imapclient import IMAPClient
 from database import db
 from datetime import datetime
-from app.services.auth_service import get_credentials
+from google.auth.transport.requests import Request
+from app.services import auth_service
 from fastapi import HTTPException, status, Query
 
 from starlette.concurrency import run_in_threadpool
 
 async def get_auth_token():
+    """Get a valid OAuth token for email access"""
     try:
-        async with httpx.AsyncClient() as client:
-            response = await client.get("http://localhost:8000/auth/internal/token")
-            if response.status_code != 200:
+        credentials = await run_in_threadpool(auth_service.get_credentials)
+        if not credentials.valid:
+            if credentials.expired and credentials.refresh_token:
+                await run_in_threadpool(lambda: credentials.refresh(Request()))
+            else:
                 raise HTTPException(
                     status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Failed to get authentication token"
+                    detail="Token expired and cannot be refreshed. User needs to re-authenticate."
                 )
-            return response.json()["access_token"]
+        return credentials.token
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -265,8 +269,8 @@ async def fetch_emails():
         if stored_emails:
             return stored_emails    
                         
- 
-        token = await get_auth_token()
+        # Get token using the auth service
+        token = await get_auth_token()  # This now uses the auth_service properly
         email_account = os.getenv('EMAIL_ACCOUNT')
         if not email_account:
             raise HTTPException(
@@ -274,10 +278,14 @@ async def fetch_emails():
                 detail="Email account not configured"
             )
 
-        # ✅ Run fetch_from_imap() in a threadpool (since it's sync)
-        emails = await run_in_threadpool(fetch_from_imap, token, email_account)
+        # Run fetch_from_imap() in a threadpool (since it's sync)
+        emails = await run_in_threadpool(
+            fetch_from_imap, 
+            token, 
+            email_account
+        )
 
-        # ✅ Now insert emails asynchronously into MongoDB
+        # Insert emails asynchronously into MongoDB
         for email_data in emails:
             await save_email_to_db(email_data, email_data["email_id"])
 
