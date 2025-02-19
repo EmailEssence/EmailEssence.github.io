@@ -18,12 +18,17 @@
   font-size: 1.2vw;
   font-weight: 600;
   display: grid;
-  grid-template-columns: 1fr 4rem;
+  grid-template-columns: 1fr 4vw;
   align-items: center;
   gap: 1rem;
 }
 
 .dashboard .email-link {
-  height: 4rem;
-  background-color: black;
+  border-radius: 0.2rem;
+  padding: 0.4rem;
+  height: 4vw;
+}
+
+.dashboard .email-link:hover {
+  background-color: #d9d9d9;
 }

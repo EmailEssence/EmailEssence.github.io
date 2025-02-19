@@ -57,7 +57,9 @@ function WEListEmail({ email, setCurEmail, handlePageChange }) {
           setCurEmail(email);
           handlePageChange("inbox");
         }}
-      ></div>
+      >
+        <img src="./src/assets/ViewIcon.svg" alt="View Icon" />
+      </div>
     </div>
   );
 }

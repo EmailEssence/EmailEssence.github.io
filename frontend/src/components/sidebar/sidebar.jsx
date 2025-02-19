@@ -14,7 +14,7 @@ export default function SideBar({
     <div>
       <div className="sidebar" style={{ width: expanded ? "180px" : "80px" }}>
         <Button expanded={expanded} onClick={onLogoClick} name="">
-          <img src="./src/assets/Logo.svg" alt="Login Icon" />
+          <img src="./src/assets/Logo.svg" alt="Logo Icon" />
         </Button>
         <Button
           expanded={expanded}
