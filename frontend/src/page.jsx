@@ -40,6 +40,9 @@ export default function Page() {
       setToken(token);
       
       const emails = await fetchEmails();
+      if (!Array.isArray(emails)) {
+        throw new Error('Invalid email response format');
+      }
       const emailArray = Array.isArray(emails) ? emails : [];
       
       setEmailsByDate(emailArray);
