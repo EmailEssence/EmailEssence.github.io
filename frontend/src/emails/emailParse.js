@@ -1,7 +1,7 @@
 // import emails from "./retrieve_emails_response.json";
 // import summaries from "./summarize_email_response.json";
 
-export const baseUrl = "https://ee-backend-w86t.onrender.com/";
+export const baseUrl = "https://ee-backend-w86t.onrender.com";
 
 async function getAllEmails() {
   try {

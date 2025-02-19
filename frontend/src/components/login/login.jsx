@@ -64,7 +64,7 @@ export const Login = ({ forward }) => {
         <div className={styles.loginDiv}>
           <div className={styles.loginIcon}>
             <img
-              src="./src/assets/Logo.PNG"
+              src="./src/assets/Logo.svg"
               alt="Login Icon"
               className={styles.loginPhoto}
             />
