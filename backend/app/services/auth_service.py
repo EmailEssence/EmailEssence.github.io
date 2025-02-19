@@ -25,12 +25,12 @@ def create_authorization_url():
             "client_secret": client_secret,
             "auth_uri": "https://accounts.google.com/o/oauth2/auth",
             "token_uri": "https://oauth2.googleapis.com/token",
-            "redirect_uris": [os.getenv('GOOGLE_REDIRECT_URI')]  # Add this to your .env
+            "redirect_uris": get_redirect_uri()
         }
     }
 
     flow = Flow.from_client_config(client_config, SCOPES)
-    flow.redirect_uri = os.getenv('GOOGLE_REDIRECT_URI')
+    flow.redirect_uri = get_redirect_uri()
     
     authorization_url, state = flow.authorization_url(
         access_type='offline',
@@ -49,12 +49,12 @@ def get_tokens_from_code(code):
             "client_secret": client_secret,
             "auth_uri": "https://accounts.google.com/o/oauth2/auth",
             "token_uri": "https://oauth2.googleapis.com/token",
-            "redirect_uris": [os.getenv('GOOGLE_REDIRECT_URI')]
+            "redirect_uris": get_redirect_uri()
         }
     }
 
     flow = Flow.from_client_config(client_config, SCOPES)
-    flow.redirect_uri = os.getenv('GOOGLE_REDIRECT_URI')
+    flow.redirect_uri = get_redirect_uri()
     
     flow.fetch_token(code=code)
     credentials = flow.credentials
