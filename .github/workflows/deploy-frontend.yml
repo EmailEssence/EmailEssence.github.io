@@ -16,17 +16,17 @@ jobs:
         with:
           node-version: 'lts/*'
 
-      - name: List files (before cd)  # Diagnostic - can be removed after it works
+      - name: List files (before cd)
         run: ls -la
 
-      - name: Change directory to frontend (with error handling)
+      - name: Change directory (explicit bash)
         run: |
-          cd frontend || { echo "Error: Could not change directory to frontend. Check the directory name and path."; exit 1; }
+          bash -c "cd frontend || { echo 'Error: Could not cd to frontend'; exit 1; }"
 
-      - name: List files (after cd) # Diagnostic - can be removed after it works
+      - name: List files (after cd)
         run: ls -la
 
-      - name: Verify current directory  # Diagnostic - can be removed after it works
+      - name: Verify current directory
         run: pwd
 
       - name: Install dependencies
