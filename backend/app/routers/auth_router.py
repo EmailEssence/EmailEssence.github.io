@@ -151,7 +151,7 @@ async def auth_status():
             "is_authenticated": credentials is not None,
             "token_valid": credentials.valid if credentials else False,
             "token_expired": credentials.expired if credentials else True,
-            "has_refresh_token": bool(credentials.refresh_token if credentHials else False)
+            "has_refresh_token": bool(credentials.refresh_token if credentials else False)
         }
     except Exception as e:
         return {
