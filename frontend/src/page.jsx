@@ -103,7 +103,7 @@ export default function Page() {
     return (
       <Login
         forward={handleLogin}
-        onSignUpClick={() => setCurPage("register")}
+        // onSignUpClick={() => setCurPage("register")}
       />
     );
   };

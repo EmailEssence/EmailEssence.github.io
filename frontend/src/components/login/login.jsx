@@ -4,12 +4,9 @@ import styles from "./login.module.css";
 import { baseUrl } from "../../emails/emailParse";
 import { useEffect } from "react";
 
-export const OAuthCallback = (forward) => {
+export const OAuthCallback = (forward, code) => {
   useEffect(() => {
     const handleCallback = async () => {
-      const params = new URLSearchParams(window.location.search);
-      const code = params.get("code");
-
       if (code) {
         try {
           // Exchange code for token
@@ -33,7 +30,7 @@ export const OAuthCallback = (forward) => {
       }
     };
     handleCallback();
-  }, [forward]);
+  }, [forward, code]);
 
   return <div>Completing sign in...</div>;
 };
@@ -56,7 +53,7 @@ export const Login = ({ forward }) => {
   const code = params.get("code");
 
   if (code) {
-    return <OAuthCallback forward={forward} />;
+    return <OAuthCallback forward={forward} code={code} />;
   }
 
   return (
