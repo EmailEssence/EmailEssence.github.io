@@ -16,6 +16,9 @@ jobs:
         with:
           node-version: 'lts/*' # Use the latest LTS version of Node.js
 
+      - name: List files (before cd)
+        run: ls -la  # List all files in the current directory (root)
+
       - name: Change directory to frontend
         run: cd frontend
 
@@ -31,7 +34,7 @@ jobs:
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
         with:
-          folder: ../build # The folder containing your React build output (usually 'build' or 'dist')
+          folder: frontend/build # The folder containing your React build output (usually 'build' or 'dist')
           branch: gh-pages # The branch to deploy to (must match your GitHub Pages source branch)
           repository-name: ${{ github.repository }} # Optional, but good practice to be explicit
           token: ${{ secrets.GITHUB_TOKEN }} # Use the built-in GITHUB_TOKEN secret
