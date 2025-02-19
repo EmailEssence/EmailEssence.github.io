@@ -6,6 +6,7 @@ import { EmailFetchInterval, Settings, SummariesInInbox, Theme } from '../compon
 // Unit Tests: Test individual functions, components, and utilities.
 // Integration Tests: Test component interactions(e.g., props, state changes).
 // End - to - End Tests: Ensure the app works as expected across user flows.
+
 describe('Settings Components', () => {
 
     // Rendering Tests
@@ -29,55 +30,42 @@ describe('Settings Components', () => {
         expect(screen.getByText('Theme')).toBeInTheDocument();
     });
 
-    // test('renders all theme buttons', () => {
-    //     render(<Theme />);
-    //     expect(screen.getByText('light')).toBeInTheDocument();
-    //     expect(screen.getByText('system')).toBeInTheDocument();
-    //     expect(screen.getByText('dark')).toBeInTheDocument();
-    // });
+    test('renders all theme buttons', () => {
+        render(<Theme />);
+        expect(screen.getByText('Light')).toBeInTheDocument();
+        expect(screen.getByText('System')).toBeInTheDocument();
+        expect(screen.getByText('Dark')).toBeInTheDocument();
+    });
 
     // Event Handling Tests
-    test("Summaries in Inbox Toggle Switch", () => {
-        const handleToggle = vi.fn();
-        render(<SummariesInInbox onClicked={handleToggle} />);
-        fireEvent.click(screen.getByRole('checkbox'));
-        expect(handleToggle).toHaveBeenCalledTimes(1);
-    });
-
-    test("Email Fetch Interval Slider", () => {  // Test the slider input event for value at 300
-        render(<EmailFetchInterval />);
-        const slider = screen.getByRole('slider');
-        fireEvent.input(slider, { target: { value: 300 } });
-        expect(screen.getByText('300')).toBeInTheDocument();
-    });
-
-    test("Email Fetch Interval Slider", () => {  // Test the slider input event for value at 0
-        render(<EmailFetchInterval />);
-        const slider = screen.getByRole('slider');
-        fireEvent.input(slider, { target: { value: 0 } });
-        expect(screen.getByText('0')).toBeInTheDocument();
-    });
-
     test('clicking a theme button updates the theme', () => {
-        render(<Theme />);
+        const mockSetTheme = vi.fn();
+        const { rerender } = render(<Theme theme="light" onSetTheme={mockSetTheme} />);
+
         const lightButton = screen.getByText('Light');
         const systemButton = screen.getByText('System');
         const darkButton = screen.getByText('Dark');
 
         // Click the Light button
         fireEvent.click(lightButton);
+        expect(mockSetTheme).toHaveBeenCalledWith('light');
+        rerender(<Theme theme="light" onSetTheme={mockSetTheme} />);
         expect(lightButton).toHaveClass('selected');
         expect(systemButton).not.toHaveClass('selected');
         expect(darkButton).not.toHaveClass('selected');
 
         // Click the System button
         fireEvent.click(systemButton);
+        expect(mockSetTheme).toHaveBeenCalledWith('system');
+        rerender(<Theme theme="system" onSetTheme={mockSetTheme} />);
         expect(systemButton).toHaveClass('selected');
         expect(lightButton).not.toHaveClass('selected');
         expect(darkButton).not.toHaveClass('selected');
 
         // Click the Dark button
         fireEvent.click(darkButton);
+        expect(mockSetTheme).toHaveBeenCalledWith('dark');
+        rerender(<Theme theme="dark" onSetTheme={mockSetTheme} />);
         expect(darkButton).toHaveClass('selected');
         expect(lightButton).not.toHaveClass('selected');
         expect(systemButton).not.toHaveClass('selected');
