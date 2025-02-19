@@ -3,6 +3,7 @@ import os
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 from starlette.concurrency import run_in_threadpool
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.routers import emails_router, summaries_router, auth_router, user_router
 from app.models import EmailSchema, SummarySchema, UserSchema
@@ -19,6 +20,17 @@ app = FastAPI(
     # contact={"name": "Support", "url": "https://example.com/support"},
 )
 
+# Configure CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:8000",
+        "https://emailessence.github.io",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods
+    allow_headers=["*"],  # Allows all headers
+)
 
 
 @app.on_event("startup")
