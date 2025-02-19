@@ -1,3 +1,5 @@
+/* eslint-disable react/prop-types */
+/* eslint-disable no-unused-vars */
 import styles from "./register.module.css";
 
 /*
@@ -5,13 +7,13 @@ import styles from "./register.module.css";
 */
 
 export default function Register({ onLoginClick }) {
-  const handleGoogleRegister = () => {
-    window.location.href = "GoogleOAuthAuthorizationURL";
-  };
+  // const handleGoogleRegister = () => {
+  //   window.location.href = "GoogleOAuthAuthorizationURL";
+  // };
 
   return (
     <div className={styles.page}>
-      <div className={styles.formBox}>
+      {/* <div className={styles.formBox}>
         <div className={styles.registerDiv}>
           <div className={styles.registerIcon}>
             <img
@@ -68,7 +70,7 @@ export default function Register({ onLoginClick }) {
             </div>
           </form>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 }
