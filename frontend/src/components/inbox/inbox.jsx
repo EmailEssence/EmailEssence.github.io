@@ -87,7 +87,9 @@ function EmailDisplay({ curEmail }) {
         <div className="title">{curEmail.subject}</div>
         <div className="to">{`To: ${curEmail.recipients}`}</div>
         <div className="date">{`Date: ${date}`}</div>
-        <ReaderView curEmail={curEmail} />
+        <div className="reader-view">
+          <ReaderView curEmail={curEmail} />
+        </div>
       </div>
       <div className="body">
         <div className="content-container">
@@ -100,7 +102,11 @@ function EmailDisplay({ curEmail }) {
 
 // eslint-disable-next-line no-unused-vars
 function ReaderView({ curEmail }) {
-  return <div></div>;
+  return (
+    <div>
+      <img src="./src/assets/ReaderView.svg" alt="ReaderView Icon" />
+    </div>
+  );
 }
 
 const getDate = (date) => {

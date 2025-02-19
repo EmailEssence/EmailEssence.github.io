@@ -37,6 +37,12 @@
   font-size: 1rem;
 }
 
+.email-display .reader-view {
+  grid-row: 2 / -1;
+  grid-column: 2 / 2;
+  width: 50%;
+}
+
 .email-display .date {
   text-align: right;
   grid-row: 1 / 1;
