@@ -20,17 +20,30 @@ export default function Page() {
   const [theme, setTheme] = useState("system");
   const [emailsByDate, setEmailsByDate] = useState(null);
   const [token, setToken] = useState(null);
+  const [loading, setLoading] = useState(false);
   const gridTempCol = `${expandedSideBar ? "180" : "80"}px 1fr`;
 
-  const handleLogin = (token) => {
-    setToken(token);
-    setLoggedIn(true);
+
+  const handleLogin = async (token) => {
     try {
-      setEmailsByDate(fetchEmails());
-      setCurEmail(emailsByDate[0]);
+      setLoading(true);
+      setToken(token);
+      
+      // Fetch emails before changing view state
+      const emails = await fetchEmails();
+      setEmailsByDate(emails);
+      if (emails?.length) {
+        setCurEmail(emails[0]);
+      }
+      
+      // Update view state after data is ready
+      setLoggedIn(true);
       setCurPage("dashboard");
     } catch (error) {
-      console.error("Error fetching emails:", error);
+      console.error("Error in auth flow:", error);
+      setToken(null);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -120,14 +133,16 @@ export default function Page() {
   };
 
   return (
-    <>
-      <div className="page">
-        {loggedIn
-          ? emailClient()
-          : curPage === "login"
-          ? loginPage()
-          : registerPage()}
-      </div>
-    </>
+    <div className="page">
+      {loading ? (
+        <div>Loading...</div>
+      ) : loggedIn ? (
+        emailClient()
+      ) : curPage === "login" ? (
+        loginPage()
+      ) : (
+        registerPage()
+      )}
+    </div>
   );
 }

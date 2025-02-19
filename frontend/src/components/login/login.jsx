@@ -28,6 +28,7 @@ export const OAuthCallback = ({ forward }) => {
               // token is valid, proceed with forwarding
               forward(authState.token);
               window.location.hash = "";
+              return; //exit early after forwarding
             }
           }
         } catch (error) {
@@ -40,7 +41,7 @@ export const OAuthCallback = ({ forward }) => {
     handleCallback();
   }, [forward]);
 
-  return <div>Completing sign in...</div>;
+  return null; 
 };
 
 export const Login = ({ forward }) => {
