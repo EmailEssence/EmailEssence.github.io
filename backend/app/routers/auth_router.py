@@ -7,6 +7,7 @@ from fastapi.responses import RedirectResponse
 from google.auth.transport.requests import Request as GoogleRequest
 from starlette.concurrency import run_in_threadpool
 from google.oauth2.credentials import Credentials
+from typing import Dict
 
 from app.services.auth_service import create_authorization_url, get_tokens_from_code, get_credentials
 
@@ -122,11 +123,16 @@ async def auth_status():
         }
 
 @router.post("/verify")
-async def verify_token(token: str = Body(...)):
+async def verify_token(data: Dict[str, str] = Body(...)):
     """
     Verifies token directly with Google
+    Accepts token object in request body
     """
     try:
+        token = data.get('token')
+        if not token:
+            return {"verified": False}
+
         # Create credentials object with just the token
         credentials = Credentials(
             token=token,
