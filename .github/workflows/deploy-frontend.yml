@@ -33,7 +33,7 @@ jobs:
         uses: JamesIves/github-pages-deploy-action@v4
         with:
        
-          folder: build # The folder containing your React build output (usually 'build' or 'dist')
+          folder: frontend/build # The folder containing your React build output (usually 'build' or 'dist')
           branch: gh-pages # The branch to deploy to (must match your GitHub Pages source branch)
           repository-name: ${{ github.repository }} # Optional, but good practice to be explicit
           token: ${{ secrets.GITHUB_TOKEN }} # Use the built-in GITHUB_TOKEN secret
