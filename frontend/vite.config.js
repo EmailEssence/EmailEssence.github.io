@@ -5,6 +5,9 @@ import { configDefaults } from 'vitest/config'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  build: {
+    outDir: '../build'
+  },
   test: {
     globals: true,
     environment: 'jsdom',

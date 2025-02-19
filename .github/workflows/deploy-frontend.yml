@@ -15,20 +15,20 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 'lts/*' # Use the latest LTS version of Node.js
-          
+
       - name: Change directory to frontend
         run: cd frontend
 
       - name: Install dependencies
-        run: npm install # Or yarn install, depending on your project
+        run: npm install
 
       - name: Build React App
-        run: npm run build # Or yarn build, depending on your project
+        run: npm run build 
 
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
         with:
-          folder: build # The folder containing your React build output (usually 'build' or 'dist')
+          folder: ../build # The folder containing your React build output (usually 'build' or 'dist')
           branch: gh-pages # The branch to deploy to (must match your GitHub Pages source branch)
           repository-name: ${{ github.repository }} # Optional, but good practice to be explicit
           token: ${{ secrets.GITHUB_TOKEN }} # Use the built-in GITHUB_TOKEN secret
