@@ -1,11 +1,11 @@
-import emails from "./retrieve_emails_response.json";
-import summaries from "./summarize_email_response.json";
+// import emails from "./retrieve_emails_response.json";
+// import summaries from "./summarize_email_response.json";
 
-export const baseUrl = "";
+export const baseUrl = "https://ee-backend-w86t.onrender.com/";
 
 async function getAllEmails() {
   try {
-    const response = await fetch(baseUrl);
+    const response = await fetch(baseUrl + "emails/");
     if (!response.ok) {
       throw new Error(`Failed to retrieve emails: ${response.statusText}`);
     }
@@ -18,7 +18,7 @@ async function getAllEmails() {
 
 async function getAllSummaries() {
   try {
-    const response = await fetch(baseUrl);
+    const response = await fetch(baseUrl + "summaries/");
     if (!response.ok) {
       throw new Error(`Failed to retrieve summaries: ${response.statusText}`);
     }
@@ -29,36 +29,37 @@ async function getAllSummaries() {
   }
 }
 
-// const emails = getAllEmails();
-// const summaries = getAllSummaries();
+export default async function fetchAll() {
+  const emails = getAllEmails();
+  const summaries = getAllSummaries();
 
-let arr1 = JSON.parse(JSON.stringify(emails));
-const arr2 = JSON.parse(JSON.stringify(summaries));
+  let arr1 = JSON.parse(JSON.stringify(emails));
+  const arr2 = JSON.parse(JSON.stringify(summaries));
 
-arr1.map((element, index) => {
-  const sumText = arr2[index].summary_text;
-  const keywords = arr2[index].keywords;
-  element.summary_text = sumText;
-  element.keywords = keywords;
-  const date = element.received_at;
-  element.received_at = parseDate(date);
-  return element;
-});
+  arr1.map((element, index) => {
+    const sumText = arr2[index].summary_text;
+    const keywords = arr2[index].keywords;
+    element.summary_text = sumText;
+    element.keywords = keywords;
+    const date = element.received_at;
+    element.received_at = parseDate(date);
+    return element;
+  });
 
-function parseDate(date) {
-  const dateArr = [];
-  const time = date.slice(11, 16);
-  const year = date.slice(0, 4);
-  const month = date.slice(5, 7);
-  const day = date.slice(8, 10);
-  dateArr.push(year);
-  dateArr.push(month);
-  dateArr.push(day);
-  dateArr.push(time);
-  return dateArr;
+  function parseDate(date) {
+    const dateArr = [];
+    const time = date.slice(11, 16);
+    const year = date.slice(0, 4);
+    const month = date.slice(5, 7);
+    const day = date.slice(8, 10);
+    dateArr.push(year);
+    dateArr.push(month);
+    dateArr.push(day);
+    dateArr.push(time);
+    return dateArr;
+  }
+  return arr1;
 }
-
-export default arr1;
 
 // "user_id" ID of the user
 // "email_id" ID of the email (unique to each email)

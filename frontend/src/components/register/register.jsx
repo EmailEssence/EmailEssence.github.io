@@ -1,5 +1,9 @@
 import styles from "./register.module.css";
 
+/*
+
+*/
+
 export default function Register({ onLoginClick }) {
   const handleGoogleRegister = () => {
     window.location.href = "GoogleOAuthAuthorizationURL";
@@ -10,11 +14,18 @@ export default function Register({ onLoginClick }) {
       <div className={styles.formBox}>
         <div className={styles.registerDiv}>
           <div className={styles.registerIcon}>
-            <img src="./src/assets/Logo.PNG" alt="Register Icon" className={styles.registerPhoto} />
+            <img
+              src="./src/assets/Logo.PNG"
+              alt="Register Icon"
+              className={styles.registerPhoto}
+            />
           </div>
           <p className={styles.title}>Create an Account</p>
           <div className={styles.loginInLink}>
-            Already have an account? <a href="#" onClick={onLoginClick}>Login</a>
+            Already have an account?{" "}
+            <a href="#" onClick={onLoginClick}>
+              Login
+            </a>
           </div>
           <form className={styles.registerInput}>
             <div>

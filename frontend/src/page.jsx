@@ -6,22 +6,24 @@ import Register from "./components/register/register";
 import { Settings } from "./components/settings/settings";
 import SideBar from "./components/sidebar/sidebar";
 import { markEmailAsRead } from "./emails/emailHandler";
-import emailsByDate from "./emails/emailParse";
+import fetchEmails from "./emails/emailParse";
 import "./page.css";
 
 export default function Page() {
   const [curPage, setCurPage] = useState("login");
   const [expandedSideBar, setExpandedSideBar] = useState(false);
   const [loggedIn, setLoggedIn] = useState(false);
-  const [curEmail, setCurEmail] = useState(emailsByDate[0]);
+  const [curEmail, setCurEmail] = useState(null);
   const [isChecked, setIsChecked] = useState(false);
   const [emailFetchInterval, setEmailFetchInterval] = useState(0);
   const [theme, setTheme] = useState("system");
-
+  const [emailsByDate, setEmailsByDate] = useState(null);
   const gridTempCol = `${expandedSideBar ? "180" : "80"}px 1fr`;
 
   const handleLogin = () => {
     setLoggedIn(true);
+    setEmailsByDate(fetchEmails());
+    setCurEmail(emailsByDate[0]);
     setCurPage("dashboard");
   };
 
