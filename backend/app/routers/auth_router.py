@@ -34,11 +34,9 @@ async def callback(code: str):
     """
     try:
         tokens = await run_in_threadpool(lambda: get_tokens_from_code(code))
-        # TODO:
-        # 1. Store the tokens securely
-        # 2. Create/update user in your database
-        # 3. Generate your app's session token
-        return tokens
+        # After processing the token, redirect to frontend
+        frontend_url = "https://emailessence.github.io/"  # or your actual frontend URL
+        return RedirectResponse(url=f"{frontend_url}")
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -136,7 +134,7 @@ async def auth_status():
             "is_authenticated": credentials is not None,
             "token_valid": credentials.valid if credentials else False,
             "token_expired": credentials.expired if credentials else True,
-            "has_refresh_token": bool(credentials.refresh_token if credentials else False)
+            "has_refresh_token": bool(credentials.refresh_token if credentHials else False)
         }
     except Exception as e:
         return {
