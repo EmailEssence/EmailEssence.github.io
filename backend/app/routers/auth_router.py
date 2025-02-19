@@ -4,7 +4,7 @@ from fastapi.responses import RedirectResponse
 from google.auth.transport.requests import Request as GoogleRequest
 from starlette.concurrency import run_in_threadpool
 
-from app.services import auth_service
+from app.services import create_authorization_url, get_tokens_from_code
 
 router = APIRouter()
 
