@@ -13,26 +13,35 @@ import "./page.css";
 export default function Page() {
   const [curPage, setCurPage] = useState("login");
   const [expandedSideBar, setExpandedSideBar] = useState(false);
-  const [loggedIn, setLoggedIn] = useState(false);
+
   const [curEmail, setCurEmail] = useState(null);
   const [isChecked, setIsChecked] = useState(false);
   const [emailFetchInterval, setEmailFetchInterval] = useState(0);
   const [theme, setTheme] = useState("system");
   const [emailsByDate, setEmailsByDate] = useState(null);
-  const [token, setToken] = useState(null);
+
   const [loading, setLoading] = useState(false);
   const gridTempCol = `${expandedSideBar ? "180" : "80"}px 1fr`;
 
-// TODO: Actually handle emails..
+  const [loggedIn, setLoggedIn] = useState(() => {
+  const savedToken = localStorage.getItem('auth_token');
+    return !!savedToken;
+  });
+
+  const [token, setToken] = useState(() => {
+    return localStorage.getItem('auth_token');
+  });
+
   const handleLogin = async (token) => {
     try {
       setLoading(true);
+      // Persist token
+      localStorage.setItem('auth_token', token);
       setToken(token);
       
       const emails = await fetchEmails();
       const emailArray = Array.isArray(emails) ? emails : [];
       
-      // Atomic state update batch
       setEmailsByDate(emailArray);
       setCurEmail(emailArray[0] || null); 
       setLoggedIn(true);
@@ -40,6 +49,8 @@ export default function Page() {
       
     } catch (error) {
       console.error("Auth flow error:", error);
+      // Clear invalid token
+      localStorage.removeItem('auth_token');
       setEmailsByDate([]);
       setCurEmail(null);
     } finally {

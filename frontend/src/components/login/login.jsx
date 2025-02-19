@@ -10,38 +10,24 @@ export const OAuthCallback = ({ forward }) => {
       const hash = window.location.hash;
       if (hash && hash.startsWith("#auth=")) {
         try {
-          // Decode the auth state from URL hash
           const encodedState = hash.substring(6);
           const authState = JSON.parse(decodeURIComponent(encodedState));
 
           if (authState.authenticated && authState.token) {
-          // First verify the token
-            const verifyResponse = await fetch(`${baseUrl}/auth/verify`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify({ token: authState.token })
-            });
-
-            if (verifyResponse.ok) {
-              // token is valid, proceed with forwarding
-              forward(authState.token);
-              window.location.hash = "";
-              return; //exit early after forwarding
-            }
+            // Token is already verified by backend
+            forward(authState.token);
+            window.location.hash = "";
+            return;
           }
         } catch (error) {
           console.error("Error parsing auth state:", error);
         }
-      } else {
-        console.error("No hash found in URL");
       }
     };
     handleCallback();
   }, [forward]);
 
-  return null; 
+  return null;
 };
 
 export const Login = ({ forward }) => {
