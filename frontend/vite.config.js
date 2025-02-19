@@ -6,7 +6,7 @@ import { configDefaults } from 'vitest/config'
 export default defineConfig({
   plugins: [react()],
   build: {
-    outDir: '../build'
+    outDir: 'build'
   },
   test: {
     globals: true,
