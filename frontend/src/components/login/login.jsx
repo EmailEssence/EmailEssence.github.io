@@ -44,7 +44,8 @@ export const Login = ({ forward }) => {
       const response = await fetch(`${baseUrl}/auth/login`);
       const data = await response.json();
       if (data.authorization_url) {
-        window.location.href = data.authorization_url;
+        window.open(data.authorization_url, "_blank");
+        //https://ee-backend-w86t.onrender.com/auth/callback?state=3kcnwylQpcgVHUziNLC6rDcYcPyoRB&code=4%2F0ASVgi3JA0nLePkt6ii6OtB4_P1O9TlnwPNbd_-0ZDs7DSGGPH0TpCL1EOIHlZcxS9bzIYQ&scope=https%3A%2F%2Fmail.google.com%2F
       }
     } catch (error) {
       console.error("Login Error", error);
