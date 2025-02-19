@@ -1,5 +1,5 @@
 /* eslint-disable react/prop-types */
-import ReaderViewIcon from "../../assets/ReaderView";
+// import ReaderViewIcon from "../../assets/ReaderView";
 import ArrowIcon from "../../assets/InboxArrow";
 import "./emailDisplay.css";
 import "./emailEntry.css";
@@ -105,7 +105,8 @@ function EmailDisplay({ curEmail }) {
 function ReaderView({ curEmail }) {
   return (
     <div>
-      <ReaderViewIcon />
+      {/* <ReaderViewIcon /> */}
+      <img src="./src/assets/oldAssets/ReaderView.svg" alt="ReaderView Icon" />
     </div>
   );
 }

@@ -2,7 +2,7 @@
 import { color1E, colorD9, colorE9 } from "../../assets/constants";
 import InboxIcon from "../../assets/InboxIcon";
 import SettingsIcon from "../../assets/SettingsIcon";
-import Logo from "../../assets/Logo";
+// import Logo from "../../assets/Logo";
 import "./sidebar.css";
 
 export default function SideBar({
@@ -15,7 +15,8 @@ export default function SideBar({
     <div>
       <div className="sidebar" style={{ width: expanded ? "180px" : "80px" }}>
         <Button expanded={expanded} onClick={onLogoClick} name="">
-          <Logo />
+          {/* <Logo /> */}
+          <img src="./src/assets/oldAssets/Logo.svg" alt="Logo Icon" />
         </Button>
         <Button
           expanded={expanded}

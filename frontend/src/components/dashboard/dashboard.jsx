@@ -1,7 +1,7 @@
 /* eslint-disable react/prop-types */
 import FullScreenIcon from "../../assets/FullScreenIcon";
 import InboxIcon from "../../assets/InboxArrow";
-import ViewIcon from "../../assets/ViewIcon";
+// import ViewIcon from "../../assets/ViewIcon";
 import "./miniview.css";
 import "./weightedEmailList.css";
 
@@ -59,7 +59,8 @@ function WEListEmail({ email, setCurEmail, handlePageChange }) {
           handlePageChange("inbox");
         }}
       >
-        <ViewIcon />
+        {/* <ViewIcon /> */}
+        <img src="./src/assets/oldAssets/ViewIcon.svg" alt="View Icon" />
       </div>
     </div>
   );
