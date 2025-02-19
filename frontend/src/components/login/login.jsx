@@ -3,6 +3,7 @@
 import styles from "./login.module.css";
 import { baseUrl } from "../../emails/emailParse";
 import { useEffect } from "react";
+import Logo from "../../assets/Logo";
 
 export const OAuthCallback = ({ forward }) => {
   useEffect(() => {
@@ -54,11 +55,7 @@ export const Login = ({ forward }) => {
       <div className={styles.formBox}>
         <div className={styles.loginDiv}>
           <div className={styles.loginIcon}>
-            <img
-              src="./src/assets/Logo.svg"
-              alt="Login Icon"
-              className={styles.loginPhoto}
-            />
+            <Logo />
           </div>
           <p className={styles.title}>Welcome Back</p>
           <button onClick={handleLogin} className={styles.googleButton}>

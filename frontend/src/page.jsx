@@ -24,36 +24,35 @@ export default function Page() {
   const gridTempCol = `${expandedSideBar ? "180" : "80"}px 1fr`;
 
   const [loggedIn, setLoggedIn] = useState(() => {
-  const savedToken = localStorage.getItem('auth_token');
+    const savedToken = localStorage.getItem("auth_token");
     return !!savedToken;
   });
 
   const [token, setToken] = useState(() => {
-    return localStorage.getItem('auth_token');
+    return localStorage.getItem("auth_token");
   });
 
   const handleLogin = async (token) => {
     try {
       setLoading(true);
       // Persist token
-      localStorage.setItem('auth_token', token);
+      localStorage.setItem("auth_token", token);
       setToken(token);
-      
+
       const emails = await fetchEmails();
       if (!Array.isArray(emails)) {
-        throw new Error('Invalid email response format');
+        throw new Error("Invalid email response format");
       }
       const emailArray = Array.isArray(emails) ? emails : [];
-      
+
       setEmailsByDate(emailArray);
-      setCurEmail(emailArray[0] || null); 
+      setCurEmail(emailArray[0] || null);
       setLoggedIn(true);
       setCurPage("dashboard");
-      
     } catch (error) {
       console.error("Auth flow error:", error);
       // Clear invalid token
-      localStorage.removeItem('auth_token');
+      localStorage.removeItem("auth_token");
       setEmailsByDate([]);
       setCurEmail(null);
     } finally {
@@ -151,7 +150,11 @@ export default function Page() {
       {loading ? (
         <div>Loading emails...</div>
       ) : !loggedIn ? (
-        curPage === "login" ? loginPage() : registerPage()
+        curPage === "login" ? (
+          loginPage()
+        ) : (
+          registerPage()
+        )
       ) : emailsByDate === null ? (
         <div>Initializing dashboard...</div>
       ) : (

@@ -1,5 +1,6 @@
 /* eslint-disable react/prop-types */
-import Icon from "../../assets/InboxArrow";
+import ReaderViewIcon from "../../assets/ReaderView";
+import ArrowIcon from "../../assets/InboxArrow";
 import "./emailDisplay.css";
 import "./emailEntry.css";
 import "./emailList.css";
@@ -65,7 +66,7 @@ function InboxEmailList({ emailList, curEmail, onClick }) {
       <div className="inbox-title-container">
         <div className="inbox-title">
           <div className="inbox-icon">
-            <Icon />
+            <ArrowIcon />
           </div>
           <div className="inbox-word">Inbox</div>
         </div>
@@ -104,7 +105,7 @@ function EmailDisplay({ curEmail }) {
 function ReaderView({ curEmail }) {
   return (
     <div>
-      <img src="./src/assets/ReaderView.svg" alt="ReaderView Icon" />
+      <ReaderViewIcon />
     </div>
   );
 }
