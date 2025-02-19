@@ -21,8 +21,8 @@ export const OAuthCallback = ({ forward }) => {
 
             if (statusData.is_authenticated) {
               // :)
-              forward(authState.token);
-              window.location.hash = "";
+              forward(authState.token); // Pass the token to forward
+              window.location.hash = ""; // Clear the hash
             } else {
               console.error("Authentication check failed");
             }
@@ -44,7 +44,13 @@ export const OAuthCallback = ({ forward }) => {
 };
 
 export const Login = ({ forward }) => {
+  const hash = window.location.hash;
+  if (hash && hash.startsWith("#auth=")) {
+    return <OAuthCallback forward={forward} />;
+  }
+
   const handleLogin = async () => {
+    // Check for auth hash and render OAuthCallback if present
     try {
       const response = await fetch(`${baseUrl}/auth/login`);
       const data = await response.json();
@@ -55,13 +61,6 @@ export const Login = ({ forward }) => {
       console.error("Login Error", error);
     }
   };
-
-  const params = new URLSearchParams(window.location.search);
-  const code = params.get("code");
-
-  if (code) {
-    return <OAuthCallback forward={forward} code={code} />;
-  }
 
   return (
     <div className={styles.page}>
