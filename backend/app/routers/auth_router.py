@@ -1,7 +1,7 @@
 import json
 import urllib.parse
 
-from fastapi import APIRouter, HTTPException, status, Depends, Request
+from fastapi import APIRouter, HTTPException, status, Depends, Request, Body
 from fastapi.security import OAuth2AuthorizationCodeBearer
 from fastapi.responses import RedirectResponse
 from google.auth.transport.requests import Request as GoogleRequest
@@ -121,8 +121,8 @@ async def auth_status():
             "error": str(e)
         }
 
-@router.get("/verify")
-async def verify_token(token: str):
+@router.post("/verify")
+async def verify_token(token: str = Body(...)):
     """
     Verifies token directly with Google
     """
