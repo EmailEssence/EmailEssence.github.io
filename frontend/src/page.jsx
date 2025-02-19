@@ -29,20 +29,15 @@ export default function Page() {
       setLoading(true);
       setToken(token);
       
-      // Await email fetch before state transitions
       const emails = await fetchEmails();
       const emailArray = Array.isArray(emails) ? emails : [];
       
-      // Batch state updates
-      await Promise.resolve(); // Microtask boundary
+      // Atomic state update batch
       setEmailsByDate(emailArray);
-      if (emailArray.length > 0) {
-        setCurEmail(emailArray[0]);
-      }
-      
-      // Navigation updates last
+      setCurEmail(emailArray[0] || null); 
       setLoggedIn(true);
       setCurPage("dashboard");
+      
     } catch (error) {
       console.error("Auth flow error:", error);
       setEmailsByDate([]);

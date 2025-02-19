@@ -24,8 +24,8 @@ env:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
+    if: ${{ false }} # disable for now
     permissions:
       contents: read
       packages: write
