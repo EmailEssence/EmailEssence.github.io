@@ -1,7 +1,7 @@
-from fastapi import APIRouter, HTTPException, status, Depends
+from fastapi import APIRouter, HTTPException, status, Depends, Request
 from fastapi.security import OAuth2AuthorizationCodeBearer
-
-from google.auth.transport.requests import Request
+from fastapi.responses import RedirectResponse
+from google.auth.transport.requests import Request as GoogleRequest
 from starlette.concurrency import run_in_threadpool
 
 from app.services import auth_service
@@ -12,6 +12,38 @@ oauth2_scheme = OAuth2AuthorizationCodeBearer(
     authorizationUrl="https://accounts.google.com/o/oauth2/auth",
     tokenUrl="https://oauth2.googleapis.com/token"
 )
+
+@router.get("/login")
+async def login():
+    """
+    Initiates the OAuth2 authorization flow with Google
+    """
+    try:
+        auth_url, state = await run_in_threadpool(auth_service.create_authorization_url)
+        return {"authorization_url": auth_url}
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to create authorization URL: {str(e)}"
+        )
+
+@router.get("/callback")
+async def callback(code: str):
+    """
+    Handles the OAuth callback from Google
+    """
+    try:
+        tokens = await run_in_threadpool(lambda: auth_service.get_tokens_from_code(code))
+        # TODO:
+        # 1. Store the tokens securely
+        # 2. Create/update user in your database
+        # 3. Generate your app's session token
+        return tokens
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"Failed to get tokens: {str(e)}"
+        )
 
 @router.get("/authorize")
 async def authorize():
@@ -36,7 +68,7 @@ async def get_token(token: str = Depends(oauth2_scheme)):
         credentials = await run_in_threadpool(auth_service.get_credentials)
         if not credentials.valid:
             if credentials.expired and credentials.refresh_token:
-                await run_in_threadpool(lambda: credentials.refresh(Request()))
+                await run_in_threadpool(lambda: credentials.refresh(GoogleRequest()))
             else:
                 raise HTTPException(
                     status_code=status.HTTP_401_UNAUTHORIZED,
@@ -59,7 +91,7 @@ async def get_internal_token():
         credentials = await run_in_threadpool(auth_service.get_credentials)
         if not credentials.valid:
             if credentials.expired and credentials.refresh_token:
-                await run_in_threadpool(lambda: credentials.refresh(Request()))
+                await run_in_threadpool(lambda: credentials.refresh(GoogleRequest()))
             else:
                 raise HTTPException(
                     status_code=status.HTTP_401_UNAUTHORIZED,
@@ -80,7 +112,7 @@ async def refresh_token():
     try:
         credentials = await run_in_threadpool(auth_service.get_credentials)
         if credentials.refresh_token:
-            await run_in_threadpool(lambda: credentials.refresh(Request()))
+            await run_in_threadpool(lambda: credentials.refresh(GoogleRequest()))
             return {"access_token": credentials.token, "token_type": "bearer"}
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
