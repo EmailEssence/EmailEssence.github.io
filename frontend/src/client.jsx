@@ -1,42 +1,59 @@
+import { useReducer } from "react";
 import "./client.css";
-import { useState } from "react";
 import Dashboard from "./components/dashboard/dashboard";
 import Inbox from "./components/inbox/inbox";
 import { Settings } from "./components/settings/settings";
 import SideBar from "./components/sidebar/sidebar";
+import { clientReducer, userPreferencesReducer } from "./reducers";
 
 export default function Client({ emailsByDate }) {
-  const [curPage, setCurPage] = useState("dashboard");
-  const [expandedSideBar, setExpandedSideBar] = useState(false);
 
-  const [curEmail, setCurEmail] = useState("current Email");
-  const [isChecked, setIsChecked] = useState(false);
-  const [emailFetchInterval, setEmailFetchInterval] = useState(0);
-  const [theme, setTheme] = useState("system");
-  const gridTempCol = `${expandedSideBar ? "180" : "80"}px 1fr`;
+  const [client, dispatchClient] = useReducer(clientReducer, { curPage: "dashboard", expandedSideBar: false, curEmail: "current Email"});
+  const [userPreferences, dispatchUserPreferences] = useReducer(userPreferencesReducer, {isChecked: false, emailFetchInterval: 0, theme: "system"});
+  
+  const gridTempCol = `${client.expandedSideBar ? "180" : "80"}px 1fr`;
 
   const handleLogoClick = () => {
-    setExpandedSideBar(!expandedSideBar);
+    dispatchClient({
+      type: 'logoClick',
+      state: client.expandedSideBar,
+    })
   };
 
   const handlePageChange = (pageName) => {
-    curPage === pageName ? setCurPage("dashboard") : setCurPage(pageName);
+    dispatchClient({
+      type: 'pageChange',
+      page: client.curPage === pageName ? "dashboard" : pageName
+    })
   };
 
   const handleToggleSummariesInInbox = () => {
-    setIsChecked(!isChecked);
+    dispatchUserPreferences({
+      type: 'isChecked',
+      isChecked: userPreferences.isChecked
+    });
   };
 
   const handleSetEmailFetchInterval = (interval) => {
-    setEmailFetchInterval(interval);
+    dispatchUserPreferences({
+      type: 'emailFetchInterval',
+      emailFetchInterval: interval
+      
+    })
   };
 
   const handleSetTheme = (theme) => {
-    setTheme(theme);
+    dispatchUserPreferences({
+      type: 'theme',
+      theme: theme
+    })
   };
 
   const handleSetCurEmail = (email) => {
-    setCurEmail(email);
+    dispatchClient({
+      type: 'emailChange',
+      email: email
+    })
   };
 
   const getPage = () => {
@@ -46,17 +63,17 @@ export default function Client({ emailsByDate }) {
           <Inbox
             emailList={emailsByDate}
             setCurEmail={handleSetCurEmail}
-            curEmail={curEmail}
+            curEmail={client.curEmail}
           />
         );
       case "settings":
         return (
           <Settings
-            isChecked={isChecked}
+            isChecked={userPreferences.isChecked}
             handleToggleSummariesInInbox={handleToggleSummariesInInbox}
-            emailFetchInterval={emailFetchInterval}
+            emailFetchInterval={userPreferences.emailFetchInterval}
             handleSetEmailFetchInterval={handleSetEmailFetchInterval}
-            theme={theme}
+            theme={userPreferences.theme}
             handleSetTheme={handleSetTheme}
           />
         );
@@ -76,9 +93,9 @@ export default function Client({ emailsByDate }) {
       <div className="client" style={{ gridTemplateColumns: gridTempCol }}>
         <SideBar
           onLogoClick={handleLogoClick}
-          expanded={expandedSideBar}
+          expanded={client.expandedSideBar}
           handlePageChange={handlePageChange}
-          selected={curPage}
+          selected={client.curEmail}
         />
         {getPage()}
       </div>

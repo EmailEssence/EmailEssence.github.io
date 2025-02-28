@@ -1,29 +1,47 @@
-export function placeholderReducer(tasks, action) {
+export function clientReducer(client, action) {
   switch (action.type) {
     case 'logoClick': {
-      return null;
-    }
+      return {
+        ...client,
+        expandedSideBar: !action.state
+      };
+    };
     case 'pageChange': {
-      return null;
-    }
-    case 'setCurEmail': {
-      return null;
-    }
-  }
-}
+      return {
+        ...client,
+        curPage: action.page
+      };
+    };
+    case 'emailChange': {
+      return {
+        ...client,
+        curEmail: action.email
+      };
+    };
+  };
+};
 
 
 
-export function userPreferencesReducer(tasks, action){
+export function userPreferencesReducer(userPreferences, action){
     switch(action.type){
         case "isChecked":{
-            return null;
+            return {
+                ...userPreferences, 
+                isChecked: !action.isChecked
+            };
         }
         case "emailFetchInterval":{
-            return null;
+            return {
+                ...userPreferences, 
+                emailFetchInterval: action.emailFetchInterval
+            };
         }
         case "theme":{
-            return null;
+            return {
+                ...userPreferences, 
+                theme: action.theme
+            };
         }
     }
 }
