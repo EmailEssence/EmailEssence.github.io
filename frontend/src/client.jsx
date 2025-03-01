@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 import { useReducer } from "react";
 import "./client.css";
 import Dashboard from "./components/dashboard/dashboard";
@@ -7,57 +8,62 @@ import SideBar from "./components/sidebar/sidebar";
 import { clientReducer, userPreferencesReducer } from "./reducers";
 
 export default function Client({ emailsByDate }) {
+  const [client, dispatchClient] = useReducer(clientReducer, {
+    curPage: "dashboard",
+    expandedSideBar: false,
+    curEmail: "current Email",
+  });
+  const [userPreferences, dispatchUserPreferences] = useReducer(
+    userPreferencesReducer,
+    { isChecked: false, emailFetchInterval: 0, theme: "system" }
+  );
 
-  const [client, dispatchClient] = useReducer(clientReducer, { curPage: "dashboard", expandedSideBar: false, curEmail: "current Email"});
-  const [userPreferences, dispatchUserPreferences] = useReducer(userPreferencesReducer, {isChecked: false, emailFetchInterval: 0, theme: "system"});
-  
   const gridTempCol = `${client.expandedSideBar ? "180" : "80"}px 1fr`;
 
   const handleLogoClick = () => {
     dispatchClient({
-      type: 'logoClick',
+      type: "logoClick",
       state: client.expandedSideBar,
-    })
+    });
   };
 
   const handlePageChange = (pageName) => {
     dispatchClient({
-      type: 'pageChange',
-      page: client.curPage === pageName ? "dashboard" : pageName
-    })
+      type: "pageChange",
+      page: client.curPage === pageName ? "dashboard" : pageName,
+    });
   };
 
   const handleToggleSummariesInInbox = () => {
     dispatchUserPreferences({
-      type: 'isChecked',
-      isChecked: userPreferences.isChecked
+      type: "isChecked",
+      isChecked: userPreferences.isChecked,
     });
   };
 
   const handleSetEmailFetchInterval = (interval) => {
     dispatchUserPreferences({
-      type: 'emailFetchInterval',
-      emailFetchInterval: interval
-      
-    })
+      type: "emailFetchInterval",
+      emailFetchInterval: interval,
+    });
   };
 
   const handleSetTheme = (theme) => {
     dispatchUserPreferences({
-      type: 'theme',
-      theme: theme
-    })
+      type: "theme",
+      theme: theme,
+    });
   };
 
   const handleSetCurEmail = (email) => {
     dispatchClient({
-      type: 'emailChange',
-      email: email
-    })
+      type: "emailChange",
+      email: email,
+    });
   };
 
   const getPage = () => {
-    switch (curPage) {
+    switch (client.curPage) {
       case "inbox":
         return (
           <Inbox
