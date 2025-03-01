@@ -3,6 +3,7 @@
 import styles from "./login.module.css";
 import { baseUrl } from "../../emails/emailParse";
 import { useEffect } from "react";
+import { authenticate } from "../../authentication/authenticate";
 // import Logo from "../../assets/Logo";
 
 export const OAuthCallback = ({ forward }) => {
@@ -36,6 +37,10 @@ export const Login = ({ forward }) => {
   if (hash && hash.startsWith("#auth=")) {
     return <OAuthCallback forward={forward} />;
   }
+
+  const handleGoogleClick = () => {
+    authenticate();
+  };
 
   const handleLogin = async () => {
     // Check for auth hash and render OAuthCallback if present
