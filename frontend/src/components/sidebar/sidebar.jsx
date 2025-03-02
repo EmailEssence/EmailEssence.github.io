@@ -41,24 +41,25 @@ export default function SideBar({
 }
 
 function Button({ expanded, curState = "N", onClick, name, children }) {
-  const buttonText =
+  const text =
     name.length > 0 ? `${name[0].toUpperCase()}${name.slice(1)}` : "";
-  const text = expanded ? buttonText : "";
-  const color = curState === name ? colorD9 : color1E;
-  const eColor = curState === name ? color1E : colorE9;
+  const colors =
+    curState === name
+      ? { main: colorD9, sub: color1E }
+      : { main: color1E, sub: colorE9 };
   return (
     <div>
       <div
         className="container"
         onClick={onClick}
         style={{
-          backgroundColor: color,
+          backgroundColor: colors.main,
           width: expanded ? "180px" : "80px",
         }}
       >
         <div className="icon">
           <div>{children}</div>
-          <p style={{ color: eColor }}>{text}</p>
+          {expanded && <p style={{ color: colors.sub }}>{text}</p>}
         </div>
       </div>
     </div>
