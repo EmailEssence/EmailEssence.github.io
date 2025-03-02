@@ -1,6 +1,7 @@
 /* eslint-disable react/prop-types */
 // import ReaderViewIcon from "../../assets/ReaderView";
 import ArrowIcon from "../../assets/InboxArrow";
+import { color00, colorD9, colorTP, colorB0 } from "../../assets/constants";
 import "./emailDisplay.css";
 import "./emailEntry.css";
 import "./emailList.css";
@@ -19,11 +20,14 @@ export default function Inbox({ emailList, setCurEmail, curEmail }) {
 }
 
 function EmailEntry({ email, onClick, selected }) {
+  const colors = selected
+    ? { main: colorD9, median: color00 }
+    : { main: colorTP, median: colorB0 };
   const date = getDate(email.received_at);
   return (
     <div
       className="entry"
-      style={{ backgroundColor: selected ? "#D9D9D9" : "transparent" }}
+      style={{ backgroundColor: colors.main }}
       onClick={onClick}
     >
       <div className="indicator-container">
@@ -34,10 +38,10 @@ function EmailEntry({ email, onClick, selected }) {
         <div className="date">{date}</div>
       </div>
       <div className="title">{email.subject}</div>
-      <div className="separator-container">
+      <div className="median-container">
         <div
-          className="separator"
-          style={{ backgroundColor: selected ? "#000000" : "#B0B0B0" }}
+          className="median"
+          style={{ backgroundColor: colors.median }}
         ></div>
       </div>
       <div className="summary">{email.summary_text}</div>
@@ -49,13 +53,12 @@ function InboxEmailList({ emailList, curEmail, onClick }) {
   const emails = () => {
     const returnBlock = [];
     for (const email of emailList) {
-      let selected = email === curEmail;
       returnBlock.push(
         <EmailEntry
           key={email.email_id}
           email={email}
           onClick={() => onClick(email)}
-          selected={selected}
+          selected={email === curEmail}
         />
       );
     }
