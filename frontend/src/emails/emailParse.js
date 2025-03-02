@@ -77,6 +77,10 @@ export default async function fetchAll() {
   }
 }
 
+export function getTop5(emails) {
+  return emails.length > 5 ? emails.slice(0, 5) : emails;
+}
+
 // "user_id" ID of the user
 // "email_id" ID of the email (unique to each email)
 // "sender" email of the sender

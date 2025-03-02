@@ -1,6 +1,7 @@
 /* eslint-disable react/prop-types */
 import FullScreenIcon from "../../assets/FullScreenIcon";
 import InboxIcon from "../../assets/InboxArrow";
+import { getTop5 } from "../../emails/emailParse";
 // import ViewIcon from "../../assets/ViewIcon";
 import "./miniview.css";
 import "./weightedEmailList.css";
@@ -32,12 +33,13 @@ export default function Dashboard({
 
 function WeightedEmailList({ emailList, setCurEmail, handlePageChange }) {
   const emails = () => {
+    const WEList = getTop5(emailList);
     const returnBlock = [];
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < WEList.length; i++) {
       returnBlock.push(
         <WEListEmail
-          key={emailList[i].email_id}
-          email={emailList[i]}
+          key={WEList[i].email_id}
+          email={WEList[i]}
           setCurEmail={setCurEmail}
           handlePageChange={handlePageChange}
         />
