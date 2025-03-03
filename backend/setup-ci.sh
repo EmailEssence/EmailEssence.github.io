@@ -71,9 +71,16 @@ log "INFO" "Generating comprehensive requirements with monitoring extras..."
     exit 1
 }
 
-# Install dependencies for production
-log "INFO" "Installing production dependencies..."
-"$UV_PATH/uv" pip sync --python-version 3.12 requirements-all.txt || {
+# Generate development requirements with testing tools (pytest, etc.)
+log "INFO" "Generating development requirements with testing dependencies..."
+"$UV_PATH/uv" pip compile --extra dev pyproject.toml > requirements-dev.txt || {
+    log "ERROR" "Failed to generate requirements-dev.txt"
+    exit 1
+}
+
+# Install ALL dependencies including development dependencies for CI
+log "INFO" "Installing ALL dependencies including development dependencies..."
+"$UV_PATH/uv" pip sync --python-version 3.12 requirements-all.txt requirements-dev.txt || {
     log "ERROR" "Failed to install dependencies"
     exit 1
 }
@@ -82,6 +89,13 @@ log "INFO" "Installing production dependencies..."
 log "INFO" "Verifying critical dependencies..."
 python -c "import fastapi, uvicorn, motor" || {
     log "ERROR" "Critical dependency verification failed"
+    exit 1
+}
+
+# Verify testing dependencies are installed
+log "INFO" "Verifying testing dependencies..."
+python -c "import pytest" || {
+    log "ERROR" "Testing dependency verification failed"
     exit 1
 }
 
