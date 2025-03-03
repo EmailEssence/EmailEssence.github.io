@@ -51,7 +51,7 @@ export default function Page() {
     return loading ? (
       <div>Loading emails...</div>
     ) : !loggedIn ? (
-      <Login handleGoogleClick={async () => authenticate} />
+      <Login handleGoogleClick={async () => authenticate()} />
     ) : emailsByDate === null ? (
       <div>Initializing dashboard...</div>
     ) : (
