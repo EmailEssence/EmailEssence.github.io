@@ -20,7 +20,6 @@ async def retrieve_email(email_id: str):
     email = await email_service.fetch_email(email_id)
     if not email:
         raise HTTPException(status_code=404, detail="Email not found")
-    email["from_"] = email.pop("from", None)
     return email
 
 # Insert a new email
@@ -28,7 +27,6 @@ async def retrieve_email(email_id: str):
 async def create_email(email: EmailSchema):
     try:
         inserted_email = await email_service.insert_email(email)
-        inserted_email["from_"] = inserted_email.pop("from", None)
         return inserted_email
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to insert email: {str(e)}")
@@ -39,7 +37,6 @@ async def mark_email_as_read(email_id: str):
     updated_email = await email_service.mark_email_as_read(email_id)
     if not updated_email:
         raise HTTPException(status_code=404, detail="Email not found")
-    updated_email["from_"] = updated_email.pop("from", None)
     return updated_email
 
 # Delete an email

@@ -8,6 +8,23 @@ from typing import Generator
 from fastapi.testclient import TestClient
 from fastapi import FastAPI
 
+# Import all fixtures from constants.py
+# This makes all fixtures available to all tests automatically
+from app.tests.constants import (
+    mock_email_message,
+    mock_email_schema,
+    mock_summary,
+    mock_db,
+    mock_db_cursor,
+    mock_empty_db_cursor,
+    mock_imap_client,
+    mock_credentials,
+    mock_threadpool,
+    mock_fetch_emails,
+    mock_empty_fetch_emails,
+    mock_error_fetch_emails
+)
+
 # Base application fixture
 @pytest.fixture(scope="session")
 def test_app() -> FastAPI:
@@ -74,17 +91,4 @@ def test_settings():
         "MONGO_URI": os.getenv("TEST_MONGO_URI", "mongodb://localhost:27017/test_db")
     }
 
-# Mock Credentials fixture
-@pytest.fixture(scope="function")
-def mock_credentials():
-    """
-    Mock OAuth credentials for testing.
-    """
-    return {
-        "token": "test_token",
-        "refresh_token": "test_refresh_token",
-        "token_uri": "https://oauth2.googleapis.com/token",
-        "client_id": "test_client_id",
-        "client_secret": "test_client_secret",
-        "scopes": ["https://mail.google.com/"]
-    }
+
