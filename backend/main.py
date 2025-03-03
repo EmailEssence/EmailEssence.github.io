@@ -1,6 +1,6 @@
 # uvicorn main:app --reload
 import os
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends, status
 from fastapi.responses import FileResponse
 from starlette.concurrency import run_in_threadpool
 from fastapi.middleware.cors import CORSMiddleware
@@ -66,3 +66,48 @@ async def favicon():
     if os.path.exists(favicon_path):
         return FileResponse(favicon_path)
     return HTTPException(status_code=404, detail="Favicon not found")
+
+# Add a health check endpoint for Docker
+@app.get("/health", status_code=200)
+async def health_check():
+    """
+    Health check endpoint for monitoring and Docker health checks.
+    Verifies core dependencies: MongoDB connection and Google API.
+    Returns a 200 OK status if all components are operational.
+    """
+    health_status = {
+        "status": "healthy",
+        "components": {
+            "database": "unknown",
+            "google_api": "unknown"
+        }
+    }
+    
+    # Check MongoDB connection
+    try:
+        await db.command("ping")
+        health_status["components"]["database"] = "connected"
+    except Exception as e:
+        health_status["components"]["database"] = f"error: {str(e)}"
+        health_status["status"] = "unhealthy"
+    
+    # Check Google API connectivity
+    try:
+        # Use httpx for async HTTP requests
+        import httpx
+        
+        # Check Google OAuth discovery document - this doesn't require authentication
+        # and verifies we can reach Google's servers
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            response = await client.get('https://accounts.google.com/.well-known/openid-configuration')
+            
+            if response.status_code == 200:
+                health_status["components"]["google_api"] = "connected"
+            else:
+                health_status["components"]["google_api"] = f"error: HTTP {response.status_code}"
+                health_status["status"] = "unhealthy"
+    except Exception as e:
+        health_status["components"]["google_api"] = f"error: {str(e)}"
+        health_status["status"] = "unhealthy"
+    
+    return health_status
