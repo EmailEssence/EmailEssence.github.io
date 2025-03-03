@@ -1,68 +1,88 @@
 #!/bin/bash
-set -e
+set -e  # Exit immediately if a command fails
 
-echo "Checking for UV installation..."
+# Log function for standardized output
+log() {
+    local level="$1"
+    local message="$2"
+    echo "[$(date -u '+%Y-%m-%d %H:%M:%S UTC')] [$level] $message"
+}
+
+log "INFO" "Starting CI environment setup..."
+
+# Ensure we're in the backend directory
+if [[ $(basename "$PWD") != "backend" ]]; then
+    log "INFO" "Changing to backend directory..."
+    cd backend || { log "ERROR" "Failed to change directory"; exit 1; }
+fi
+
+# Create log directory if it doesn't exist
+mkdir -p logs
+
+# Install UV package manager
+log "INFO" "Checking for UV installation..."
 UV_PATH="$HOME/.local/bin"
 if ! test -x "$UV_PATH/uv"; then
-    echo "UV not found, installing..."
+    log "INFO" "UV not found, installing..."
     curl -LsSf https://astral.sh/uv/install.sh | sh
     if ! test -x "$UV_PATH/uv"; then
-        echo "Error: UV installation failed at $UV_PATH/uv"
+        log "ERROR" "UV installation failed at $UV_PATH/uv"
         exit 1
     fi
 fi
-echo "UV is ready at $UV_PATH/uv"
+log "INFO" "UV is ready at $UV_PATH/uv"
 
 # Create virtual environment
-echo "Creating virtual environment..."
-"$UV_PATH/uv" venv
+log "INFO" "Creating virtual environment..."
+"$UV_PATH/uv" venv || { log "ERROR" "Failed to create virtual environment"; exit 1; }
 
-# Activate virtual environment (temporarily, just for path context for sed command)
-echo "Activating virtual environment temporarily for shebang fix..."
-source .venv/bin/activate
+# Activate virtual environment
+log "INFO" "Activating virtual environment..."
+source .venv/bin/activate || { log "ERROR" "Failed to activate virtual environment"; exit 1; }
 
-# Fix shebang line in uvicorn script (and potentially others if needed)
-echo "Fixing shebang line in uvicorn..."
+# Fix shebang lines in scripts to ensure portability
+log "INFO" "Fixing shebang lines in scripts for portability..."
 SHEBANG_LINE="#!/usr/bin/env python3"
-SCRIPT_TO_FIX=".venv/bin/uvicorn"
+SCRIPTS_TO_FIX=(".venv/bin/uvicorn" ".venv/bin/python" ".venv/bin/pip")
 
-echo "Checking if script exists: $SCRIPT_TO_FIX"
-if test -f "$SCRIPT_TO_FIX"; then
-  echo "Script $SCRIPT_TO_FIX exists."
-  echo "Current shebang line (before sed):"
-  head -n 1 "$SCRIPT_TO_FIX"
+for SCRIPT_TO_FIX in "${SCRIPTS_TO_FIX[@]}"; do
+    if test -f "$SCRIPT_TO_FIX"; then
+        log "INFO" "Fixing shebang in $SCRIPT_TO_FIX"
+        sed -i "1s/^#!.*/$SHEBANG_LINE/" "$SCRIPT_TO_FIX" || {
+            log "WARNING" "Failed to fix shebang in $SCRIPT_TO_FIX"
+        }
+    else
+        log "WARNING" "Script $SCRIPT_TO_FIX not found, skipping shebang fix"
+    fi
+done
 
-  sed -i "1s/^#!.*/$SHEBANG_LINE/" "$SCRIPT_TO_FIX"
+# Generate requirements file from pyproject.toml
+# For deployment, we only need prod dependencies, not dev extras
+log "INFO" "Generating production requirements from pyproject.toml..."
+"$UV_PATH/uv" pip compile pyproject.toml > requirements.txt || {
+    log "ERROR" "Failed to generate requirements.txt"
+    exit 1
+}
 
-  if [ $? -eq 0 ]; then # Check exit code of sed
-    echo "sed command executed successfully."
-  else
-    echo "Error: sed command failed with exit code $?."
-    exit 1 # Exit if sed fails
-  fi
+# Generate full requirements with all extras for monitoring in production
+log "INFO" "Generating comprehensive requirements with monitoring extras..."
+"$UV_PATH/uv" pip compile --extra monitoring pyproject.toml > requirements-all.txt || {
+    log "ERROR" "Failed to generate requirements-all.txt"
+    exit 1
+}
 
-  echo "Shebang line in $SCRIPT_TO_FIX updated to: $SHEBANG_LINE"
-  echo "New shebang line (after sed):"
-  head -n 1 "$SCRIPT_TO_FIX"
-else
-  echo "Warning: Script $SCRIPT_TO_FIX not found, shebang fix skipped."
-fi
+# Install dependencies for production
+log "INFO" "Installing production dependencies..."
+"$UV_PATH/uv" pip sync --python-version 3.12 requirements-all.txt || {
+    log "ERROR" "Failed to install dependencies"
+    exit 1
+}
 
-# Deactivate virtual environment (no longer needed for shebang fix)
-deactivate
+# Verify critical dependencies are installed
+log "INFO" "Verifying critical dependencies..."
+python -c "import fastapi, uvicorn, motor" || {
+    log "ERROR" "Critical dependency verification failed"
+    exit 1
+}
 
-# Activate virtual environment for dependency installation and run
-echo "Activating virtual environment for dependency installation..."
-source .venv/bin/activate
-
-# Generate requirements file
-echo "Generating requirements from pyproject.toml..."
-"$UV_PATH/uv" pip compile --extra dev --extra docs --extra monitoring pyproject.toml > requirements-all.txt
-
-# Install dependencies
-echo "Installing dependencies..."
-"$UV_PATH/uv" pip sync --python-version 3.12 requirements-all.txt
-
-# Run tests
-#echo "Running tests..."
-#pytest
+log "INFO" "CI environment setup completed successfully"
