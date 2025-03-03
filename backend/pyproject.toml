@@ -74,6 +74,11 @@ addopts = [
 testpaths = ["app/tests"]
 asyncio_mode = "auto"
 python_files = "test_*.py"
+python_functions = "test_*"
+markers = [
+    "db: Tests that interact with the database",
+    "asyncio: Tests that use asyncio"
+]
 pythonpath = ["."] # imports
 
 [tool.mypy]

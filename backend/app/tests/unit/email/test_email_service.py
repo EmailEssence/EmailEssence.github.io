@@ -38,6 +38,7 @@ async def test_get_auth_token_failure():
 
 # Test fetch_emails
 @pytest.mark.skip(reason="Database implementation issues - to be fixed later")
+@pytest.mark.db
 @pytest.mark.asyncio
 async def test_fetch_emails_from_mongodb(mock_db):
     """Test fetching emails from MongoDB cache"""
@@ -59,6 +60,7 @@ async def test_fetch_emails_from_mongodb(mock_db):
 
 
 @pytest.mark.skip(reason="Database implementation issues - to be fixed later")
+@pytest.mark.db
 @pytest.mark.asyncio
 async def test_fetch_emails_no_email_account(mock_db):
     """Test fetching emails with no email account configured"""
@@ -78,6 +80,7 @@ async def test_fetch_emails_no_email_account(mock_db):
 
 # Test fetch_from_imap
 @pytest.mark.skip(reason="Database implementation issues - to be fixed later")
+@pytest.mark.db
 @pytest.mark.asyncio
 async def test_fetch_from_imap_success(mock_imap_client, mock_credentials, mock_db, mock_threadpool):
     """Test successful email retrieval from IMAP server"""
@@ -138,6 +141,7 @@ async def test_fetch_from_imap_error(mock_imap_client):
                     assert "Failed to fetch emails" in str(exc_info.value.detail)
 
 @pytest.mark.skip(reason="Database implementation issues - to be fixed later")
+@pytest.mark.db
 @pytest.mark.asyncio
 async def test_fetch_emails_empty_db_uses_imap(mock_imap_client, mock_empty_db_cursor, mock_threadpool):
     """Test that when MongoDB is empty, emails are fetched from IMAP"""

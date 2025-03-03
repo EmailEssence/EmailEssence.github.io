@@ -59,6 +59,8 @@ def load_env_file(env_file: str) -> None:
     else:
         print(f"Warning: Environment file {env_file} not found in tests directory, using default mock values")
 
+# Note: We now have environment variables set at the root conftest level,
+# so this is mostly for local development where you might want to use .env.test
 @pytest.fixture(scope="session", autouse=True)
 def test_settings():
     """
@@ -69,26 +71,13 @@ def test_settings():
     # Try to load test-specific environment variables
     load_env_file('.env.test')
     
-    # Set environment variables with mock values if not present
-    test_env_vars = {
-        "TEST_EMAIL_ACCOUNT": "test@example.com",
-        "TEST_OPENAI_API_KEY": "sk-test-key-123456789",
-        "TEST_GOOGLE_CLIENT_ID": "test-client-id.apps.googleusercontent.com",
-        "TEST_GOOGLE_CLIENT_SECRET": "test-client-secret-123456",
-        "TEST_MONGO_URI": "mongodb://localhost:27017/test_db"
-    }
-    
-    for key, value in test_env_vars.items():
-        if key not in os.environ:
-            os.environ[key] = value
-    
+    # Environment variables are now set in the root conftest.py
+    # This fixture remains for backward compatibility
     return {
         "TESTING": True,
-        "EMAIL_ACCOUNT": os.getenv("TEST_EMAIL_ACCOUNT", "test@example.com"),
-        "OPENAI_API_KEY": os.getenv("TEST_OPENAI_API_KEY", "test_key_123"),
-        "GOOGLE_CLIENT_ID": os.getenv("TEST_GOOGLE_CLIENT_ID", "test_client_id"),
-        "GOOGLE_CLIENT_SECRET": os.getenv("TEST_GOOGLE_CLIENT_SECRET", "test_client_secret"),
-        "MONGO_URI": os.getenv("TEST_MONGO_URI", "mongodb://localhost:27017/test_db")
+        "EMAIL_ACCOUNT": os.getenv("EMAIL_ACCOUNT", "test@example.com"),
+        "OPENAI_API_KEY": os.getenv("OPENAI_API_KEY", "test_key_123"),
+        "GOOGLE_CLIENT_ID": os.getenv("GOOGLE_CLIENT_ID", "test_client_id"),
+        "GOOGLE_CLIENT_SECRET": os.getenv("GOOGLE_CLIENT_SECRET", "test_client_secret"),
+        "MONGO_URI": os.getenv("MONGO_URI", "mongodb://localhost:27017/test_db")
     }
-
-

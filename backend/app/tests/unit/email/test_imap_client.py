@@ -44,6 +44,7 @@ def test_fetch_from_imap_auth_failure():
         assert "Auth failed" in str(exc_info.value)
     
 @pytest.mark.skip(reason="Database implementation issues - to be fixed later")
+@pytest.mark.db
 @pytest.mark.asyncio
 async def test_fetch_emails_from_imap(mock_db, mock_threadpool, mock_imap_client):
     """Test fetching emails from IMAP when MongoDB is empty"""
