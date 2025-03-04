@@ -18,7 +18,11 @@ export default function Client({ emailsByDate = [] }) {
     { isChecked: false, emailFetchInterval: 0, theme: "system" }
   );
 
-  const gridTempCol = `${client.expandedSideBar ? "180" : "80"}px 1fr`;
+  const root = document.querySelector(":root");
+  root.style.setProperty(
+    "--sidebar-width",
+    `calc(${client.expandedSideBar ? "70px + 5vw" : "30px + 2vw"})`
+  );
 
   const handleLogoClick = () => {
     dispatchClient({
@@ -96,12 +100,12 @@ export default function Client({ emailsByDate = [] }) {
 
   const emailClient = () => {
     return (
-      <div className="client" style={{ gridTemplateColumns: gridTempCol }}>
+      <div className="client">
         <SideBar
           onLogoClick={handleLogoClick}
           expanded={client.expandedSideBar}
           handlePageChange={handlePageChange}
-          selected={client.curEmail}
+          selected={client.curPage}
         />
         {getPage()}
       </div>

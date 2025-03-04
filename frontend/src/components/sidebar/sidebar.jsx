@@ -13,7 +13,7 @@ export default function SideBar({
 }) {
   return (
     <div>
-      <div className="sidebar" style={{ width: expanded ? "180px" : "80px" }}>
+      <div className="sidebar">
         <Button expanded={expanded} onClick={onLogoClick} name="">
           {/* <Logo /> */}
           <img src="./src/assets/oldAssets/Logo.svg" alt="Logo Icon" />
@@ -54,7 +54,6 @@ function Button({ expanded, curState = "N", onClick, name, children }) {
         onClick={onClick}
         style={{
           backgroundColor: colors.main,
-          width: expanded ? "180px" : "80px",
         }}
       >
         <div className="icon">
