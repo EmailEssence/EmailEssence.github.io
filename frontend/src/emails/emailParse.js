@@ -1,6 +1,6 @@
-// import emails from "./retrieve_emails_response.json";
-// import summaries from "./summarize_email_response.json";
-const isDevMode = false;
+import ems from "./retrieve_emails_response.json";
+import sums from "./summarize_email_response.json";
+export const isDevMode = true;
 export const baseUrl = isDevMode
   ? "http://localhost:19000"
   : "https://ee-backend-w86t.onrender.com";
@@ -49,10 +49,9 @@ function parseDate(date) {
 export default async function fetchAll() {
   try {
     // Fetch both emails and summaries concurrently
-    const [emails, summaries] = await Promise.all([
-      getAllEmails(),
-      getAllSummaries(),
-    ]);
+    const [emails, summaries] = isDevMode
+      ? [ems, sums]
+      : await Promise.all([getAllEmails(), getAllSummaries()]);
 
     // Validate array responses
     if (!Array.isArray(emails)) {

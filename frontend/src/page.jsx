@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 // import { markEmailAsRead } from "./emails/emailHandler";
 import { Login } from "./components/login/login";
 import Client from "./client";
-import fetchEmails from "./emails/emailParse";
+import fetchEmails, { isDevMode } from "./emails/emailParse";
 import {
   handleOAuthCallback,
   authenticate,
@@ -21,6 +21,10 @@ export default function Page() {
     if (hash && hash.startsWith("#auth=")) {
       handleOAuthCallback(handleAuthenticate);
     }
+    const code = window.location.href;
+    if (code && code.includes("code=")) {
+      handleOAuthCallback(handleAuthenticate);
+    }
   }, []); // In array put State/Variable that will update once user is logged in
 
   const handleAuthenticate = async (token) => {
@@ -34,7 +38,7 @@ export default function Page() {
         throw new Error("Invalid email response format");
       }
       const emailArray = Array.isArray(emails) ? emails : [];
-
+      console.log(emailArray);
       setEmailsByDate(emailArray);
       setLoggedIn(true);
     } catch (error) {
@@ -47,17 +51,18 @@ export default function Page() {
     }
   };
 
-  const display = () => {
-    return loading ? (
-      <div>Loading emails...</div>
-    ) : !loggedIn ? (
-      <Login handleGoogleClick={async () => authenticate()} />
-    ) : emailsByDate === null ? (
-      <div>Initializing dashboard...</div>
-    ) : (
-      <Client emailsByDate={emailsByDate} />
-    );
-  };
+  // if (isDevMode) setEmailsByDate(fetchEmails());
 
-  return <div className="page">{display()}</div>;
+  const display = isDevMode ? (
+    <Client emailsByDate={[]} /> // temporarly empty display
+  ) : loading ? (
+    <div>Loading emails...</div>
+  ) : !loggedIn ? (
+    <Login handleGoogleClick={authenticate} />
+  ) : emailsByDate === null ? (
+    <div>Initializing dashboard...</div>
+  ) : (
+    <Client emailsByDate={emailsByDate} />
+  );
+  return <div className="page">{display}</div>;
 }

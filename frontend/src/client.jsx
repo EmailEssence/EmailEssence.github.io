@@ -7,7 +7,7 @@ import { Settings } from "./components/settings/settings";
 import SideBar from "./components/sidebar/sidebar";
 import { clientReducer, userPreferencesReducer } from "./reducers";
 
-export default function Client({ emailsByDate }) {
+export default function Client({ emailsByDate = [] }) {
   const [client, dispatchClient] = useReducer(clientReducer, {
     curPage: "dashboard",
     expandedSideBar: false,
