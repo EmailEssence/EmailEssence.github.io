@@ -1,54 +1,60 @@
 /* eslint-disable react/prop-types */
+// import ReaderViewIcon from "../../assets/ReaderView";
+import ArrowIcon from "../../assets/InboxArrow";
 import "./emailDisplay.css";
 import "./emailEntry.css";
 import "./emailList.css";
-import {useState} from "react";
-import {emails} from "../../emails/emails";
 
-export default function Inbox() {
-  const [curEmail, setCurEmail] = useState(0);
-  const handleClick = email => {
-    setCurEmail(email);
-  };
+export default function Inbox({ emailList, setCurEmail, curEmail }) {
   return (
     <div className="inbox-display">
-      <InboxEmailList curEmail={curEmail} onClick={handleClick} />
+      <InboxEmailList
+        emailList={emailList}
+        curEmail={curEmail}
+        onClick={setCurEmail}
+      />
       <EmailDisplay key={curEmail} curEmail={curEmail} />
     </div>
   );
 }
 
-function EmailEntry({email, onClick, selected}) {
-  const content = emails[email];
-  const brColor = selected ? "#D9D9D9" : "#FFFFFF";
+function EmailEntry({ email, onClick, selected }) {
+  const date = getDate(email.received_at);
   return (
-    <div className="entry" style={{backgroundColor: brColor}} onClick={onClick}>
+    <div
+      className="entry"
+      style={{ backgroundColor: selected ? "#D9D9D9" : "transparent" }}
+      onClick={onClick}
+    >
       <div className="indicator-container">
-        <div className="indicator"></div>
+        <div className={!email.is_read && "indicator"}></div>
       </div>
       <div className="head">
-        <div className="from">{content.from}</div>
-        <div className="date">{content.date}</div>
+        <div className="from">{getSenderName(email.sender)}</div>
+        <div className="date">{date}</div>
       </div>
-      <div className="title">{content.title}</div>
+      <div className="title">{email.subject}</div>
       <div className="separator-container">
-        <div className="separator"></div>
+        <div
+          className="separator"
+          style={{ backgroundColor: selected ? "#000000" : "#B0B0B0" }}
+        ></div>
       </div>
-      <div className="summary">{content.summary}</div>
+      <div className="summary">{email.summary_text}</div>
     </div>
   );
 }
 
-function InboxEmailList({curEmail, onClick}) {
+function InboxEmailList({ emailList, curEmail, onClick }) {
   const emails = () => {
     const returnBlock = [];
-    for (let i = 0; i < 20; i++) {
-      let selected = i === curEmail;
+    for (const email of emailList) {
+      let selected = email === curEmail;
       returnBlock.push(
         <EmailEntry
-          key={i}
-          email={i}
-          onClick={() => onClick(i)}
+          key={email.email_id}
+          email={email}
+          onClick={() => onClick(email)}
           selected={selected}
         />
       );
@@ -59,7 +65,9 @@ function InboxEmailList({curEmail, onClick}) {
     <div className="list">
       <div className="inbox-title-container">
         <div className="inbox-title">
-          <div className="inbox-icon">IN</div>
+          <div className="inbox-icon">
+            <ArrowIcon />
+          </div>
           <div className="inbox-word">Inbox</div>
         </div>
       </div>
@@ -71,27 +79,42 @@ function InboxEmailList({curEmail, onClick}) {
   );
 }
 
-function EmailDisplay({curEmail}) {
-  const curContent = emails[curEmail];
+function EmailDisplay({ curEmail }) {
+  const date = getDate(curEmail.received_at);
   return (
     <div className="email-display">
       <div className="header">
-        <div className="from">{curContent.from}</div>
-        <div className="title">{curContent.title}</div>
-        <div className="to">{`To: ${curContent.to}`}</div>
-        <div className="date">{`Date: ${curContent.date}`}</div>
-        <ReaderView curEmail={curEmail} />
+        <div className="from">{curEmail.sender}</div>
+        <div className="title">{curEmail.subject}</div>
+        <div className="to">{`To: ${curEmail.recipients}`}</div>
+        <div className="date">{`Date: ${date}`}</div>
+        <div className="reader-view">
+          <ReaderView curEmail={curEmail} />
+        </div>
       </div>
       <div className="body">
         <div className="content-container">
-          <div className="content">{curContent.content}</div>
+          <div className="content">{curEmail.body}</div>
         </div>
       </div>
     </div>
   );
 }
 
-function ReaderView({curEmail}) {
-  console.log(curEmail);
-  return <div></div>;
+// eslint-disable-next-line no-unused-vars
+function ReaderView({ curEmail }) {
+  return (
+    <div>
+      {/* <ReaderViewIcon /> */}
+      <img src="./src/assets/oldAssets/ReaderView.svg" alt="ReaderView Icon" />
+    </div>
+  );
 }
+
+const getDate = (date) => {
+  return `${date[1]}/${date[2]}/${date[0]}`;
+};
+
+const getSenderName = (sender) => {
+  return sender.slice(0, sender.indexOf("<"));
+};
