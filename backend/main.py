@@ -2,7 +2,6 @@
 import os
 from fastapi import FastAPI, HTTPException, Depends, status
 from fastapi.responses import FileResponse
-from fastapi.middleware.cors import CORSMiddleware
 from starlette.concurrency import run_in_threadpool
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -22,7 +21,6 @@ app = FastAPI(
     # contact={"name": "Support", "url": "https://example.com/support"},
 )
 
-<<<<<<< HEAD
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
@@ -40,21 +38,7 @@ app.add_middleware(
     allow_methods=["*"],  # Allows all methods
     allow_headers=["*"],  # Allows all headers
 )
-=======
-origins = [
-    "http://localhost:5173",  #  The origin of the React frontend
-    # Add other origins if needed, e.g., for production domains
-]
->>>>>>> origin/main
 
-# TODO : Limit limit methods and headers
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],  # Allows all HTTP methods (GET, POST, PUT, DELETE, etc.)
-    allow_headers=["*"],  # Allows all headers
-)
 
 @app.on_event("startup")
 async def startup_db_client():
