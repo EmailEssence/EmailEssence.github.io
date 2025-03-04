@@ -69,8 +69,22 @@ def get_tokens_from_code(code):
     }
 
 def get_redirect_uri():
+    """
+    Returns the backend callback URL for OAuth
+    Can be overridden with OAUTH_CALLBACK_URL environment variable
+    """
+    # Allow complete override through env var
+    if callback_url := os.getenv('OAUTH_CALLBACK_URL'):
+        return callback_url
+    
+    # Otherwise build based on environment
     environment = os.getenv('ENVIRONMENT', 'development')
-    if environment == 'development':
+    base_url = os.getenv('BACKEND_BASE_URL')
+    
+    if base_url:
+        # Use configured base URL
+        return f"{base_url.rstrip('/')}/auth/callback"
+    elif environment == 'development':
         return 'http://localhost:8000/auth/callback'
     else:
         return 'https://ee-backend-w86t.onrender.com/auth/callback'

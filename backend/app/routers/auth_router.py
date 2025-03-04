@@ -1,7 +1,9 @@
 import json
 import urllib.parse
+import base64
+import uuid
 
-from fastapi import APIRouter, HTTPException, status, Depends, Request, Body
+from fastapi import APIRouter, HTTPException, status, Depends, Request, Body, Query
 from fastapi.security import OAuth2AuthorizationCodeBearer
 from fastapi.responses import RedirectResponse
 from google.auth.transport.requests import Request as GoogleRequest
@@ -19,13 +21,31 @@ oauth2_scheme = OAuth2AuthorizationCodeBearer(
 )
 
 @router.get("/login")
-async def login():
+async def login(redirect_uri: str = Query(..., description="Frontend URI to redirect back to after authentication")):
     """
-    Initiates the OAuth2 authorization flow with Google
+    Initiates the OAuth flow with Google, storing the frontend's redirect URI in the state parameter
     """
     try:
-        auth_url, state = await run_in_threadpool(create_authorization_url)
-        return {"authorization_url": auth_url}
+        # Create a custom state that includes the redirect URI
+        custom_state = {
+            "redirect_uri": redirect_uri,
+            "nonce": str(uuid.uuid4())  # Add a nonce for security
+        }
+        
+        # Encode custom state to pass to Google
+        encoded_custom_state = base64.urlsafe_b64encode(json.dumps(custom_state).encode()).decode()
+        
+        # Use the existing service to get the authorization URL
+        authorization_url, _ = create_authorization_url()
+        
+        # Append our custom state to the authorization URL
+        if '?' in authorization_url:
+            authorization_url = authorization_url.split('&state=')[0]  # Remove any existing state
+            authorization_url += f"&state={encoded_custom_state}"
+        else:
+            authorization_url += f"?state={encoded_custom_state}"
+            
+        return RedirectResponse(authorization_url)
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -33,18 +53,24 @@ async def login():
         )
 
 @router.get("/callback")
-async def callback(code: str):
+async def callback(code: str, state: str = Query(None)):
     """
     Handles the OAuth callback from Google
     """
     try:
+        # Decode the state parameter to get the frontend's redirect URI
+        if not state:
+            raise ValueError("Missing state parameter")
+            
+        decoded_state = json.loads(base64.urlsafe_b64decode(state).decode())
+        frontend_url = decoded_state.get("redirect_uri")
+        
+        if not frontend_url:
+            raise ValueError("Missing redirect URI in state parameter")
+        
         tokens = await run_in_threadpool(lambda: get_tokens_from_code(code))
         
-        # Get the appropriate frontend URL
-        frontend_url = "https://emailessence.github.io"  # or use environment variable
-        
         # Add token to redirect URL as a hash parameter
-        # Using hash (#) instead of query (?) parameters for client-side only access
         auth_state = {
             "authenticated": True,
             "token": tokens['token']
