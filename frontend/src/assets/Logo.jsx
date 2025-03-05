@@ -3,8 +3,9 @@ export default function SvgComponent() {
     <svg
       version="1.1"
       xmlns="http://www.w3.org/2000/svg"
-      width="512"
-      height="512"
+      viewBox="0 0 512 512"
+      width="100%"
+      height="100%"
     >
       <path
         d="M0 0 C168.96 0 337.92 0 512 0 C512 168.96 512 337.92 512 512 C343.04 512 174.08 512 0 512 C0 343.04 0 174.08 0 0 Z "

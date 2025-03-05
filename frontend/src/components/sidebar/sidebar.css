@@ -45,3 +45,10 @@
   width: calc(var(--sidebar-icon-height) - 0.8vw);
   margin: auto;
 }
+
+/* if icon is logo make it bigger */
+
+.icon > .logo {
+  height: calc(var(--sidebar-icon-height) - 0.2vw);
+  width: calc(var(--sidebar-icon-height) - 0.2vw);
+}

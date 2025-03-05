@@ -2,7 +2,7 @@
 import { color1E, colorD9, colorE9 } from "../../assets/constants";
 import InboxIcon from "../../assets/InboxIcon";
 import SettingsIcon from "../../assets/SettingsIcon";
-// import Logo from "../../assets/Logo";
+import Logo from "../../assets/Logo";
 import "./sidebar.css";
 
 export default function SideBar({
@@ -15,8 +15,7 @@ export default function SideBar({
     <div>
       <div className="sidebar">
         <Button expanded={expanded} onClick={onLogoClick} name="">
-          {/* <Logo /> */}
-          <img src="./src/assets/oldAssets/Logo.svg" alt="Logo Icon" />
+          <Logo />
         </Button>
         <Button
           expanded={expanded}
@@ -57,7 +56,7 @@ function Button({ expanded, curState = "N", onClick, name, children }) {
         }}
       >
         <div className="icon">
-          <div>{children}</div>
+          <div className={text.length < 1 && "logo"}>{children}</div>
           {expanded && <p style={{ color: colors.sub }}>{text}</p>}
         </div>
       </div>
