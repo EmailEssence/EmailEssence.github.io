@@ -7,6 +7,7 @@ import {
   handleOAuthCallback,
   authenticate,
 } from "./authentication/authenticate";
+import "./assets/globals.css";
 
 const devEmails = fetchDev();
 
