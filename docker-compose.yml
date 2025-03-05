@@ -1,1 +1,23 @@
- 
+version: "3.9" 
+
+services:
+  backend:
+    build:
+      context: . 
+      dockerfile: backend/Dockerfile 
+    ports:
+      - "8000:8000"  # Map host port 8000 to container port 8000
+    volumes:
+      - ./backend:/app  # Mount the backend directory for live code changes
+      - ./.env:/app/.env  # Mount the .env file for environment variables
+    restart: unless-stopped
+    # Enable development mode with live reloading
+    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+    # Note: Environment variables are loaded from .env automatically
+    # by the application using Pydantic's BaseSettings
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s

@@ -1,8 +1,8 @@
 from motor.motor_asyncio import AsyncIOMotorClient
-from config import MONGO_URI
+from app.utils.config import Settings, get_settings
 from motor.motor_asyncio import AsyncIOMotorClient
-from dotenv import load_dotenv
-import os
 
-client = AsyncIOMotorClient(MONGO_URI)
+settings = get_settings()
+
+client = AsyncIOMotorClient(settings.mongo_uri)
 db = client.email_system
