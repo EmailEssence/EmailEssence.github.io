@@ -1,6 +1,24 @@
 :root {
   --sidebar-width: 1px;
   --sidebar-icon-height: calc(30px + 2vw);
-
   /* --sub-constraint: */
+
+
+
+  /* Settings */
+  --settings-font-family: sans-serif;
+  --settings-font-size: 15px;
+  --settings-color-text: #000;
+  --settings-color-border: #cfd0d0;
+  --settings-font-weight-normal: 300;
+  --settings-color-selected-text: #000;
+  --settings-color-selected-background: #d9d9d9;
+  --settings-color-hover-background: #e0e0e0;
+  --settings-color-background: #fff;
+  --settings-font-weight-bold: 600;
+  --settings-color-toggle-border: #a3a3a3;
+  --settings-color-toggle-background: white;
+
+
+
 }
