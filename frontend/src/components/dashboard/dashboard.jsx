@@ -2,7 +2,7 @@
 import FullScreenIcon from "../../assets/FullScreenIcon";
 import InboxIcon from "../../assets/InboxArrow";
 import { getTop5 } from "../../emails/emailParse";
-// import ViewIcon from "../../assets/ViewIcon";
+import ViewIcon from "../../assets/ViewIcon";
 import "./miniview.css";
 import "./weightedEmailList.css";
 
@@ -61,8 +61,7 @@ function WEListEmail({ email, setCurEmail, handlePageChange }) {
           handlePageChange("inbox");
         }}
       >
-        {/* <ViewIcon /> */}
-        <img src="./src/assets/oldAssets/ViewIcon.svg" alt="View Icon" />
+        <ViewIcon />
       </div>
     </div>
   );
