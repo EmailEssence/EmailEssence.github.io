@@ -82,7 +82,7 @@ function InboxEmailList({ emailList, curEmail, onClick }) {
   );
 }
 
-function EmailDisplay({ curEmail = null }) {
+function EmailDisplay({ curEmail }) {
   const date = getDate(curEmail.received_at);
   return (
     <div className="email-display">

@@ -49,16 +49,16 @@ function parseDate(date) {
 export default async function fetchAll() {
   try {
     // Fetch both emails and summaries concurrently
-    const [emails, summaries] = isDevMode
-      ? [ems, sums]
-      : await Promise.all([getAllEmails(), getAllSummaries()]);
+    const [emails, summaries] = await Promise.all([
+      getAllEmails(),
+      getAllSummaries(),
+    ]);
 
     // Validate array responses
     if (!Array.isArray(emails)) {
       console.error("Invalid emails response:", emails);
       return [];
     }
-
     // Handle case where summaries length doesn't match emails
     const processedEmails = emails.map((email, index) => {
       const summary = summaries[index] || { summary_text: "", keywords: [] };
@@ -70,12 +70,28 @@ export default async function fetchAll() {
         received_at: parseDate(email.received_at),
       };
     });
-
+    console.log(processedEmails);
     return processedEmails;
   } catch (error) {
     console.error("Email processing error:", error);
     return []; // Return empty array for graceful degradation
   }
+}
+
+export function fetchDev() {
+  const [emails, summaries] = [ems, sums];
+  const processedEmails = emails.map((email, index) => {
+    const summary = summaries[index] || { summary_text: "", keywords: [] };
+
+    return {
+      ...email,
+      summary_text: summary.summary_text || "",
+      keywords: summary.keywords || [],
+      received_at: parseDate(email.received_at),
+    };
+  });
+  console.log(processedEmails);
+  return processedEmails;
 }
 
 export function getTop5(emails) {

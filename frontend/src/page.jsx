@@ -2,14 +2,16 @@ import { useState, useEffect } from "react";
 // import { markEmailAsRead } from "./emails/emailHandler";
 import { Login } from "./components/login/login";
 import Client from "./client";
-import fetchEmails, { isDevMode } from "./emails/emailParse";
+import fetchEmails, { isDevMode, fetchDev } from "./emails/emailParse";
 import {
   handleOAuthCallback,
   authenticate,
 } from "./authentication/authenticate";
 
+const devEmails = fetchDev();
+
 export default function Page() {
-  const [emailsByDate, setEmailsByDate] = useState(null);
+  const [emailsByDate, setEmailsByDate] = useState(devEmails);
   const [loading, setLoading] = useState(false);
 
   const [loggedIn, setLoggedIn] = useState(
@@ -51,18 +53,18 @@ export default function Page() {
     }
   };
 
-  // if (isDevMode) setEmailsByDate(fetchEmails());
-
-  const display = isDevMode ? (
-    <Client emailsByDate={[]} /> // temporarly empty display
-  ) : loading ? (
-    <div>Loading emails...</div>
-  ) : !loggedIn ? (
-    <Login handleGoogleClick={authenticate} />
-  ) : emailsByDate === null ? (
-    <div>Initializing dashboard...</div>
-  ) : (
-    <Client emailsByDate={emailsByDate} />
-  );
-  return <div className="page">{display}</div>;
+  const display = () => {
+    return isDevMode ? (
+      <Client emailsByDate={emailsByDate} />
+    ) : loading ? (
+      <div>Loading emails...</div>
+    ) : !loggedIn ? (
+      <Login handleGoogleClick={authenticate} />
+    ) : emailsByDate === null ? (
+      <div>Initializing dashboard...</div>
+    ) : (
+      <Client emailsByDate={emailsByDate} />
+    );
+  };
+  return <div className="page">{display()}</div>;
 }
