@@ -27,18 +27,20 @@ export function Settings ({
   );
 }
 
+// component that renders the summary toggle switch for enabling/disabling summaries in the inbox
 export function SummariesInInbox({ isChecked, onToggle }) {
   return (
     <div className="settings-block">
       <h2>Summaries in Inbox</h2>
       <label className="switch">
-        <input type="checkbox" checked={isChecked} onChange={onToggle} />
+        <input type="checkbox" checked={isChecked} onChange={onToggle} /> 
         <span className="toggle"></span>
       </label>
     </div>
   );
 }
 
+// component that renders the email fetch interval slider
 export function EmailFetchInterval({ emailFetchInterval, onSetEmailFetchInterval }) {
   return (
     <div className="settings-block email-fetch-interval">
@@ -60,8 +62,9 @@ export function EmailFetchInterval({ emailFetchInterval, onSetEmailFetchInterval
   );
 }
 
+// component that renders the buttons to switch between different themes
 export function Theme({ theme, onSetTheme }) {
-  const themes = ["light", "system", "dark"];
+  const themes = ["light", "system", "dark"]; //array of themes
 
   //function to handle theme change
   const handleThemeChange = (newTheme) => {
@@ -77,7 +80,7 @@ export function Theme({ theme, onSetTheme }) {
     <div className="settings-block">
       <h2>Theme</h2>
       <div className="theme-toggle-group">
-        {themes.map((t) => (
+        {themes.map((t) => ( //renders the theme buttons
           <button
             key={t}
             className={`theme-toggle-item ${theme === t ? "selected" : ""}`}
