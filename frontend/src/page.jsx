@@ -1,13 +1,13 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 // import { markEmailAsRead } from "./emails/emailHandler";
-import { Login } from "./components/login/login";
-import Client from "./client";
-import fetchEmails, { isDevMode, fetchDev } from "./emails/emailParse";
 import {
-  handleOAuthCallback,
   authenticate,
+  handleOAuthCallback,
 } from "./authentication/authenticate";
-import "./assets/globals.css";
+import Client from "./client";
+import { Login } from "./components/login/login";
+import fetchEmails, { fetchDev, isDevMode } from "./emails/emailParse";
+
 
 const devEmails = fetchDev();
 

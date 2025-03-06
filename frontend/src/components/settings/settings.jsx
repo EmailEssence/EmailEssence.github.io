@@ -7,7 +7,6 @@ export function Settings ({
   handleSetEmailFetchInterval,
   theme,
   handleSetTheme,
- 
 }) {
   return (
     <div className="settings">
@@ -64,6 +63,16 @@ export function EmailFetchInterval({ emailFetchInterval, onSetEmailFetchInterval
 export function Theme({ theme, onSetTheme }) {
   const themes = ["light", "system", "dark"];
 
+  //function to handle theme change
+  const handleThemeChange = (newTheme) => {
+    onSetTheme(newTheme);
+    if (newTheme === "dark") {
+      document.body.classList.add("dark-mode");
+    } else {
+      document.body.classList.remove("dark-mode");
+    }
+  };
+
   return (
     <div className="settings-block">
       <h2>Theme</h2>
@@ -72,7 +81,7 @@ export function Theme({ theme, onSetTheme }) {
           <button
             key={t}
             className={`theme-toggle-item ${theme === t ? "selected" : ""}`}
-            onClick={() => onSetTheme(t)}
+            onClick={() => handleThemeChange(t)}
           >
             {t.charAt(0).toUpperCase() + t.slice(1)}
           </button>

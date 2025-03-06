@@ -85,7 +85,7 @@ h2 {
   /* Adjusted left position */
   bottom: 3px;
   /* Adjusted bottom position */
-  background-color: white;
+  background-color: var(--white);
   transition: 0.4s;
   border-radius: 50%;
 }
@@ -129,7 +129,7 @@ h2 {
 .settings .metric {
   margin-left: -15px;
 
-  color: #5e5e5e;
+  color: var(--dark-grey);
   font-family: sans-serif;
   font-size: 10px;
   font-style: normal;
@@ -147,7 +147,7 @@ h2 {
   border: 2px solid var(--settings-color-border);
   border-radius: 4px;
   padding: 5px 10px;
-  color: #000;
+  color: var(--black);
 
   font-family: var(--Label-Large-Font, sans-serif);
   font-size: var(--Label-Large-Size, 14px);
@@ -168,7 +168,7 @@ h2 {
   outline: none;
   opacity: 0.7;
   transition: opacity 0.2s;
-  color: #a3a3a3;
+  color: var(--grey);
   margin-top: 1rem;
 }
 
@@ -181,7 +181,7 @@ h2 {
   width: 30px;
   height: 10px;
   border-radius: 2px;
-  background: #5e5e5e;
+  background: var(--dark-grey);
 }
 
 .settings .slider::-moz-range-thumb {
@@ -189,45 +189,5 @@ h2 {
   height: 20px;
   background: var(--settings-color-toggle-border);
   border-radius: 2px;
-  color: #a3a3a3;
-}
-
-.theme-toggle-group {
-  margin-left: auto;
-  display: flex;
-  border: 2px solid var(--settings-color-toggle-border);
-  border-radius: 5px;
-  overflow: hidden;
-}
-
-.theme-toggle-item:not(:last-child) {
-  border-right: 2px solid var(--settings-color-toggle-border);
-}
-
-.theme-toggle-item {
-  flex: 1;
-  padding: 5px 20px;
-  border: none;
-  background-color: var(--settings-color-toggle-background);
-  color: var(--settings-color-text);
-  text-align: center;
-  font-family: var(--settings-font-family);
-  font-size: var(--settings-font-size);
-  font-weight: var(--settings-font-weight-normal);
-  line-height: normal;
-  transition: background-color 0.2s, color 0.2s;
-}
-
-.theme-toggle-item.selected {
-  background-color: var(--settings-color-selected-background);
-  color: var(--settings-color-selected-text);
-}
-
-.theme-toggle-item:hover {
-  background-color: var(--settings-color-hover-background);
-}
-
-.theme-toggle-item:focus {
-  outline: 2px solid var(--color-focus-outline);
-  outline-offset: 2px;
+  color: var(--grey);
 }

@@ -16,7 +16,75 @@
   --settings-font-weight-bold: 600;
   --settings-color-toggle-border: #a3a3a3;
   --settings-color-toggle-background: white;
+
+
+  --black: #000;
+  --white: white;
+  --dark-grey: #5e5e5e;
+  --grey: #a3a3a3;
+
 }
+
+/* dark theme*/
+body.dark-mode {
+  --settings-color-text: #fff;
+  --settings-color-border: #444;
+  --settings-color-selected-text: #fff;
+  --settings-color-selected-background: #333;
+  --settings-color-hover-background: #555;
+  --settings-color-background: #222;
+  --settings-color-toggle-border: #666;
+  --settings-color-toggle-background: #333;
+}
+
+
+/* themes settings transfer to these file*/
+.theme-toggle-group {
+  margin-left: auto;
+  display: flex;
+  border: 2px solid var(--settings-color-toggle-border);
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.theme-toggle-item:not(:last-child) {
+  border-right: 2px solid var(--settings-color-toggle-border);
+}
+
+.theme-toggle-item {
+  flex: 1;
+  padding: 5px 20px;
+  border: none;
+  background-color: var(--settings-color-toggle-background);
+  color: var(--settings-color-text);
+  text-align: center;
+  font-family: var(--settings-font-family);
+  font-size: var(--settings-font-size);
+  font-weight: var(--settings-font-weight-normal);
+  line-height: normal;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.theme-toggle-item.selected {
+  background-color: var(--settings-color-selected-background);
+  color: var(--settings-color-selected-text);
+}
+
+.theme-toggle-item:hover {
+  background-color: var(--settings-color-hover-background);
+}
+
+.theme-toggle-item:focus {
+  outline: 2px solid var(--color-focus-outline);
+  outline-offset: 2px;
+}
+
+
+
+
+
+
+
 
 /* CSS Reset */
 *,
