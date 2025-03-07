@@ -1,30 +1,28 @@
 @import url("../../main.css");
 
 body {
-  font-family: var(--settings-font-family);
-  font-size: var(--settings-font-size);
-  color: var(--settings-color-text);
-  background-color: var(--settings-color-background);
+  font-family: var(--font-family);
+  font-size: var(--font-size);
+  color: var(--color-text);
+  background-color: var(--color-background);
 }
 
 .settings {
   width: 100%;
   height: 100%;
   flex-shrink: 0;
-  border: 1px solid var(--settings-color-border);
-  background: var(--settings-color-background);
-  /* box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25); */
+  border: 1px solid var(--color-border);
+  background: var(--color-background);
 }
 
 .settings-block {
   width: auto;
   height: auto;
   flex-shrink: 0;
-  padding: 0 20px;
-  border: 1px solid var(--settings-color-border);
-  background: var(--settings-color-background);
+  padding: 1rem 20px;
+  border: 1px solid var(--color-border);
+  background: var(--color-background);
   box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
-  padding: 1rem;
   margin: 1rem;
   display: flex;
   align-items: center;
@@ -33,10 +31,10 @@ body {
 
 h2 {
   margin-right: 20px;
-  color: var(--settings-color-text);
-  font-family: var(--settings-font-family);
-  font-size: var(--settings-font-size);
-  font-weight: var(--settings-font-weight-bold);
+  color: var(--color-text);
+  font-family: var(--font-family);
+  font-size: var(--font-size);
+  font-weight: var(--font-weight-bold);
   line-height: normal;
 }
 
@@ -46,9 +44,7 @@ h2 {
   position: relative;
   display: inline-block;
   width: 40px;
-  /* Adjusted width */
   height: 20px;
-  /* Adjusted height */
 }
 
 /* Hide default HTML checkbox */
@@ -66,34 +62,26 @@ h2 {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: var(--settings-color-border);
-  /* Default color */
-  -webkit-transition: 0.4s;
+  background-color: var(--color-border);
   transition: 0.4s;
   border-radius: 20px;
-  /* Adjusted border-radius */
 }
 
 .toggle:before {
   position: absolute;
   content: "";
   height: 15px;
-  /* Adjusted height */
   width: 15px;
-  /* Adjusted width */
   left: 3px;
-  /* Adjusted left position */
   bottom: 3px;
-  /* Adjusted bottom position */
-  background-color: var(--white);
+  background-color: var(--color-background);
   transition: 0.4s;
   border-radius: 50%;
 }
 
 /* When the checkbox is checked, add a background color */
 .switch input:checked + .toggle {
-  background-color: var(--settings-color-toggle-border);
-  /* Color after toggle */
+  background-color: var(--color-toggle-border);
 }
 
 /* Move the slider when the checkbox is checked */
@@ -128,11 +116,9 @@ h2 {
 
 .settings .metric {
   margin-left: -15px;
-
-  color: var(--dark-grey);
-  font-family: sans-serif;
+  color: var(--grey-2);
+  font-family: var(--font-family);
   font-size: 10px;
-  font-style: normal;
   font-weight: 200;
   line-height: normal;
 }
@@ -143,15 +129,12 @@ h2 {
   right: 0;
   margin-top: 5px;
   margin-right: 16px;
-
-  border: 2px solid var(--settings-color-border);
+  border: 2px solid var(--color-border);
   border-radius: 4px;
   padding: 5px 10px;
-  color: var(--black);
-
-  font-family: var(--Label-Large-Font, sans-serif);
-  font-size: var(--Label-Large-Size, 14px);
-
+  color: var(--color-text);
+  font-family: var(--font-family);
+  font-size: 14px;
   display: flex;
   width: 60px;
   height: 30px;
@@ -163,12 +146,12 @@ h2 {
   appearance: none;
   width: 100%;
   height: 10px;
-  background: var(--settings-color-border);
+  background: var(--color-border);
   border-radius: 2px;
   outline: none;
   opacity: 0.7;
   transition: opacity 0.2s;
-  color: var(--grey);
+  color: var(--color-text);
   margin-top: 1rem;
 }
 
@@ -181,13 +164,13 @@ h2 {
   width: 30px;
   height: 10px;
   border-radius: 2px;
-  background: var(--dark-grey);
+  background: var(--color-slider-thumb);
 }
 
 .settings .slider::-moz-range-thumb {
   width: 20px;
   height: 20px;
-  background: var(--settings-color-toggle-border);
+  background: var(--color-background);
   border-radius: 2px;
-  color: var(--grey);
+  color: var(--color-slider-thumb);
 }

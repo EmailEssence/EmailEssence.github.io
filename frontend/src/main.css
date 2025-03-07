@@ -1,90 +1,88 @@
 :root {
   --sidebar-width: 1px;
   --sidebar-icon-height: calc(30px + 2vw);
-  /* --sub-constraint: */
 
-  /* Settings */
-  --settings-font-family: sans-serif;
-  --settings-font-size: 15px;
-  --settings-color-text: #000;
-  --settings-color-border: #cfd0d0;
-  --settings-font-weight-normal: 300;
-  --settings-color-selected-text: #000;
-  --settings-color-selected-background: #d9d9d9;
-  --settings-color-hover-background: #e0e0e0;
-  --settings-color-background: #fff;
-  --settings-font-weight-bold: 600;
-  --settings-color-toggle-border: #a3a3a3;
-  --settings-color-toggle-background: white;
-
-
+  /* Color palette from dark to light */
   --black: #000;
+  --grey-1: #161616;
+  --grey-2: #5e5e5e;
+  --grey-3: #a3a3a3;
+  --grey-4: #d9d9d9;
+  --grey-5: #e9e9e9;
   --white: white;
-  --dark-grey: #5e5e5e;
-  --grey: #a3a3a3;
 
+
+  /*variables */
+  --font-family: sans-serif;
+  --font-size: 15px;
+  --color-text: var(--black);
+  --color-border: var(--grey-4);
+  --color-selected-text: var(--black);
+  --color-selected-background: var(--grey-4);
+  --color-hover-background: var(--grey-4);
+  --color-background: var(--white);
+  --font-weight-normal: 300;
+  --font-weight-bold: 600;
+  --color-toggle-border: var(--grey-3);
+  --color-toggle-background: var(--white);
+  --color-slider-background: var(--grey-3);
+  --color-slider-thumb: var(--grey-2);
 }
 
-/* dark theme*/
+/* dark theme variables */
 body.dark-mode {
-  --settings-color-text: #fff;
-  --settings-color-border: #444;
-  --settings-color-selected-text: #fff;
-  --settings-color-selected-background: #333;
-  --settings-color-hover-background: #555;
-  --settings-color-background: #222;
-  --settings-color-toggle-border: #666;
-  --settings-color-toggle-background: #333;
+  --color-text: var(--grey-5);
+  --color-border: var(--grey-2);
+  --color-selected-text: var(--grey-5);
+  --color-selected-background: var(--grey-2);
+  --color-hover-background: var(--grey-2);
+  --color-background: var(--grey-1);
+  --color-toggle-border: var(--grey-3);
+  --color-toggle-background: var(--grey-1);
+  --color-slider-background: var(--grey-3);
+  --color-slider-thumb: var(--grey-4);
 }
 
-
-/* themes settings transfer to these file*/
+/* Theme Toggle Styles */
 .theme-toggle-group {
   margin-left: auto;
   display: flex;
-  border: 2px solid var(--settings-color-toggle-border);
+  border: 2px solid var(--color-toggle-border);
   border-radius: 5px;
   overflow: hidden;
 }
 
 .theme-toggle-item:not(:last-child) {
-  border-right: 2px solid var(--settings-color-toggle-border);
+  border-right: 2px solid var(--color-toggle-border);
 }
 
 .theme-toggle-item {
   flex: 1;
   padding: 5px 20px;
   border: none;
-  background-color: var(--settings-color-toggle-background);
-  color: var(--settings-color-text);
+  background-color: var(--color-toggle-background);
+  color: var(--color-text);
   text-align: center;
-  font-family: var(--settings-font-family);
-  font-size: var(--settings-font-size);
-  font-weight: var(--settings-font-weight-normal);
+  font-family: var(--font-family);
+  font-size: var(--font-size);
+  font-weight: var(--font-weight-normal);
   line-height: normal;
   transition: background-color 0.2s, color 0.2s;
 }
 
 .theme-toggle-item.selected {
-  background-color: var(--settings-color-selected-background);
-  color: var(--settings-color-selected-text);
+  background-color: var(--color-selected-background);
+  color: var(--color-selected-text);
 }
 
 .theme-toggle-item:hover {
-  background-color: var(--settings-color-hover-background);
+  background-color: var(--color-hover-background);
 }
 
 .theme-toggle-item:focus {
   outline: 2px solid var(--color-focus-outline);
   outline-offset: 2px;
 }
-
-
-
-
-
-
-
 
 /* CSS Reset */
 *,
@@ -98,10 +96,12 @@ body.dark-mode {
 html,
 body {
   height: 100%;
-  font-family: Arial, sans-serif;
+  font-family: var(--font-family);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  color: var(--color-text);
+  background-color: var(--color-background);
 }
 
 img,
