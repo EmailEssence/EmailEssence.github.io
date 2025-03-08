@@ -1,9 +1,11 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable react/prop-types */
 import FullScreenIcon from "../../assets/FullScreenIcon";
 import InboxIcon from "../../assets/InboxArrow";
 import { getTop5 } from "../../emails/emailParse";
 import ViewIcon from "../../assets/ViewIcon";
-import { useState, useRef } from "react";
+import { emailsPerPage } from "../../assets/constants";
+import { useState, useRef, useEffect } from "react";
 import "./miniview.css";
 import "./weightedEmailList.css";
 
@@ -101,13 +103,13 @@ function MiniViewHead({ handlePageChange }) {
   );
 }
 
-// Current Bug: When 20 emails occupy the screen scroll functionality doesnt work.
 function MiniViewBody({ emailList, setCurEmail, handlePageChange }) {
   const [pages, setPages] = useState(1);
-  // const [updating, setUpdating] = useState(false);
   const ref = useRef(null);
   const maxEmails =
-    pages * 20 < emailList.length ? pages * 20 : emailList.length;
+    pages * emailsPerPage < emailList.length
+      ? pages * emailsPerPage
+      : emailList.length;
   const hasUnloadedEmails = maxEmails < emailList.length;
 
   const handleScroll = () => {
@@ -118,12 +120,13 @@ function MiniViewBody({ emailList, setCurEmail, handlePageChange }) {
           ref.current.scrollTop
       ) <= 1;
     if (fullyScrolled && hasUnloadedEmails) {
-      // && !updating
-      console.log(`Cur Scroll Height: ${ref.current.scrollTop}`);
       setPages(pages + 1);
-      // setUpdating(true);
     }
   };
+
+  useEffect(() => {
+    handleScroll();
+  }, [pages]); // Fixes minimum for large screens, but runs effect after every load which is unnecessary
 
   const emails = () => {
     const returnBlock = [];
