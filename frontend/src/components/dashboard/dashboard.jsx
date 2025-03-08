@@ -102,14 +102,21 @@ function MiniViewHead({ handlePageChange }) {
 }
 
 function MiniViewBody({ emailList, setCurEmail, handlePageChange }) {
-  const [pages, setPages] = useState(1);
+  const [pages, setPages] = useState(2);
   const ref = useRef(null);
   const maxEmails =
     pages * 20 < emailList.length ? pages * 20 : emailList.length;
 
   const handleScroll = () => {
-    console.log(ref.current.scrollTop);
-    if (false) setPages(pages + 1);
+    const fullyScrolled =
+      Math.abs(
+        ref.current.scrollHeight -
+          ref.current.clientHeight -
+          ref.current.scrollTop
+      ) <= 1;
+    if (fullyScrolled) {
+      console.log(`Cur Scroll Height: ${ref.current.scrollTop}`);
+    }
   };
 
   const emails = () => {
