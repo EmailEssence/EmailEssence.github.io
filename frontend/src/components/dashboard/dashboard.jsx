@@ -3,6 +3,7 @@ import FullScreenIcon from "../../assets/FullScreenIcon";
 import InboxIcon from "../../assets/InboxArrow";
 import { getTop5 } from "../../emails/emailParse";
 import ViewIcon from "../../assets/ViewIcon";
+import { useState } from "react";
 import "./miniview.css";
 import "./weightedEmailList.css";
 
@@ -101,13 +102,16 @@ function MiniViewHead({ handlePageChange }) {
 }
 
 function MiniViewBody({ emailList, setCurEmail, handlePageChange }) {
+  const [pages, setPages] = useState(1);
+  const maxEmails =
+    pages * 20 < emailList.length ? pages * 20 : emailList.length;
   const emails = () => {
     const returnBlock = [];
-    for (const email of emailList) {
+    for (let i = 0; i < maxEmails; i++) {
       returnBlock.push(
         <MiniViewEmail
-          key={email.email_id}
-          email={email}
+          key={emailList[i].email_id}
+          email={emailList[i]}
           setCurEmail={setCurEmail}
           handlePageChange={handlePageChange}
         />
