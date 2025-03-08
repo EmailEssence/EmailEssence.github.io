@@ -3,7 +3,7 @@ import FullScreenIcon from "../../assets/FullScreenIcon";
 import InboxIcon from "../../assets/InboxArrow";
 import { getTop5 } from "../../emails/emailParse";
 import ViewIcon from "../../assets/ViewIcon";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import "./miniview.css";
 import "./weightedEmailList.css";
 
@@ -103,8 +103,15 @@ function MiniViewHead({ handlePageChange }) {
 
 function MiniViewBody({ emailList, setCurEmail, handlePageChange }) {
   const [pages, setPages] = useState(1);
+  const ref = useRef(null);
   const maxEmails =
     pages * 20 < emailList.length ? pages * 20 : emailList.length;
+
+  const handleScroll = () => {
+    console.log(ref.current.scrollTop);
+    if (false) setPages(pages + 1);
+  };
+
   const emails = () => {
     const returnBlock = [];
     for (let i = 0; i < maxEmails; i++) {
@@ -119,7 +126,11 @@ function MiniViewBody({ emailList, setCurEmail, handlePageChange }) {
     }
     return returnBlock;
   };
-  return <div className="body-container">{emails()}</div>;
+  return (
+    <div className="body-container" ref={ref} onScroll={handleScroll}>
+      {emails()}
+    </div>
+  );
 }
 
 function MiniViewEmail({ email, setCurEmail, handlePageChange }) {
