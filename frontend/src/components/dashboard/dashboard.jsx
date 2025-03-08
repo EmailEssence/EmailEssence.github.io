@@ -101,11 +101,14 @@ function MiniViewHead({ handlePageChange }) {
   );
 }
 
+// Current Bug: When 20 emails occupy the screen scroll functionality doesnt work.
 function MiniViewBody({ emailList, setCurEmail, handlePageChange }) {
-  const [pages, setPages] = useState(2);
+  const [pages, setPages] = useState(1);
+  // const [updating, setUpdating] = useState(false);
   const ref = useRef(null);
   const maxEmails =
     pages * 20 < emailList.length ? pages * 20 : emailList.length;
+  const hasUnloadedEmails = maxEmails < emailList.length;
 
   const handleScroll = () => {
     const fullyScrolled =
@@ -114,8 +117,11 @@ function MiniViewBody({ emailList, setCurEmail, handlePageChange }) {
           ref.current.clientHeight -
           ref.current.scrollTop
       ) <= 1;
-    if (fullyScrolled) {
+    if (fullyScrolled && hasUnloadedEmails) {
+      // && !updating
       console.log(`Cur Scroll Height: ${ref.current.scrollTop}`);
+      setPages(pages + 1);
+      // setUpdating(true);
     }
   };
 
