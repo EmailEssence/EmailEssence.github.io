@@ -11,6 +11,10 @@
   flex: 0, 0, 4rem;
 }
 
+.no-summary.entry {
+  grid-template-columns: 2rem 1fr 8px;
+}
+
 /* use space [0, 0] and [0, 1] */
 .indicator-container {
   grid-row: 1 / -1;

@@ -17,7 +17,6 @@ export default function Client({ emailsByDate }) {
     userPreferencesReducer,
     { isChecked: false, emailFetchInterval: 0, theme: "system" }
   );
-
   const root = document.querySelector(":root");
   root.style.setProperty(
     "--sidebar-width",
@@ -71,6 +70,7 @@ export default function Client({ emailsByDate }) {
       case "inbox":
         return (
           <Inbox
+            displaySummaries={userPreferences.isChecked}
             emailList={emailsByDate}
             setCurEmail={handleSetCurEmail}
             curEmail={client.curEmail}
@@ -102,7 +102,6 @@ export default function Client({ emailsByDate }) {
     return (
       <div className="client">
         <SideBar
-          displaySummaries={userPreferences.isChecked}
           onLogoClick={handleLogoClick}
           expanded={client.expandedSideBar}
           handlePageChange={handlePageChange}

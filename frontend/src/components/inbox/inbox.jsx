@@ -32,7 +32,7 @@ function EmailEntry({ displaySummary, email, onClick, selected }) {
   const date = getDate(email.received_at);
   return (
     <div
-      className="entry"
+      className={`entry${displaySummary ? "" : " no-summary"}`}
       style={{ backgroundColor: colors.main }}
       onClick={onClick}
     >
@@ -56,9 +56,6 @@ function EmailEntry({ displaySummary, email, onClick, selected }) {
 }
 
 function InboxEmailList({ displaySummaries, emailList, curEmail, onClick }) {
-  console.log(
-    displaySummaries ? "displaying summaries" : "not displaying summaries"
-  );
   const emails = () => {
     const returnBlock = [];
     for (const email of emailList) {
