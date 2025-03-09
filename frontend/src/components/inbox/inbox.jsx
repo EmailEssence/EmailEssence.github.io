@@ -6,10 +6,16 @@ import "./emailDisplay.css";
 import "./emailEntry.css";
 import "./emailList.css";
 
-export default function Inbox({ emailList, setCurEmail, curEmail }) {
+export default function Inbox({
+  displaySummaries,
+  emailList,
+  setCurEmail,
+  curEmail,
+}) {
   return (
     <div className="inbox-display">
       <InboxEmailList
+        displaySummaries={displaySummaries}
         emailList={emailList}
         curEmail={curEmail}
         onClick={setCurEmail}
@@ -19,7 +25,7 @@ export default function Inbox({ emailList, setCurEmail, curEmail }) {
   );
 }
 
-function EmailEntry({ email, onClick, selected }) {
+function EmailEntry({ displaySummary, email, onClick, selected }) {
   const colors = selected
     ? { main: colorD9, median: color00 }
     : { main: colorTP, median: colorB0 };
@@ -44,18 +50,22 @@ function EmailEntry({ email, onClick, selected }) {
           style={{ backgroundColor: colors.median }}
         ></div>
       </div>
-      <div className="summary">{email.summary_text}</div>
+      {displaySummary && <div className="summary">{email.summary_text}</div>}
     </div>
   );
 }
 
-function InboxEmailList({ emailList, curEmail, onClick }) {
+function InboxEmailList({ displaySummaries, emailList, curEmail, onClick }) {
+  console.log(
+    displaySummaries ? "displaying summaries" : "not displaying summaries"
+  );
   const emails = () => {
     const returnBlock = [];
     for (const email of emailList) {
       returnBlock.push(
         <EmailEntry
           key={email.email_id}
+          displaySummary={displaySummaries}
           email={email}
           onClick={() => onClick(email)}
           selected={email === curEmail}

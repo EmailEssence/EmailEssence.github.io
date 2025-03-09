@@ -102,6 +102,7 @@ export default function Client({ emailsByDate }) {
     return (
       <div className="client">
         <SideBar
+          displaySummaries={userPreferences.isChecked}
           onLogoClick={handleLogoClick}
           expanded={client.expandedSideBar}
           handlePageChange={handlePageChange}
