@@ -56,7 +56,7 @@ function Button({ expanded, curState = "N", onClick, name, children }) {
         }}
       >
         <div className="icon">
-          <div className={text.length < 1 && "logo"}>{children}</div>
+          <div className={text.length < 1 ? "logo" : ""}>{children}</div>
           {expanded && <p style={{ color: colors.sub }}>{text}</p>}
         </div>
       </div>

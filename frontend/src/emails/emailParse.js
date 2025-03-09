@@ -90,7 +90,6 @@ export function fetchDev() {
       received_at: parseDate(email.received_at),
     };
   });
-  console.log(processedEmails);
   return processedEmails;
 }
 

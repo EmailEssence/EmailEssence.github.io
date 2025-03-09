@@ -44,7 +44,7 @@ function EmailEntry({ displaySummary, email, onClick, selected }) {
       onClick={onClick}
     >
       <div className="indicator-container">
-        <div className={!email.is_read && "indicator"}></div>
+        <div className={email.is_read ? "" : "indicator"}></div>
       </div>
       <div className="head">
         <div className="from">{getSenderName(email.sender)}</div>
