@@ -37,7 +37,7 @@ export default function Page() {
       // Persist token
       localStorage.setItem("auth_token", token);
 
-      const emails = await fetchEmails();
+      const emails = await fetchEmails(0);
       if (!Array.isArray(emails)) {
         throw new Error("Invalid email response format");
       }
