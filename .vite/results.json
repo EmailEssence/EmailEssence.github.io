@@ -1,0 +1,1 @@
+{"version":"3.0.7","results":[[":frontend/src/tests/settings.test.jsx",{"duration":4.636792000000014,"failed":true}],[":frontend/src/tests/dashboard.test.jsx",{"duration":4.020834000000036,"failed":true}],[":frontend/src/tests/inbox.test.jsx",{"duration":4.146624999999972,"failed":true}],[":frontend/src/tests/login.test.jsx",{"duration":3.4986249999999472,"failed":true}]]}

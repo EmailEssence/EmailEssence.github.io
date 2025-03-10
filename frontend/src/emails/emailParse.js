@@ -1,11 +1,13 @@
-// import emails from "./retrieve_emails_response.json";
-// import summaries from "./summarize_email_response.json";
+import ems from "./retrieve_emails_response.json";
+import sums from "./summarize_email_response.json";
+export const isDevMode = true;
+export const baseUrl = isDevMode
+  ? "http://localhost:19000"
+  : "https://ee-backend-w86t.onrender.com";
 
-export const baseUrl = "https://ee-backend-w86t.onrender.com";
-
-async function getAllEmails() {
+async function getEmails(extension) {
   try {
-    const response = await fetch(`${baseUrl}/emails/`);
+    const response = await fetch(`${baseUrl}/emails/${extension}`);
     if (!response.ok) {
       throw new Error(`Failed to retrieve emails: ${response.statusText}`);
     }
@@ -16,9 +18,9 @@ async function getAllEmails() {
   }
 }
 
-async function getAllSummaries() {
+async function getSummaries(extension) {
   try {
-    const response = await fetch(`${baseUrl}/summaries/`);
+    const response = await fetch(`${baseUrl}/summaries/${extension}`);
     if (!response.ok) {
       throw new Error(`Failed to retrieve summaries: ${response.statusText}`);
     }
@@ -27,6 +29,14 @@ async function getAllSummaries() {
     console.error("Summary fetch error:", error);
     return []; // Return empty array on error for graceful degradation
   }
+}
+
+async function getMoreEmails(numRequested) {
+  return await getEmails(numRequested > 0 ? numRequested : "");
+}
+
+async function getMoreSummaries(numRequested) {
+  return await getSummaries(numRequested > 0 ? numRequested : "");
 }
 
 function parseDate(date) {
@@ -44,12 +54,12 @@ function parseDate(date) {
   }
 }
 
-export default async function fetchAll() {
+export default async function fetchEmails(numRequested) {
   try {
     // Fetch both emails and summaries concurrently
     const [emails, summaries] = await Promise.all([
-      getAllEmails(),
-      getAllSummaries(),
+      getMoreEmails(numRequested),
+      getMoreSummaries(numRequested),
     ]);
 
     // Validate array responses
@@ -57,7 +67,6 @@ export default async function fetchAll() {
       console.error("Invalid emails response:", emails);
       return [];
     }
-
     // Handle case where summaries length doesn't match emails
     const processedEmails = emails.map((email, index) => {
       const summary = summaries[index] || { summary_text: "", keywords: [] };
@@ -69,12 +78,16 @@ export default async function fetchAll() {
         received_at: parseDate(email.received_at),
       };
     });
-
+    console.log(processedEmails);
     return processedEmails;
   } catch (error) {
     console.error("Email processing error:", error);
     return []; // Return empty array for graceful degradation
   }
+}
+
+export function getTop5(emails) {
+  return emails.length > 5 ? emails.slice(0, 5) : emails;
 }
 
 // "user_id" ID of the user
@@ -88,3 +101,19 @@ export default async function fetchAll() {
 // "is_read" has the email been read
 // "summary_text" summary of the email
 // "keywords": [] keywords used to describe email
+
+// Dev Function
+export function fetchDev() {
+  const [emails, summaries] = [ems, sums];
+  const processedEmails = emails.map((email, index) => {
+    const summary = summaries[index] || { summary_text: "", keywords: [] };
+
+    return {
+      ...email,
+      summary_text: summary.summary_text || "",
+      keywords: summary.keywords || [],
+      received_at: parseDate(email.received_at),
+    };
+  });
+  return processedEmails;
+}

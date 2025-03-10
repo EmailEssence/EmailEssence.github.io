@@ -2,7 +2,7 @@
 import { color1E, colorD9, colorE9 } from "../../assets/constants";
 import InboxIcon from "../../assets/InboxIcon";
 import SettingsIcon from "../../assets/SettingsIcon";
-// import Logo from "../../assets/Logo";
+import Logo from "../../assets/Logo";
 import "./sidebar.css";
 
 export default function SideBar({
@@ -13,10 +13,9 @@ export default function SideBar({
 }) {
   return (
     <div>
-      <div className="sidebar" style={{ width: expanded ? "180px" : "80px" }}>
+      <div className="sidebar">
         <Button expanded={expanded} onClick={onLogoClick} name="">
-          {/* <Logo /> */}
-          <img src="./src/assets/oldAssets/Logo.svg" alt="Logo Icon" />
+          <Logo />
         </Button>
         <Button
           expanded={expanded}
@@ -41,24 +40,24 @@ export default function SideBar({
 }
 
 function Button({ expanded, curState = "N", onClick, name, children }) {
-  const buttonText =
+  const text =
     name.length > 0 ? `${name[0].toUpperCase()}${name.slice(1)}` : "";
-  const text = expanded ? buttonText : "";
-  const color = curState === name ? colorD9 : color1E;
-  const eColor = curState === name ? color1E : colorE9;
+  const colors =
+    curState === name
+      ? { main: colorD9, sub: color1E }
+      : { main: color1E, sub: colorE9 };
   return (
     <div>
       <div
         className="container"
         onClick={onClick}
         style={{
-          backgroundColor: color,
-          width: expanded ? "180px" : "80px",
+          backgroundColor: colors.main,
         }}
       >
         <div className="icon">
-          <div>{children}</div>
-          <p style={{ color: eColor }}>{text}</p>
+          <div className={text.length < 1 ? "logo" : ""}>{children}</div>
+          {expanded && <p style={{ color: colors.sub }}>{text}</p>}
         </div>
       </div>
     </div>
