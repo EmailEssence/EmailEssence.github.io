@@ -8,11 +8,12 @@ import Client from "./client";
 import { Login } from "./components/login/login";
 import fetchEmails, { fetchDev, isDevMode } from "./emails/emailParse";
 
-
-const devEmails = fetchDev();
+const devEmails = isDevMode ? fetchDev() : [];
 
 export default function Page() {
-  const [emailsByDate, setEmailsByDate] = useState(devEmails);
+  const [emailsByDate, setEmailsByDate] = useState(
+    isDevMode ? devEmails : null
+  );
   const [loading, setLoading] = useState(false);
 
   const [loggedIn, setLoggedIn] = useState(
