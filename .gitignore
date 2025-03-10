@@ -29,3 +29,6 @@ token.pickle
 
 # FastAPI
 .pytest_cache/
+
+# Testing
+.coverage
