@@ -148,6 +148,7 @@ function EmailDisplay({ curEmail }) {
 function ReaderView({ curEmail }) {
   const [text, setText] = useState("Loading ...");
   const [displaying, setDisplaying] = useState(false);
+
   function displayReaderView() {
     if (!displaying) {
       const parser = new DOMParser();
@@ -156,14 +157,13 @@ function ReaderView({ curEmail }) {
       setText(article.textContent);
     }
     setDisplaying(!displaying);
-    console.log("display clicked");
   }
+
   useEffect(() => {
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(curEmail.body, "text/html");
-    const article = new Readability(doc).parse();
-    console.log(article.textContent);
-  }, [curEmail]); // Inefficient way to do This
+    setDisplaying(false);
+    setText("Loading...");
+  }, [curEmail]); // Inefficient way to clean state when email switches
+
   return (
     <div onClick={displayReaderView}>
       {/* <ReaderViewIcon /> */}
