@@ -156,6 +156,7 @@ function ReaderView({ curEmail }) {
       setText(article.textContent);
     }
     setDisplaying(!displaying);
+    console.log("display clicked");
   }
   useEffect(() => {
     const parser = new DOMParser();

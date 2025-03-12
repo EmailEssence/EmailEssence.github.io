@@ -41,6 +41,14 @@
   grid-row: 2 / -1;
   grid-column: 2 / 2;
   width: 40%;
+  /* set height to width  */
+  aspect-ratio: 1 / 1;
+  padding: 4px;
+  border-radius: 4px;
+}
+
+.email-display .reader-view:hover {
+  background-color: #d9d9d9;
 }
 
 .email-display .date {
