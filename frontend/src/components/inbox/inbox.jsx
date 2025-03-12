@@ -166,9 +166,23 @@ function ReaderView({ curEmail }) {
 
   return (
     <div onClick={displayReaderView}>
-      {/* <ReaderViewIcon /> */}
       <img src="./src/assets/oldAssets/ReaderView.svg" alt="ReaderView Icon" />
+      <PopUp isOpen={displaying} handleClose={displayReaderView}>
+        <div>{text}</div>
+      </PopUp>
     </div>
+  );
+}
+
+function PopUp({ isOpen, handleClose, children }) {
+  if (!isOpen) return null;
+  return (
+    <>
+      <div className="pop-up-container">
+        {children}
+        <button onClick={handleClose}>Click To Close</button>
+      </div>
+    </>
   );
 }
 
