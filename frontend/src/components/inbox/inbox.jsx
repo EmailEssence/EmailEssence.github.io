@@ -146,14 +146,25 @@ function EmailDisplay({ curEmail }) {
 }
 
 function ReaderView({ curEmail }) {
+  const [text, setText] = useState("Loading ...");
+  const [displaying, setDisplaying] = useState(false);
+  function displayReaderView() {
+    if (!displaying) {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(curEmail.body, "text/html");
+      const article = new Readability(doc).parse();
+      setText(article.textContent);
+    }
+    setDisplaying(!displaying);
+  }
   useEffect(() => {
     const parser = new DOMParser();
     const doc = parser.parseFromString(curEmail.body, "text/html");
     const article = new Readability(doc).parse();
     console.log(article.textContent);
-  }, [curEmail]);
+  }, [curEmail]); // Inefficient way to do This
   return (
-    <div>
+    <div onClick={displayReaderView}>
       {/* <ReaderViewIcon /> */}
       <img src="./src/assets/oldAssets/ReaderView.svg" alt="ReaderView Icon" />
     </div>
