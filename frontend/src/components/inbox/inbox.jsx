@@ -10,6 +10,7 @@ import {
 } from "../../assets/constants";
 import { useState, useRef, useEffect } from "react";
 import { Readability } from "@mozilla/readability";
+import ReactDom from "react-dom";
 import "./emailDisplay.css";
 import "./emailEntry.css";
 import "./emailList.css";
@@ -176,13 +177,14 @@ function ReaderView({ curEmail }) {
 
 function PopUp({ isOpen, handleClose, children }) {
   if (!isOpen) return null;
-  return (
+  return ReactDom.createPortal(
     <>
       <div className="pop-up-container">
         {children}
         <button onClick={handleClose}>Click To Close</button>
       </div>
-    </>
+    </>,
+    document.getElementById("portal")
   );
 }
 
