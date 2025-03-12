@@ -103,4 +103,17 @@ const getUserPreferences = async (user_id) => {
   return response.json();
 } 
 
+// my attempt at a function saves the user preferences to the backend
+const saveUserPreferences = async (userPreferences) => {
+  const response = await fetch(`http://localhost:8000/user/${user_id}/preferences`, {
+    method: 'PUT',
+    headers: {'Content-Type':'application/json',},
+    body: JSON.stringify(userPreferences),
+  });
+  if (!response.ok) {
+    throw new Error(` failed to fetch ${response.status}`);
+  }
+  return response.json();
+};
+
 
