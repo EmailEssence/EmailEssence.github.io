@@ -94,7 +94,13 @@ export function Theme({ theme, onSetTheme }) {
   );
 }
 
+// my attempt at a function that gets the user preferences from the backend
+const getUserPreferences = async (user_id) => {
+  const response = await fetch(`http://localhost:8000/user/${user_id}/preferences`);
+  if (!response.ok) {
+    throw new Error(` failed to fetch ${response.status}`);
+  }
+  return response.json();
+} 
 
-// const saveUserPreferences = (userPreferences) => {
 
-// }
