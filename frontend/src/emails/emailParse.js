@@ -1,6 +1,6 @@
-import ems from "./retrieve_emails_response.json";
-import sums from "./summarize_email_response.json";
-export const isDevMode = false;
+import ems from "./retrieve_emails_response.json" with { type: 'json' };
+import sums from "./summarize_email_response.json" with { type: 'json' };
+export const isDevMode = true;
 export const baseUrl = isDevMode
   ? "http://localhost:8000"
   : "https://ee-backend-w86t.onrender.com";

@@ -9,6 +9,7 @@ import {
   emailsPerPage,
 } from "../../assets/constants";
 import { useState, useRef, useEffect } from "react";
+import { Readability } from "@mozilla/readability";
 import "./emailDisplay.css";
 import "./emailEntry.css";
 import "./emailList.css";
@@ -144,8 +145,13 @@ function EmailDisplay({ curEmail }) {
   );
 }
 
-// eslint-disable-next-line no-unused-vars
 function ReaderView({ curEmail }) {
+  useEffect(() => {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(curEmail.body, "text/html");
+    const article = new Readability(doc).parse();
+    console.log(article.textContent);
+  }, [curEmail]);
   return (
     <div>
       {/* <ReaderViewIcon /> */}
