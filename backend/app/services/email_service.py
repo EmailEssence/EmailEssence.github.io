@@ -1,5 +1,7 @@
+import logging
 import os
 import email
+from typing import List, Optional
 from typing import List, Optional
 import httpx
 import re
@@ -12,6 +14,16 @@ from app.services import auth_service
 from fastapi import HTTPException, status, Query
 
 from starlette.concurrency import run_in_threadpool
+
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
+
+# Create module-specific logger
+logger = logging.getLogger(__name__)
+
 
 async def get_auth_token():
     """Get a valid OAuth token for email access"""
@@ -292,9 +304,7 @@ async def fetch_emails():
         return emails
 
     except Exception as e:
+        service_logger.exception("Email fetch operation failed")
         if isinstance(e, HTTPException):
             raise e
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to fetch emails: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=str(e))
