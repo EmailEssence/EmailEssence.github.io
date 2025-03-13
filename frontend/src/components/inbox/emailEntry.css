@@ -7,19 +7,19 @@
   height: 4rem;
   display: grid;
   grid-template-rows: 1.25rem 2.75rem;
-  grid-template-columns: 2rem 1fr 8px 2fr;
+  grid-template-columns: calc(1rem + 0.4vw) calc(3rem + 8vw) 8px 1fr;
   flex: 0, 0, 4rem;
 }
 
 .no-summary.entry {
-  grid-template-columns: 2rem 1fr 8px;
+  grid-template-columns: calc(1rem + 0.4vw) 1fr 8px;
 }
 
 /* use space [0, 0] and [0, 1] */
 .indicator-container {
   grid-row: 1 / -1;
   grid-column: 1 / 1;
-  padding: 1.5rem 0.5rem;
+  align-content: center;
 }
 
 /* use space [1, 0] */
@@ -58,8 +58,8 @@
 }
 
 .indicator-container > .indicator {
-  height: 100%;
-  width: 100%;
+  width: 50%;
+  aspect-ratio: 1 / 1;
   margin: auto;
   border-radius: 50%;
   background-color: #a2845e;
