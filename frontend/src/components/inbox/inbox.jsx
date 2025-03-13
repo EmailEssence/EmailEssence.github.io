@@ -151,6 +151,7 @@ function ReaderView({ curEmail }) {
   const [displaying, setDisplaying] = useState(false);
 
   function displayReaderView() {
+    console.log("handleing click");
     if (!displaying) {
       const parser = new DOMParser();
       const doc = parser.parseFromString(curEmail.body, "text/html");
@@ -179,6 +180,7 @@ function PopUp({ isOpen, handleClose, children }) {
   if (!isOpen) return null;
   return ReactDom.createPortal(
     <>
+      <div className="overlay-background" />
       <div className="pop-up-container">
         {children}
         <button onClick={handleClose}>Click To Close</button>
