@@ -1,3 +1,4 @@
+import React, { useEffect, useState } from 'react';
 import "./settings.css";
 
 export function Settings ({
@@ -8,6 +9,18 @@ export function Settings ({
   theme,
   handleSetTheme,
 }) {
+  const isDarkTheme = useSystemTheme();
+
+  useEffect(() => {
+    if (theme === 'system') {
+      if (isDarkTheme) {
+        document.body.classList.add("dark-mode");
+      } else {
+        document.body.classList.remove("dark-mode");
+      }
+    }
+  }, [isDarkTheme, theme]);
+
   return (
     <div className="settings">
       <h1>Settings</h1>
@@ -66,13 +79,20 @@ export function EmailFetchInterval({ emailFetchInterval, onSetEmailFetchInterval
 export function Theme({ theme, onSetTheme }) {
   const themes = ["light", "system", "dark"]; //array of themes
 
-  //function to handle theme change
-  const handleThemeChange = (newTheme) => {
-    onSetTheme(newTheme);
-    if (newTheme === "dark") {
+  //function to handle theme change between light and dark through the buttons
+  const handleThemeChange = (setTheme) => {
+    onSetTheme(setTheme);
+    if (setTheme === "dark") {
       document.body.classList.add("dark-mode");
-    } else {
+    } else if (setTheme === "light") {
       document.body.classList.remove("dark-mode");
+    } else if (setTheme === "system") {
+      const isDarkTheme = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      if (isDarkTheme) {
+        document.body.classList.add("dark-mode");
+      } else {
+        document.body.classList.remove("dark-mode");
+      }
     }
   };
 
@@ -93,6 +113,24 @@ export function Theme({ theme, onSetTheme }) {
     </div>
   );
 }
+
+const useSystemTheme = () => {
+  const getCurrentTheme = () => window.matchMedia("(prefers-color-scheme: dark)").matches;
+  const [isDarkTheme, setIsDarkTheme] = useState(getCurrentTheme());
+
+  const mqListener = (e) => {
+    setIsDarkTheme(e.matches);
+  };
+
+  useEffect(() => {
+    const darkThemeMq = window.matchMedia("(prefers-color-scheme: dark)");
+    darkThemeMq.addListener(mqListener);
+    return () => darkThemeMq.removeListener(mqListener);
+  }, []);
+
+  return isDarkTheme;
+};
+
 // need to test these
 // my attempt at a function that gets the user preferences from the backend
 const getUserPreferences = async (user_id) => {
@@ -111,7 +149,7 @@ const saveUserPreferences = async (userPreferences) => {
     body: JSON.stringify(userPreferences),
   });
   if (!response.ok) {
-    throw new Error(` failed to fetch ${response.status}`);
+    throw new Error(`failed to fetch ${response.status}`);
   }
   return response.json();
 };
