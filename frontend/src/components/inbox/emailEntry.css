@@ -3,7 +3,7 @@
 .entry {
   overflow: hidden;
   text-overflow: ellipsis;
-  width: 460px;
+  width: 100%;
   height: 4rem;
   display: grid;
   grid-template-rows: 1.25rem 2.75rem;

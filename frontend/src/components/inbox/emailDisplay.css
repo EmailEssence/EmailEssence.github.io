@@ -62,14 +62,18 @@
 }
 
 .email-display .body {
+  width: 100%;
   padding: 1rem;
+  max-width: min(
+    calc(100vw - 15rem - var(--sidebar-width)),
+    calc(70vw - var(--sidebar-width))
+  );
 }
 
 .email-display .content-container {
   height: 100%;
   max-height: calc(100vh - 11rem);
   /* does not work when sidebar extended */
-  max-width: calc(100vw - 80px - 31.5rem);
   overflow: auto;
   overflow-y: scroll;
   word-wrap: break-word;
