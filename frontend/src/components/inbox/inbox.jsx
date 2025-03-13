@@ -116,10 +116,8 @@ function InboxEmailList({ displaySummaries, emailList, curEmail, onClick }) {
         </div>
       </div>
       <div className="divider"></div>
-      <div className="email-container">
-        <div className="emails" ref={ref} onScroll={handleScroll}>
-          {emails()}
-        </div>
+      <div className="emails" ref={ref} onScroll={handleScroll}>
+        {emails()}
       </div>
     </div>
   );
