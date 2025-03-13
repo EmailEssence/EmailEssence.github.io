@@ -87,6 +87,7 @@ function InboxEmailList({ displaySummaries, emailList, curEmail, onClick }) {
 
   useEffect(() => {
     handleScroll();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pages]); // Fixes minimum for large screens, but runs effect after every load which is unnecessary
 
   const emails = () => {
@@ -153,10 +154,11 @@ function ReaderView({ curEmail }) {
   function displayReaderView() {
     console.log("handleing click");
     if (!displaying) {
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(curEmail.body, "text/html");
-      const article = new Readability(doc).parse();
-      setText(article.textContent);
+      // const parser = new DOMParser();
+      // const doc = parser.parseFromString(curEmail.body, "text/html");
+      // const article = new Readability(doc).parse();
+      // setText(article.textContent);
+      setText(curEmail.body);
     }
     setDisplaying(!displaying);
   }

@@ -37,7 +37,7 @@
   text-align: left;
   grid-row: 2 / 2;
   grid-column: 2 / 2;
-  font-size: 0.6rem;
+  font-size: calc(0.45rem + 0.2vw);
 }
 
 /* use space [2, 0] and [2, 1] */
@@ -54,7 +54,7 @@
   grid-row: 1 / -1;
   grid-column: 4 / 4;
   text-align: left;
-  font-size: 0.75rem;
+  font-size: calc(0.5rem + 0.2vw);
 }
 
 .indicator-container > .indicator {
@@ -71,14 +71,14 @@
   white-space: nowrap;
   grid-column: 1 / 1;
   text-align: left;
-  font-size: 0.8rem;
+  font-size: calc(0.65rem + 0.2vw);
   font-weight: 700;
 }
 
 .entry .head > .date {
   grid-column: 2 / 2;
   text-align: right;
-  font-size: 0.6rem;
+  font-size: calc(0.45rem + 0.2vw);
 }
 
 .median-container > .median {
