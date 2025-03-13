@@ -167,8 +167,13 @@ function ReaderView({ curEmail }) {
   }, [curEmail]); // Inefficient way to clean state when email switches
 
   return (
-    <div onClick={displayReaderView}>
-      <img src="./src/assets/oldAssets/ReaderView.svg" alt="ReaderView Icon" />
+    <div>
+      <div className="icon-container" onClick={displayReaderView}>
+        <img
+          src="./src/assets/oldAssets/ReaderView.svg"
+          alt="ReaderView Icon"
+        />
+      </div>
       <PopUp isOpen={displaying} handleClose={displayReaderView}>
         <div>{text}</div>
       </PopUp>

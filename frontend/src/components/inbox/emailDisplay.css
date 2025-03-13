@@ -43,11 +43,14 @@
   width: 40%;
   /* set height to width  */
   aspect-ratio: 1 / 1;
+}
+
+.email-display .icon-container {
   padding: 4px;
   border-radius: 4px;
 }
 
-.email-display .reader-view:hover {
+.email-display .icon-container:hover {
   background-color: #d9d9d9;
 }
 
