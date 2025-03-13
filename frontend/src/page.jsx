@@ -19,6 +19,7 @@ export default function Page() {
   const [loggedIn, setLoggedIn] = useState(
     () => !!localStorage.getItem("auth_token")
   );
+  const [authChanged, setAuthChanged] = useState(false); // New state variable
 
   useEffect(() => {
     const hash = window.location.hash;
@@ -45,11 +46,13 @@ export default function Page() {
       console.log(emailArray);
       setEmailsByDate(emailArray);
       setLoggedIn(true);
+      setAuthChanged(true); // Update authChanged state
     } catch (error) {
       console.error("Auth flow error:", error);
       // Clear invalid token
       localStorage.removeItem("auth_token");
       setEmailsByDate([]);
+      setAuthChanged(true); // Update authChanged state
     } finally {
       setLoading(false);
     }

@@ -19,11 +19,11 @@ body {
   width: auto;
   height: auto;
   flex-shrink: 0;
-  padding: 1rem 20px;
+  padding: calc(0.4rem + 0.55vw) 20px;
   border: 1px solid var(--color-border);
   background: var(--color-background);
   box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
-  margin: 1rem;
+  margin: calc(0.4rem + 0.55vw);
   display: flex;
   align-items: center;
   position: relative;
@@ -70,10 +70,10 @@ h2 {
 .toggle:before {
   position: absolute;
   content: "";
-  height: 15px;
-  width: 15px;
-  left: 3px;
-  bottom: 3px;
+  height: calc(0.75rem + 0.25vw);
+  width: calc(0.75rem + 0.25vw);
+  left: calc(0.2rem + 0.1vw);
+  bottom: calc(0.2rem + 0.1vw);
   background-color: var(--color-background);
   transition: 0.4s;
   border-radius: 50%;
@@ -86,7 +86,7 @@ h2 {
 
 /* Move the slider when the checkbox is checked */
 .switch input:checked + .toggle:before {
-  transform: translateX(19px);
+  transform: translateX(calc(1rem + 0.5vw));
 }
 
 /* Rounded sliders */
@@ -115,7 +115,7 @@ h2 {
 }
 
 .settings .metric {
-  margin-left: -15px;
+  margin-left: -calc(-0.75rem - 0.25vw);
   color: var(--grey-2);
   font-family: var(--font-family);
   font-size: 10px;
@@ -127,17 +127,17 @@ h2 {
   position: absolute;
   top: 0;
   right: 0;
-  margin-top: 5px;
-  margin-right: 16px;
+  margin-top: calc(0.25rem + 0.15vw);
+  margin-right: calc(1rem + 0.5vw);
   border: 2px solid var(--color-border);
   border-radius: 4px;
-  padding: 5px 10px;
+  padding: calc(0.25rem + 0.25vw) calc(0.5rem + 0.5vw);
   color: var(--color-text);
   font-family: var(--font-family);
   font-size: 14px;
   display: flex;
-  width: 60px;
-  height: 30px;
+  width: calc(3rem + 1vw);
+  height: calc(1.5rem + 0.5vw);
   flex-direction: column;
   justify-content: center;
 }

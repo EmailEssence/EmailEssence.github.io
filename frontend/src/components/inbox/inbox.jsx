@@ -1,15 +1,15 @@
 /* eslint-disable react/prop-types */
 // import ReaderViewIcon from "../../assets/ReaderView";
+import { useEffect, useRef, useState } from "react";
 import ArrowIcon from "../../assets/InboxArrow";
 import {
   color00,
+  colorB0,
   colorD9,
   colorTP,
-  colorB0,
   emailsPerPage,
 } from "../../assets/constants";
-import { useState, useRef, useEffect } from "react";
-import { Readability } from "@mozilla/readability";
+// import { Readability } from "@mozilla/readability";
 import ReactDom from "react-dom";
 import "./emailDisplay.css";
 import "./emailEntry.css";
