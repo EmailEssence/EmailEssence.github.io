@@ -1,16 +1,16 @@
 /* eslint-disable react/prop-types */
 // import ReaderViewIcon from "../../assets/ReaderView";
+import { Readability } from "@mozilla/readability";
 import { useEffect, useRef, useState } from "react";
+import ReactDom from "react-dom";
 import ArrowIcon from "../../assets/InboxArrow";
 import {
-  color00,
-  colorB0,
-  colorD9,
-  colorTP,
-  emailsPerPage,
+    color00,
+    colorB0,
+    colorD9,
+    colorTP,
+    emailsPerPage,
 } from "../../assets/constants";
-// import { Readability } from "@mozilla/readability";
-import ReactDom from "react-dom";
 import "./emailDisplay.css";
 import "./emailEntry.css";
 import "./emailList.css";
@@ -150,12 +150,11 @@ function ReaderView({ curEmail }) {
   const [displaying, setDisplaying] = useState(false);
 
   function displayReaderView() {
-    console.log("handleing click");
     if (!displaying) {
-      // const parser = new DOMParser();
-      // const doc = parser.parseFromString(curEmail.body, "text/html");
-      // const article = new Readability(doc).parse();
-      // setText(article.textContent);
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(curEmail.body, "text/html");
+      const article = new Readability(doc).parse();
+      setText(article.textContent);
       setText(curEmail.body);
     }
     setDisplaying(!displaying);

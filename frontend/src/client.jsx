@@ -18,7 +18,7 @@ export default function Client({ emailsByDate, setEmailsByDate }) {
     userPreferencesReducer,
     { isChecked: true, emailFetchInterval: 120, theme: "light" } //call getuserpreferences function 
   );
-  // create a "clock" that updates every (emailFetchinterval Seconds)
+  // create a "cloxck" that updates every (emailFetchinterval Seconds)
   // Pass that clock into an effect that will update based on the clock
   useEffect(() => {
     const clock = setInterval(() => {

@@ -10,6 +10,7 @@
   --grey-4: #d9d9d9;
   --grey-5: #e9e9e9;
   --white: white;
+  --brown: #a2845e;
 
 
   /*variables */
@@ -21,12 +22,14 @@
   --color-selected-background: var(--grey-4);
   --color-hover-background: var(--grey-4);
   --color-background: var(--white);
+  --color-background2: var(--grey-4);
   --font-weight-normal: 300;
   --font-weight-bold: 600;
   --color-toggle-border: var(--grey-3);
   --color-toggle-background: var(--white);
   --color-slider-background: var(--grey-3);
   --color-slider-thumb: var(--grey-2);
+  --color-indicator: var(--brown);
 }
 
 /* dark theme variables */
@@ -37,10 +40,12 @@ body.dark-mode {
   --color-selected-background: var(--grey-2);
   --color-hover-background: var(--grey-2);
   --color-background: var(--grey-1);
+  --color-background2: var(--grey-2);
   --color-toggle-border: var(--grey-3);
   --color-toggle-background: var(--grey-1);
   --color-slider-background: var(--grey-3);
   --color-slider-thumb: var(--grey-4);
+  --color-indicator: var(#5c452e);
 }
 
 /* Theme Toggle Styles */
