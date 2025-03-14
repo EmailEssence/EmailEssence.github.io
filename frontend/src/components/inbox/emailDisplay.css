@@ -74,7 +74,6 @@
 .email-display .content-container {
   height: 100%;
   max-height: calc(100vh - 11rem);
-  /* does not work when sidebar extended */
   overflow: auto;
   overflow-y: scroll;
   word-wrap: break-word;
@@ -87,16 +86,33 @@
 /* overlay styles */
 
 .pop-up-container {
+  max-width: max(50vw, min(30rem, 90vw));
+  max-height: 80vh;
   display: flex;
   flex-direction: column;
   gap: 1rem;
   position: fixed;
   top: 50%;
   left: 50%;
+  overflow: auto;
+  overflow-y: scroll;
+  word-wrap: break-word;
   transform: translate(-50%, -50%);
   background-color: var(--color-background);
-  border-radius: 0.5rem;
-  padding: 2rem;
+  border-radius: 0.25rem;
+  padding: calc(0.5rem + 1vw);
+}
+
+.pop-up-container > .button {
+  border-radius: 0.25rem;
+  margin: auto;
+  min-height: 4vh;
+  width: 40%;
+  background-color: var(--color-background2);
+  font-weight: 600;
+  /* center text vertically */
+  vertical-align: middle;
+  line-height: 4vh;
 }
 
 .overlay-background {

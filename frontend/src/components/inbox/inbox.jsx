@@ -187,7 +187,9 @@ function PopUp({ isOpen, handleClose, children }) {
       <div className="overlay-background" />
       <div className="pop-up-container">
         {children}
-        <button onClick={handleClose}>Click To Close</button>
+        <div className="button" onClick={handleClose}>
+          Click To Close
+        </div>
       </div>
     </>,
     document.getElementById("portal")
