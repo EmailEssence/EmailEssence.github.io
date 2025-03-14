@@ -85,7 +85,7 @@
 
 /* controls summary overflow */
 
-@media (min-width: 672px) {
+@media (min-width: 672px) and (max-width: 1175px) {
   .entry .summary {
     line-clamp: 4;
   }
@@ -94,6 +94,12 @@
 @media (max-width: 671px) {
   .entry .summary {
     line-clamp: 5;
+  }
+}
+
+@media (min-width: 1176px) {
+  .entry .summary {
+    line-clamp: 3;
   }
 }
 
@@ -126,4 +132,3 @@
   width: 100%;
   background-color: var(--color-background2);
 }
-
