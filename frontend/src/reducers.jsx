@@ -24,6 +24,7 @@ export function clientReducer(client, action) {
 
 
 export function userPreferencesReducer(userPreferences, action){
+    // Call to get user preferences the the update preferences base on the reducer action
     switch(action.type){
         case "isChecked":{
             return {

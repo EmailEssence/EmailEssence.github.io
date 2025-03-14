@@ -15,7 +15,7 @@ export default function Client({ emailsByDate }) {
   });
   const [userPreferences, dispatchUserPreferences] = useReducer(
     userPreferencesReducer,
-    { isChecked: false, emailFetchInterval: 0, theme: "system" }
+    { isChecked: true, emailFetchInterval: 120, theme: "light" } //call getuserpreferences function 
   );
   const root = document.querySelector(":root");
   root.style.setProperty(
