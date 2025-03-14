@@ -49,6 +49,11 @@
   font-weight: 600;
 }
 
+.dashboard .head-container .expand-button {
+  /* color of the expand-button in the miniview */
+  color: var(--color-text);
+}
+
 .dashboard .body-container {
   padding: 0.5rem 0.5rem;
   display: grid;

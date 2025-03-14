@@ -38,6 +38,7 @@
 }
 
 .email-display .reader-view {
+  color: var(--color-text);
   grid-row: 2 / -1;
   grid-column: 2 / 2;
   width: 40%;

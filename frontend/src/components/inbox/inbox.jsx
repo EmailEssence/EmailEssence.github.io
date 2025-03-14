@@ -4,6 +4,7 @@ import { Readability } from "@mozilla/readability";
 import { useEffect, useRef, useState } from "react";
 import ReactDom from "react-dom";
 import ArrowIcon from "../../assets/InboxArrow";
+import ReaderViewIcon from "../../assets/ReaderView";
 import {
   // color00,
   // colorB0,
@@ -41,7 +42,9 @@ function EmailEntry({ displaySummary, email, onClick, selected }) {
   const date = getDate(email.received_at);
   return (
     <div
-      className={`entry${displaySummary ? "" : " no-summary"}${selected ? " selected" : ""}`}
+      className={`entry${displaySummary ? "" : " no-summary"}${
+        selected ? " selected" : ""
+      }`}
       // style={{ backgroundColor: colors.main }}
       onClick={onClick}
     >
@@ -168,10 +171,7 @@ function ReaderView({ curEmail }) {
   return (
     <div>
       <div className="icon-container" onClick={displayReaderView}>
-        <img
-          src="./src/assets/oldAssets/ReaderView.svg"
-          alt="ReaderView Icon"
-        />
+        <ReaderViewIcon />
       </div>
       <PopUp isOpen={displaying} handleClose={displayReaderView}>
         <div>{text}</div>
