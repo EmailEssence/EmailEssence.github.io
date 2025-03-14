@@ -1,13 +1,13 @@
 .email-display {
   display: grid;
-  grid-template-rows: 9rem 1fr;
+  grid-template-rows: 7rem 1fr;
 }
 
 .email-display .header {
-  padding: 1rem 2rem;
+  padding: 1.5rem 2rem 0.5rem 2rem;
   display: grid;
   grid-template-columns: 1fr 8rem;
-  grid-template-rows: 3rem 2rem 2rem;
+  grid-template-rows: 2rem 1.5rem 1.5rem;
   text-align: left;
 }
 
@@ -20,7 +20,7 @@
 .email-display .from {
   grid-row: 1 / 1;
   grid-column: 1 / 1;
-  font-size: 2rem;
+  font-size: 1rem;
   font-weight: 700;
 }
 
@@ -34,7 +34,9 @@
 .email-display .to {
   grid-row: 3 / 3;
   grid-column: 1 / 1;
-  font-size: 1rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  opacity: 0.6;
 }
 
 .email-display .reader-view {
@@ -59,7 +61,7 @@
   text-align: right;
   grid-row: 1 / 1;
   grid-column: 2 / 2;
-  font-size: 1rem;
+  font-size: calc(0.6rem + 0.2vw);
 }
 
 .email-display .body {
@@ -73,11 +75,11 @@
 
 .email-display .content-container {
   height: 100%;
-  max-height: calc(100vh - 11rem);
+  max-height: calc(100vh - 9rem);
   overflow: auto;
   overflow-y: scroll;
   word-wrap: break-word;
-  border-radius: 1rem;
+  border-radius: 0.4rem;
   border: 2px solid var(--color-border);
   padding: 2rem 4rem;
   text-align: left;
