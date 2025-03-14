@@ -68,7 +68,7 @@ export default function Page() {
     ) : emailsByDate === null ? (
       <div>Initializing dashboard...</div>
     ) : (
-      <Client emailsByDate={emailsByDate} />
+      <Client emailsByDate={emailsByDate} setEmailsByDate={setEmailsByDate} />
     );
   };
   return <div className="page">{display()}</div>;

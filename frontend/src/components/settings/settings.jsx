@@ -64,7 +64,7 @@ export function EmailFetchInterval({ emailFetchInterval, onSetEmailFetchInterval
       <input
         className="slider"
         type="range"
-        min="0"
+        min="5"
         max="600"
         step="5"
         value={emailFetchInterval}

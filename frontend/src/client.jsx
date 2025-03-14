@@ -1,13 +1,14 @@
 /* eslint-disable react/prop-types */
-import { useReducer } from "react";
+import { useEffect, useReducer } from "react";
 import "./client.css";
 import Dashboard from "./components/dashboard/dashboard";
 import Inbox from "./components/inbox/inbox";
 import { Settings } from "./components/settings/settings";
 import SideBar from "./components/sidebar/sidebar";
+import fetchEmails, { fetchDev, isDevMode } from "./emails/emailParse";
 import { clientReducer, userPreferencesReducer } from "./reducers";
 
-export default function Client({ emailsByDate }) {
+export default function Client({ emailsByDate, setEmailsByDate }) {
   const [client, dispatchClient] = useReducer(clientReducer, {
     curPage: "dashboard",
     expandedSideBar: false,
@@ -17,6 +18,22 @@ export default function Client({ emailsByDate }) {
     userPreferencesReducer,
     { isChecked: true, emailFetchInterval: 120, theme: "light" } //call getuserpreferences function 
   );
+  // create a "clock" that updates every (emailFetchinterval Seconds)
+  // Pass that clock into an effect that will update based on the clock
+  useEffect(() => {
+    const clock = setInterval(() => {
+      try {
+        const newEmails = isDevMode ? fetchDev() : fetchEmails(0);
+        if (newEmails.length !== emailsByDate.length) setEmailsByDate(newEmails);
+        console.log("emails loaded");
+      } catch (error) {
+        console.error(`Loading Emails Error: ${error}`)
+      }
+    }, userPreferences.emailFetchInterval * 1000);
+    return () => clearInterval(clock);
+  }, [userPreferences.emailFetchInterval])
+
+
   const root = document.querySelector(":root");
   root.style.setProperty(
     "--sidebar-width",
