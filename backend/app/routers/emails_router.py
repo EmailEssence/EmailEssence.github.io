@@ -40,7 +40,8 @@ async def retrieve_emails(
     category: Optional[str] = Query(default=None, description="Filter by email category"),
     search: Optional[str] = Query(default=None, description="Search in subject and body"),
     sort_by: str = Query(default="received_at", enum=["received_at", "sender", "subject"]),
-    sort_order: str = Query(default="desc", enum=["asc", "desc"])
+    sort_order: str = Query(default="desc", enum=["asc", "desc"]),
+    refresh: bool = Query(default=False, description="Whether to refresh emails from IMAP first")
 ):
     debug_info = {
         "request_params": {
@@ -50,7 +51,8 @@ async def retrieve_emails(
             "category": category,
             "search": search,
             "sort_by": sort_by,
-            "sort_order": sort_order
+            "sort_order": sort_order,
+            "refresh": refresh
         }
     }
     
@@ -65,7 +67,8 @@ async def retrieve_emails(
             category=category,
             search=search,
             sort_by=sort_by,
-            sort_order=sort_order
+            sort_order=sort_order,
+            refresh=refresh
         )
         
         # Combine debug info

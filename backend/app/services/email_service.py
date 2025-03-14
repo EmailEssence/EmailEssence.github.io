@@ -419,12 +419,8 @@ async def fetch_emails(
         # Reset timer for main query
         start_time = datetime.now()
         
-        # Fetch emails with pagination and sorting
-        cursor = db.emails.find(query)
-        cursor = cursor.sort(sort_by, sort_direction)
-        cursor = cursor.skip(skip).limit(limit)
-        
-        emails = await cursor.to_list(length=limit)
+        # Fetch emails with pagination and sorting in one chained operation
+        emails = await db.emails.find(query).sort([(sort_by, sort_direction)]).skip(skip).limit(limit).to_list(length=limit)
         debug_info["timing"]["main_query"] = (datetime.now() - start_time).total_seconds()
         
         logger.info(f"Retrieved {len(emails)} emails out of {total} total")
