@@ -54,14 +54,6 @@ function WeightedEmailList({ emailList, setCurEmail, handlePageChange }) {
 }
 
 function WEListEmail({ email, setCurEmail, handlePageChange }) {
-  // const emailLinkRef = useRef(null);
-  // const [color, setColor] = useState("#000000")
-
-  // useEffect(() => {
-  //   const computedStyle = getComputedStyle(emailLinkRef.current);
-  //   setColor(computedStyle.color);
-  //   console.log(computedStyle.color);
-  // }, [])
   return (
     <div className="welist-email-container">
       <div className="summary">{email.summary_text}</div>
