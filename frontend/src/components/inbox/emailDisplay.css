@@ -62,6 +62,7 @@
   grid-row: 1 / 1;
   grid-column: 2 / 2;
   font-size: calc(0.6rem + 0.2vw);
+  opacity: 0.6;
 }
 
 .email-display .body {
@@ -81,8 +82,9 @@
   word-wrap: break-word;
   border-radius: 0.4rem;
   border: 2px solid var(--color-border);
-  padding: 2rem 4rem;
+  padding: calc(0.6rem + 0.2vh) calc(0.8rem + 0.6vw);
   text-align: left;
+  font-size: calc(0.6rem + 0.2vw);
 }
 
 /* overlay styles */
