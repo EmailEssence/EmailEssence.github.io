@@ -30,6 +30,10 @@
   --color-slider-background: var(--grey-3);
   --color-slider-thumb: var(--grey-2);
   --color-indicator: var(--brown);
+  --color-median: var(--grey-3);
+  --color-scroll-background: var(--grey-5);
+  --color-scroll-thumb: var(--grey-3);
+  --color-scroll-hover: var(--grey-3);
 }
 
 /* dark theme variables */
@@ -45,48 +49,34 @@ body.dark-mode {
   --color-toggle-background: var(--grey-1);
   --color-slider-background: var(--grey-3);
   --color-slider-thumb: var(--grey-4);
-  --color-indicator: var(#5c452e);
+  --color-indicator: var(#5C452E);
+  --color-median: var(--grey-3);
+  --color-scroll-background: var(--grey-1);
+  --color-scroll-thumb: var(--grey-3);
+  --color-scroll-hover: var(--grey-3);
 }
 
-/* Theme Toggle Styles */
-.theme-toggle-group {
-  margin-left: auto;
-  display: flex;
-  border: 2px solid var(--color-toggle-border);
-  border-radius: 5px;
-  overflow: hidden;
+/* Target the scrollbar track (the background) */
+::-webkit-scrollbar-track {
+  background-color: var(--color-scroll-background);
 }
 
-.theme-toggle-item:not(:last-child) {
-  border-right: 2px solid var(--color-toggle-border);
+/* Target the scrollbar thumb (the draggable part) */
+::-webkit-scrollbar-thumb {
+  background-color: var(--color-scroll-thumb);
+  border-radius: 10px;
+  /* Optional: round the thumb */
 }
 
-.theme-toggle-item {
-  flex: 1;
-  padding: 5px 20px;
-  border: none;
-  background-color: var(--color-toggle-background);
-  color: var(--color-text);
-  text-align: center;
-  font-family: var(--font-family);
-  font-size: var(--font-size);
-  font-weight: var(--font-weight-normal);
-  line-height: normal;
-  transition: background-color 0.2s, color 0.2s;
+/* Target the scrollbar thumb on hover */
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-scroll-hover);
 }
 
-.theme-toggle-item.selected {
-  background-color: var(--color-selected-background);
-  color: var(--color-selected-text);
-}
-
-.theme-toggle-item:hover {
-  background-color: var(--color-hover-background);
-}
-
-.theme-toggle-item:focus {
-  outline: 2px solid var(--color-focus-outline);
-  outline-offset: 2px;
+/* Target the whole scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  /* Optional: adjust the width */
 }
 
 /* CSS Reset */

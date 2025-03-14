@@ -12,6 +12,14 @@
   flex: 0, 0, 4rem;
 }
 
+.entry.selected {
+  background-color: var(--color-selected-background);
+}
+
+.entry.selected .median {
+  background-color: var(--color-median);
+}
+
 .no-summary.entry {
   grid-template-columns: calc(1rem + 0.4vw) 1fr 8px;
 }

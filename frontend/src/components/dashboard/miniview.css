@@ -59,6 +59,7 @@
 }
 
 .dashboard .miniview-email-container {
+  border-radius: 4px;
   font-size: calc(0.4rem + 0.55vw);
   text-align: left;
   display: flex;

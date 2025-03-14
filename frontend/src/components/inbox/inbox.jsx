@@ -5,11 +5,11 @@ import { useEffect, useRef, useState } from "react";
 import ReactDom from "react-dom";
 import ArrowIcon from "../../assets/InboxArrow";
 import {
-    color00,
-    colorB0,
-    colorD9,
-    colorTP,
-    emailsPerPage,
+  // color00,
+  // colorB0,
+  // colorD9,
+  // colorTP,
+  emailsPerPage,
 } from "../../assets/constants";
 import "./emailDisplay.css";
 import "./emailEntry.css";
@@ -35,14 +35,14 @@ export default function Inbox({
 }
 
 function EmailEntry({ displaySummary, email, onClick, selected }) {
-  const colors = selected
-    ? { main: colorD9, median: color00 }
-    : { main: colorTP, median: colorB0 };
+  // const colors = selected
+  //   ? { main: colorD9, median: color00 }
+  //   : { main: colorTP, median: colorB0 };
   const date = getDate(email.received_at);
   return (
     <div
-      className={`entry${displaySummary ? "" : " no-summary"}`}
-      style={{ backgroundColor: colors.main }}
+      className={`entry${displaySummary ? "" : " no-summary"}${selected ? " selected" : ""}`}
+      // style={{ backgroundColor: colors.main }}
       onClick={onClick}
     >
       <div className="indicator-container">
@@ -56,7 +56,7 @@ function EmailEntry({ displaySummary, email, onClick, selected }) {
       <div className="median-container">
         <div
           className="median"
-          style={{ backgroundColor: colors.median }}
+          // style={{ backgroundColor: colors.median }}
         ></div>
       </div>
       {displaySummary && <div className="summary">{email.summary_text}</div>}
