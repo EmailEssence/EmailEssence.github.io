@@ -14,7 +14,9 @@ export const authenticate = async () => {
   console.log("Reached authenticate()");
   // Check for auth hash and render OAuthCallback if present
   try {
-    const response = await fetch(`${baseUrl}/auth/login`);
+    const response = await fetch(
+      `${baseUrl}/auth/login?redirect_uri=http://localhost:3000`
+    );
     const data = await response.json();
     if (data.authorization_url) {
       window.open(data.authorization_url);
