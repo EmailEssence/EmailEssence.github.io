@@ -26,7 +26,15 @@ logger = logging.getLogger(__name__)
 
 
 async def get_auth_token():
-    """Get a valid OAuth token for email access"""
+    """
+    Get a valid OAuth token for email access.
+    
+    Returns:
+        str: Valid OAuth token
+        
+    Raises:
+        HTTPException: If token retrieval fails
+    """
     try:
         credentials = await run_in_threadpool(auth_service.get_credentials)
         if not credentials.valid:
@@ -45,7 +53,15 @@ async def get_auth_token():
         )
     
 def clean_body(body: str) -> str:
-    """Clean up email body content"""
+    """
+    Clean up email body content.
+    
+    Args:
+        body: Raw email body text
+        
+    Returns:
+        str: Cleaned email body
+    """
     # Remove image tags
     body = re.sub(r'\[image:[^\]]*\]', '', body)
     
@@ -175,12 +191,13 @@ def fetch_from_imap(
     Fetch emails from an IMAP server with support for pagination and date filtering.
     
     Args:
-        token (str): OAuth2 token for authentication
-        email_account (str): Email account to fetch from
-        limit (Optional[int]): Maximum number of emails to fetch
-        since_date (Optional[datetime]): Only fetch emails received after this date
-        folder (str): IMAP folder to fetch from (default: 'INBOX')
-        criteria (str): IMAP search criteria (default: 'ALL')
+        token: OAuth2 token for authentication
+        email_account: Email account to fetch from
+        user_id: User ID for the email owner
+        limit: Maximum number of emails to fetch
+        since_date: Only fetch emails received after this date
+        folder: IMAP folder to fetch from
+        criteria: IMAP search criteria
         
     Returns:
         List[dict]: List of fetched emails in schema-compliant format
@@ -188,6 +205,10 @@ def fetch_from_imap(
     Raises:
         Exception: If authentication or fetching fails
     """
+    # TODO: Add support for multiple folders/labels beyond just INBOX
+    # TODO: Implement connection pooling to reduce connection overhead
+    # TODO: Move print to logging for consistent log management
+    
     imap_host = 'imap.gmail.com'
     with IMAPClient(imap_host, use_uid=True, ssl=True) as server:
         try:
@@ -245,66 +266,264 @@ def fetch_from_imap(
         return emails
 
 async def save_email_to_db(email_data, uid):
-    """Store email in Database asynchronously if it does not already exist"""
+    """
+    Store email in Database asynchronously if it does not already exist.
+    
+    Args:
+        email_data: Processed email data dictionary
+        uid: Email unique identifier
+        
+    Returns:
+        None
+    """
+    # TODO: Move print to logging for consistent log management
     try:
         print(f"🔍 Checking if email {uid} already exists in MongoDB...")
-        existing_email = await db.emails.find_one({"email_id": str(uid)})  # ✅ Needs await
+        existing_email = await db.emails.find_one({"email_id": str(uid)})
 
         if existing_email:
             print(f"⚠️ Email {uid} already exists, skipping insert.")
         else:
             print(f"📌 Inserting email {uid} into MongoDB...")
-            result = await db.emails.insert_one(email_data)  # ✅ Needs await
+            result = await db.emails.insert_one(email_data)
             print(f"✅ Email {uid} inserted successfully with ID: {result.inserted_id}")
 
     except Exception as e:
         print(f"❌ Error inserting email {uid} into MongoDB: {e}")
 
 async def get_emails_from_db():
-        stored_emails = await db.emails.find().to_list(100)
-        if stored_emails:
-            print(f"✅ Returning {len(stored_emails)} stored emails from MongoDB")
-            return stored_emails
+    """
+    Retrieve emails from database.
+    
+    Returns:
+        List[dict]: List of emails from database
+    """
+    # TODO: Move print to logging for consistent log management
+    stored_emails = await db.emails.find().to_list(100)
+    if stored_emails:
+        print(f"✅ Returning {len(stored_emails)} stored emails from MongoDB")
+        return stored_emails
 
 
-async def fetch_emails():
+async def fetch_emails(
+    skip: int = 0,
+    limit: int = 20,
+    unread_only: bool = False,
+    category: Optional[str] = None,
+    search: Optional[str] = None,
+    sort_by: str = "received_at",
+    sort_order: str = "desc",
+    refresh: bool = False
+):
+    """
+    Main email fetching function that combines IMAP and database operations.
+    
+    Args:
+        skip: Number of emails to skip (pagination)
+        limit: Maximum number of emails to return
+        unread_only: Filter to only unread emails
+        category: Filter by email category
+        search: Search term for filtering emails
+        sort_by: Field to sort by
+        sort_order: Sort direction ("asc" or "desc")
+        refresh: Whether to refresh emails from IMAP first
+        
+    Returns:
+        tuple: (emails list, total count, debug info)
+        
+    Raises:
+        HTTPException: If operation fails
+    """
+    # TODO: Implement incremental sync using last sync timestamp instead of fetching last 50
+    # TODO: Add background task option for async refresh without blocking the request
+    
     try:
-        # Fetch 1 email from imap
-        # compare with 1st email in db
-        # if not equal, fetch next n emails
-        # stored_emails=get_emails_from_db()
-        # if(stored_emails):
-        #     latest_email = await db.emails.find_one(sort=[("_id", -1)])
-
+        debug_info = {
+            "db_query": {},
+            "timing": {},
+            "source": "database"
+        }
+        
+        # Start timing
+        start_time = datetime.now()
+        
+        # If refresh is requested, fetch new emails from IMAP first
+        if refresh:
+            debug_info["source"] = "imap+database"
+            debug_info["timing"]["imap_fetch_start"] = datetime.now().isoformat()
             
-        stored_emails = await db.emails.find().to_list(100)
-        if stored_emails:
-            return stored_emails    
-                        
-        # Get token using the auth service
-        token = await get_auth_token()  # This now uses the auth_service properly
-        email_account = os.getenv('EMAIL_ACCOUNT')
-        if not email_account:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Email account not configured"
-            )
-
-        # Run fetch_from_imap() in a threadpool (since it's sync)
-        emails = await run_in_threadpool(
-            fetch_from_imap, 
-            token, 
-            email_account
-        )
-
-        # Insert emails asynchronously into MongoDB
-        for email_data in emails:
-            await save_email_to_db(email_data, email_data["email_id"])
-
-        return emails
+            try:
+                # Get OAuth token
+                token = await get_auth_token()
+                
+                # Use environment variable or config for email account
+                # TODO: Utilize user management for email account once implemented
+                email_account = os.environ.get("EMAIL_ACCOUNT")
+                if not email_account:
+                    raise HTTPException(
+                        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                        detail="EMAIL_ACCOUNT environment variable not set"
+                    )
+                
+                # Fetch last 50 emails from IMAP (adjust as needed)
+                imap_emails = await run_in_threadpool(
+                    lambda: fetch_from_imap(
+                        token=token,
+                        email_account=email_account,
+                        limit=50,  # Fetch last 50 emails
+                        folder="INBOX"
+                    )
+                )
+                
+                # Save fetched emails to database
+                for email_data in imap_emails:
+                    await save_email_to_db(email_data, email_data["email_id"])
+                
+                debug_info["imap_fetch_count"] = len(imap_emails)
+                debug_info["timing"]["imap_fetch_duration"] = (datetime.now() - start_time).total_seconds()
+                
+            except Exception as e:
+                logger.error(f"IMAP fetch failed: {str(e)}")
+                debug_info["imap_error"] = str(e)
+        
+        # Reset timer for database operations
+        start_time = datetime.now()
+        
+        # Build query filter
+        query = {}
+        
+        if unread_only:
+            query["is_read"] = False
+            
+        if category:
+            query["category"] = category
+            
+        if search:
+            # Search in subject and body fields
+            search_regex = {"$regex": search, "$options": "i"}
+            query["$or"] = [
+                {"subject": search_regex},
+                {"body": search_regex},
+                {"sender": search_regex}
+            ]
+        
+        debug_info["db_query"] = query
+        
+        # Determine sort direction
+        sort_direction = -1 if sort_order == "desc" else 1
+        
+        # Get total count first
+        total = await db.emails.count_documents(query)
+        debug_info["timing"]["count_query"] = (datetime.now() - start_time).total_seconds()
+        
+        # Reset timer for main query
+        start_time = datetime.now()
+        
+        # Fetch emails with pagination and sorting
+        cursor = db.emails.find(query)
+        cursor = cursor.sort(sort_by, sort_direction)
+        cursor = cursor.skip(skip).limit(limit)
+        
+        emails = await cursor.to_list(length=limit)
+        debug_info["timing"]["main_query"] = (datetime.now() - start_time).total_seconds()
+        
+        logger.info(f"Retrieved {len(emails)} emails out of {total} total")
+        
+        return emails, total, debug_info
 
     except Exception as e:
-        service_logger.exception("Email fetch operation failed")
+        logger.exception("Email fetch operation failed")
         if isinstance(e, HTTPException):
             raise e
+        raise HTTPException(status_code=500, detail=str(e))
+
+async def fetch_email(email_id: str):
+    """
+    Fetch a single email by ID.
+    
+    Args:
+        email_id: Unique email identifier
+        
+    Returns:
+        dict: Email data or None if not found
+        
+    Raises:
+        HTTPException: If database operation fails
+    """
+    # TODO: Add fallback to IMAP if email not found in database
+    # TODO: Implement conflict resolution for emails modified in both places
+    
+    try:
+        email = await db.emails.find_one({"email_id": email_id})
+        return email
+    except Exception as e:
+        logger.exception(f"Failed to fetch email {email_id}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+async def insert_email(email_data):
+    """
+    Insert a new email into the database.
+    
+    Args:
+        email_data: Email data object (Pydantic model)
+        
+    Returns:
+        dict: Inserted email with database ID
+        
+    Raises:
+        HTTPException: If insert operation fails
+    """
+    try:
+        result = await db.emails.insert_one(email_data.dict())
+        # Return the inserted email with _id
+        return await db.emails.find_one({"_id": result.inserted_id})
+    except Exception as e:
+        logger.exception("Failed to insert email")
+        raise HTTPException(status_code=500, detail=str(e))
+
+async def mark_email_as_read(email_id: str):
+    """
+    Mark an email as read.
+    
+    Args:
+        email_id: Unique email identifier
+        
+    Returns:
+        dict: Updated email or None if not found
+        
+    Raises:
+        HTTPException: If update operation fails
+    """
+    try:
+        result = await db.emails.update_one(
+            {"email_id": email_id},
+            {"$set": {"is_read": True}}
+        )
+        
+        if result.matched_count == 0:
+            return None
+            
+        return await db.emails.find_one({"email_id": email_id})
+    except Exception as e:
+        logger.exception(f"Failed to mark email {email_id} as read")
+        raise HTTPException(status_code=500, detail=str(e))
+
+async def delete_email(email_id: str):
+    """
+    Delete an email.
+    
+    Args:
+        email_id: Unique email identifier
+        
+    Returns:
+        bool: True if deleted, False if not found
+        
+    Raises:
+        HTTPException: If delete operation fails
+    """
+    try:
+        result = await db.emails.delete_one({"email_id": email_id})
+        return result.deleted_count > 0
+    except Exception as e:
+        logger.exception(f"Failed to delete email {email_id}")
         raise HTTPException(status_code=500, detail=str(e))
