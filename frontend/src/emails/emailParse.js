@@ -1,6 +1,6 @@
 import ems from "./retrieve_emails_response.json" with { type: 'json' };
 import sums from "./summarize_email_response.json" with { type: 'json' };
-export const isDevMode = false;
+export const isDevMode = true;
 export const baseUrl = isDevMode
   ? "http://localhost:8000"
   : "http://localhost:8000";

@@ -16,23 +16,23 @@ export default function Client({ emailsByDate, setEmailsByDate }) {
   });
   const [userPreferences, dispatchUserPreferences] = useReducer(
     userPreferencesReducer,
-    { isChecked: true, emailFetchInterval: 120, theme: "light" } //call getuserpreferences function 
+    { isChecked: true, emailFetchInterval: 120, theme: "light" } //call getuserpreferences function
   );
-  // create a "cloxck" that updates every (emailFetchinterval Seconds)
-  // Pass that clock into an effect that will update based on the clock
+
   useEffect(() => {
     const clock = setInterval(() => {
       try {
         const newEmails = isDevMode ? fetchDev() : fetchEmails(0);
-        if (newEmails.length !== emailsByDate.length) setEmailsByDate(newEmails);
+        if (newEmails.length !== emailsByDate.length)
+          setEmailsByDate(newEmails);
         console.log("emails loaded");
       } catch (error) {
-        console.error(`Loading Emails Error: ${error}`)
+        console.error(`Loading Emails Error: ${error}`);
       }
     }, userPreferences.emailFetchInterval * 1000);
     return () => clearInterval(clock);
-  }, [userPreferences.emailFetchInterval])
-
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userPreferences.emailFetchInterval]);
 
   const root = document.querySelector(":root");
   root.style.setProperty(
