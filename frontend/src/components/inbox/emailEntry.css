@@ -102,7 +102,7 @@
   aspect-ratio: 1 / 1;
   margin: auto;
   border-radius: 50%;
-  background-color: #a2845e;
+  background-color: var(--color-indicator);
 }
 
 .entry .head > .from {

@@ -51,7 +51,7 @@
 
 .dashboard .head-container .expand-button {
   /* color of the expand-button in the miniview */
-  color: var(--color-text);
+  color: var(--icon-color);
 }
 
 .dashboard .body-container {

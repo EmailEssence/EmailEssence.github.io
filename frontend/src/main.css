@@ -4,6 +4,7 @@
 
   /* Color palette from dark to light */
   --black: #000;
+  --grey: #1e1e1e;
   --grey-1: #161616;
   --grey-2: #5e5e5e;
   --grey-3: #a3a3a3;
@@ -34,6 +35,8 @@
   --color-scroll-background: var(--grey-5);
   --color-scroll-thumb: var(--grey-3);
   --color-scroll-hover: var(--grey-3);
+  --color-background-sidebar: var(--grey);
+  --icon-color: var(--grey-1);
 }
 
 /* dark theme variables */
@@ -54,6 +57,8 @@ body.dark-mode {
   --color-scroll-background: var(--grey-1);
   --color-scroll-thumb: var(--grey-3);
   --color-scroll-hover: var(--grey-3);
+  --color-background-sidebar: var(--grey-1);
+  --icon-color: var(--grey-5);
 }
 
 /* Target the scrollbar track (the background) */

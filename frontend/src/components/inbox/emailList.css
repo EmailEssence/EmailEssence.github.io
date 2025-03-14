@@ -58,5 +58,5 @@
   height: 100%;
   grid-row: 1 / -1;
   grid-column: 2 / 2;
-  background-color: #d9d9d9;
+  background-color: var(--color-background2);
 }

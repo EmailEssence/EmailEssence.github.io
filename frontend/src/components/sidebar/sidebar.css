@@ -5,18 +5,18 @@
 }
 .container {
   margin: auto;
-  background-color: #d9d9d9;
+  background-color: var(--color-background-sidebar);
   font-size: 1rem;
   height: var(--sidebar-icon-height);
   width: var(--sidebar-width);
 }
 
 .container p {
-  color: white;
+  color: var(--white);
 }
 
 .sidebar {
-  background-color: #1e1e1e;
+  background-color: var(--color-background-sidebar);
   height: 100vh;
   display: grid;
   text-align: left;
@@ -28,7 +28,7 @@
 
 .icon {
   height: var(--sidebar-icon-height);
-  color: white;
+  color: var(--white);
   display: grid;
   grid-template-columns: var(--sidebar-icon-height) 1fr;
   gap: -5px;
@@ -47,8 +47,15 @@
 }
 
 /* if icon is logo make it bigger */
-
 .icon > .logo {
   height: calc(var(--sidebar-icon-height) - 0.2vw);
   width: calc(var(--sidebar-icon-height) - 0.2vw);
+}
+
+.icon-selected{
+  color: var(--white);
+}
+
+.icon-unselected{
+  color: var(--white);
 }
