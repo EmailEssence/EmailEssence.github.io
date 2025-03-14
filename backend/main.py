@@ -40,24 +40,25 @@ app.add_middleware(
 )
 
 
-@app.on_event("startup")
 async def startup_db_client():
-    print("Connecting to MongoDB...")
+    """
+    Initializes MongoDB connection on startup.
+    """
+    print("🔄 Connecting to MongoDB...")
     try:
         await db.command("ping")  
         collections = await db.list_collection_names()
         print(f"✅ Collections in DB: {collections}")
-
-        print("MongoDB connection successful!")
+        print("✅ MongoDB connection successful!")
     except Exception as e:
         print(f"❌ Failed to connect to MongoDB: {str(e)}")
 
 
 # Register routers
+app.include_router(auth_router, prefix="/auth", tags=["Auth"])
+app.include_router(user_router, prefix="/users", tags=["Users"])
 app.include_router(emails_router, prefix="/emails", tags=["Emails"])
 app.include_router(summaries_router, prefix="/summaries", tags=["Summaries"])
-app.include_router(user_router, prefix="/users", tags=["Users"])
-app.include_router(auth_router, prefix="/auth", tags=["Auth"])
 
 # Serve favicon.ico from root directory
 @app.get('/favicon.ico')
