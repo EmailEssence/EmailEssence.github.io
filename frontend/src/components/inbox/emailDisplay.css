@@ -1,13 +1,13 @@
 .email-display {
   display: grid;
-  grid-template-rows: 9rem 1fr;
+  grid-template-rows: 7rem 1fr;
 }
 
 .email-display .header {
-  padding: 1rem 2rem;
+  padding: 1.5rem 2rem 0.5rem 2rem;
   display: grid;
   grid-template-columns: 1fr 8rem;
-  grid-template-rows: 3rem 2rem 2rem;
+  grid-template-rows: 2rem 1.5rem 1.5rem;
   text-align: left;
 }
 
@@ -20,7 +20,7 @@
 .email-display .from {
   grid-row: 1 / 1;
   grid-column: 1 / 1;
-  font-size: 2rem;
+  font-size: 1rem;
   font-weight: 700;
 }
 
@@ -34,7 +34,9 @@
 .email-display .to {
   grid-row: 3 / 3;
   grid-column: 1 / 1;
-  font-size: 1rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  opacity: 0.6;
 }
 
 .email-display .reader-view {
@@ -59,7 +61,8 @@
   text-align: right;
   grid-row: 1 / 1;
   grid-column: 2 / 2;
-  font-size: 1rem;
+  font-size: calc(0.6rem + 0.2vw);
+  opacity: 0.6;
 }
 
 .email-display .body {
@@ -73,30 +76,47 @@
 
 .email-display .content-container {
   height: 100%;
-  max-height: calc(100vh - 11rem);
-  /* does not work when sidebar extended */
+  max-height: calc(100vh - 9rem);
   overflow: auto;
   overflow-y: scroll;
   word-wrap: break-word;
-  border-radius: 1rem;
+  border-radius: 0.4rem;
   border: 2px solid var(--color-border);
-  padding: 2rem 4rem;
+  padding: calc(0.6rem + 0.2vh) calc(0.8rem + 0.6vw);
   text-align: left;
+  font-size: calc(0.6rem + 0.2vw);
 }
 
 /* overlay styles */
 
 .pop-up-container {
+  max-width: max(50vw, min(30rem, 90vw));
+  max-height: 80vh;
   display: flex;
   flex-direction: column;
   gap: 1rem;
   position: fixed;
   top: 50%;
   left: 50%;
+  overflow: auto;
+  overflow-y: scroll;
+  word-wrap: break-word;
   transform: translate(-50%, -50%);
   background-color: var(--color-background);
-  border-radius: 0.5rem;
-  padding: 2rem;
+  border-radius: 0.25rem;
+  padding: calc(0.5rem + 1vw);
+}
+
+.pop-up-container > .button {
+  border-radius: 0.25rem;
+  margin: auto;
+  min-height: 4vh;
+  width: 40%;
+  background-color: var(--color-background2);
+  font-weight: 600;
+  /* center text vertically */
+  vertical-align: middle;
+  line-height: 4vh;
 }
 
 .overlay-background {
