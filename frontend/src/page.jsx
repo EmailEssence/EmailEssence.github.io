@@ -6,6 +6,7 @@ import {
 } from "./authentication/authenticate";
 import Client from "./client";
 import { Login } from "./components/login/login";
+import { fetchUserPreferences } from "./components/settings/settings";
 import fetchEmails, { fetchDev, isDevMode } from "./emails/emailParse";
 
 const devEmails = isDevMode ? fetchDev() : [];
@@ -19,7 +20,25 @@ export default function Page() {
   const [loggedIn, setLoggedIn] = useState(
     () => !!localStorage.getItem("auth_token")
   );
-  const [authChanged, setAuthChanged] = useState(false); // New state variable
+  const [authChanged, setAuthChanged] = useState(false); 
+  const [defaultUserPreferences, setDefaultUserPreferences] = useState({ 
+    isChecked: true,
+    emailFetchInterval: 120,
+    theme: "light",
+  });
+
+  useEffect(() => { // Get user preferences from the server and set the default user preferences state
+    const user_id = " "; // replace with actual user ID
+    async function getUserPreferences() {
+      try {
+        const preferences = await fetchUserPreferences(user_id);
+        setDefaultUserPreferences(preferences);
+      } catch (error) {
+        console.error(error);
+      }
+    }
+    getUserPreferences();
+  }, []);
 
   useEffect(() => {
     const hash = window.location.hash;
@@ -60,7 +79,7 @@ export default function Page() {
 
   const display = () => {
     return isDevMode ? (
-      <Client emailsByDate={emailsByDate} />
+      <Client emailsByDate={emailsByDate} defaultUserPreferences={defaultUserPreferences} />
     ) : loading ? (
       <div>Loading emails...</div>
     ) : !loggedIn ? (
@@ -68,8 +87,9 @@ export default function Page() {
     ) : emailsByDate === null ? (
       <div>Initializing dashboard...</div>
     ) : (
-      <Client emailsByDate={emailsByDate} setEmailsByDate={setEmailsByDate} />
+      <Client emailsByDate={emailsByDate} setEmailsByDate={setEmailsByDate} defaultUserPreferences={defaultUserPreferences} />
     );
   };
   return <div className="page">{display()}</div>;
 }
+

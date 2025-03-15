@@ -8,7 +8,7 @@ import SideBar from "./components/sidebar/sidebar";
 import fetchEmails, { fetchDev, isDevMode } from "./emails/emailParse";
 import { clientReducer, userPreferencesReducer } from "./reducers";
 
-export default function Client({ emailsByDate, setEmailsByDate }) {
+export default function Client({ emailsByDate, setEmailsByDate, defaultUserPreferences = { isChecked: true, emailFetchInterval: 120, theme: "light" } }) {
   const [client, dispatchClient] = useReducer(clientReducer, {
     curPage: "dashboard",
     expandedSideBar: false,
@@ -16,7 +16,7 @@ export default function Client({ emailsByDate, setEmailsByDate }) {
   });
   const [userPreferences, dispatchUserPreferences] = useReducer(
     userPreferencesReducer,
-    { isChecked: true, emailFetchInterval: 120, theme: "light" } //call getuserpreferences function
+    defaultUserPreferences
   );
 
   useEffect(() => {
