@@ -3,16 +3,11 @@
 :root {
   text-align: center;
 }
-.container {
+.sidebar .container {
   margin: auto;
-  background-color: var(--color-background-sidebar);
   font-size: 1rem;
   height: var(--sidebar-icon-height);
   width: var(--sidebar-width);
-}
-
-.container p {
-  color: var(--white);
 }
 
 .sidebar {
@@ -26,7 +21,7 @@
   width: var(--sidebar-width);
 }
 
-.icon {
+.sidebar .icon {
   height: var(--sidebar-icon-height);
   color: var(--white);
   display: grid;
@@ -35,27 +30,33 @@
   align-items: center;
 }
 
-.icon > p {
+.sidebar .icon > p {
   font-size: calc(var(--sidebar-icon-height) / 3.3);
   font-weight: 600;
 }
 
-.icon > div {
+.sidebar .icon > div {
   height: calc(var(--sidebar-icon-height) - 0.8vw);
   width: calc(var(--sidebar-icon-height) - 0.8vw);
   margin: auto;
 }
 
 /* if icon is logo make it bigger */
-.icon > .logo {
+.sidebar .icon > .logo {
   height: calc(var(--sidebar-icon-height) - 0.2vw);
   width: calc(var(--sidebar-icon-height) - 0.2vw);
 }
 
-.icon-selected{
+/* controls color of icon and icon text when button is unselected */
+.sidebar .container .icon,
+.sidebar .container .icon p {
   color: var(--white);
+  /* background-color: ; background color of unselected buttons */
 }
 
-.icon-unselected{
+/* controls color of icon and icon text when button is selected */
+.sidebar .container.selected .icon,
+.sidebar .container.selected .icon p {
   color: var(--white);
+  /* background-color: ; background color of selected button */
 }
