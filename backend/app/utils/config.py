@@ -5,7 +5,7 @@ from enum import Enum
 
 class SummarizerProvider(str, Enum):
     OPENAI = "openai"
-    ANTHROPIC = "anthropic"
+    GOOGLE = "google"
     LOCAL = "local"
 
 class Settings(BaseSettings):
@@ -24,8 +24,7 @@ class Settings(BaseSettings):
 
     # AI Providers
     openai_api_key: str
-    deepseek_api_key: str | None = None
-    gemini_api_key: str | None = None
+    google_api_key: str | None = None
     
     # Summarizer settings
     summarizer_provider: SummarizerProvider = SummarizerProvider.OPENAI
