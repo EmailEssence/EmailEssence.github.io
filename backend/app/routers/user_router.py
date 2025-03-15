@@ -1,14 +1,15 @@
 from fastapi import APIRouter, HTTPException, status, Depends
 from fastapi.security import OAuth2AuthorizationCodeBearer
 from fastapi.responses import JSONResponse
+
 from google.auth.transport.requests import Request as GoogleRequest
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from motor.motor_asyncio import AsyncIOMotorClient
 from starlette.concurrency import run_in_threadpool
 
+from app.models import UserSchema
 from app.services.auth_service import get_tokens_from_code, get_credentials
-from app.models.user_model import UserSchema
 from database import db
 
 router = APIRouter()

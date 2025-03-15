@@ -30,8 +30,8 @@ def pytest_configure(config):
     # Register database marker
     config.addinivalue_line("markers", "db: Tests that interact with the database")
     
-    # Check if we should skip database tests (default is True in CI environment)
-    if os.environ.get("SKIP_DB_TESTS", "1") == "1":
+    # Check if we should skip database tests (only if explicitly set to "1")
+    if os.environ.get("SKIP_DB_TESTS") == "1":
         # Register a marker to skip all database tests
         config.addinivalue_line("markers", 
             "skip_db: Skip database tests automatically")
@@ -41,8 +41,8 @@ def pytest_configure(config):
             'skipif("True", reason="Database tests are disabled")')
 
 def pytest_collection_modifyitems(config, items):
-    """Modify test collection to skip database tests"""
-    if os.environ.get("SKIP_DB_TESTS", "1") == "1":
+    """Modify test collection to skip database tests only if explicitly disabled"""
+    if os.environ.get("SKIP_DB_TESTS") == "1":
         skip_db = pytest.mark.skip(reason="Database tests disabled")
         for item in items:
             if "db" in item.keywords:
