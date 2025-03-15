@@ -10,6 +10,7 @@ from starlette.concurrency import run_in_threadpool
 
 from app.models import UserSchema
 from app.services.auth_service import get_tokens_from_code, get_credentials
+from app.services.user_service import get_or_create_user
 from database import db
 
 router = APIRouter()
@@ -22,41 +23,22 @@ oauth2_scheme = OAuth2AuthorizationCodeBearer(
 @router.get("/me")
 async def get_current_user(token: str = Depends(oauth2_scheme)):
     """
-    Retrieve user details or create user if they don't exist.
+    Retrieves user details or creates the user if they don't exist.
     """
     try:
         credentials = await run_in_threadpool(get_credentials)
         if not credentials.valid:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid Google OAuth token")
-        
+
         service = await run_in_threadpool(lambda: build("oauth2", "v2", credentials=credentials))
         user_info = await run_in_threadpool(lambda: service.userinfo().get().execute())
 
         if not user_info:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Failed to retrieve user info")
 
-        existing_user = await db.users.find_one({"google_id": user_info["id"]})
-
-        if not existing_user:
-            new_user = UserSchema(
-                google_id=user_info["id"],
-                email=user_info["email"],
-                name=user_info["name"],
-                oauth={
-                    "access_token": credentials.token,
-                    "refresh_token": credentials.refresh_token,
-                    "token_uri": credentials.token_uri,
-                    "client_id": credentials.client_id,
-                    "client_secret": credentials.client_secret,
-                    "scopes": credentials.scopes
-                }
-            )
-            await db.users.insert_one(new_user.model_dump())
-            return new_user
-        
-        # Convert MongoDB's ObjectId to string before returning
-        existing_user["_id"] = str(existing_user["_id"])
-        return existing_user
+        # Use `get_or_create_user` instead of manually checking the database
+        user = await get_or_create_user(user_info, credentials)
+        return user
 
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to retrieve user: {str(e)}")

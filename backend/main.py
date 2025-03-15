@@ -56,7 +56,7 @@ async def startup_db_client():
 
 # Register routers
 app.include_router(auth_router, prefix="/auth", tags=["Auth"])
-app.include_router(user_router, prefix="/users", tags=["Users"])
+app.include_router(user_router, prefix="/user", tags=["User"])
 app.include_router(emails_router, prefix="/emails", tags=["Emails"])
 app.include_router(summaries_router, prefix="/summaries", tags=["Summaries"])
 
