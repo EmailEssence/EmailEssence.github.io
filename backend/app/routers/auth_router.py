@@ -174,3 +174,33 @@ async def verify_token(data: Dict[str, str] = Body(...)):
     except Exception as e:
         # Any error means token is invalid
         return {"verified": False}
+
+@router.post("/exchange")
+async def exchange_code(data: Dict[str, str] = Body(...)):
+    """
+    Exchanges an authorization code for tokens
+    Accepts the authorization code in the request body
+    """
+    try:
+        code = data.get("code")
+        if not code:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Authorization code is required"
+            )
+        
+        # Exchange the code for tokens
+        tokens = await run_in_threadpool(lambda: get_tokens_from_code(code))
+        
+        # Return the tokens to the frontend
+        return {
+            "access_token": tokens["token"],
+            "token_type": "bearer",
+            "expires_in": 3600,  # Typical expiration time
+            "refresh_token": tokens.get("refresh_token")
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"Failed to exchange code for tokens: {str(e)}"
+        )
