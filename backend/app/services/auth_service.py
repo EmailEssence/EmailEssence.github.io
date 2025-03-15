@@ -6,18 +6,10 @@ from googleapiclient.discovery import build
 from dotenv import load_dotenv
 from fastapi import HTTPException, status, Depends
 from fastapi.security import OAuth2PasswordBearer
-from jose import JWTError, jwt
 from pydantic import BaseModel
-from datetime import datetime, timedelta
 from typing import Optional, Dict
-import requests
-import logging
+from app.models import UserSchema
 
-from app.models.user_model import UserSchema
-from app.services.user_service import get_or_create_user
-from app.core.config import settings
-from app.core.security import oauth2_scheme, verify_password
-from app.db.session import get_db
 
 load_dotenv()
 
