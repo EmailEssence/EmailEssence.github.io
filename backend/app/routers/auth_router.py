@@ -2,26 +2,32 @@ import json
 import urllib.parse
 import base64
 import uuid
+from typing import Dict, Optional
 
 from fastapi import APIRouter, HTTPException, status, Depends, Request, Query
-from fastapi.security import OAuth2AuthorizationCodeBearer
+from fastapi.security import OAuth2PasswordBearer, OAuth2AuthorizationCodeBearer
 from fastapi.responses import RedirectResponse
 from google.auth.transport.requests import Request as GoogleRequest
 from google.oauth2.credentials import Credentials
 from starlette.concurrency import run_in_threadpool
-from typing import Dict, Optional
 from pydantic import BaseModel, EmailStr
 
-from app.services.auth_service import create_authorization_url, get_tokens_from_code, get_credentials
+from app.services.auth_service import create_authorization_url, get_tokens_from_code, get_credentials, get_credentials_from_token
 
 router = APIRouter()
 
-oauth2_scheme = OAuth2AuthorizationCodeBearer(
+# -- Authentication Schemes --
+
+# For protected endpoints that require authentication
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+
+# OAuth flow for Google authentication
+google_oauth2_scheme = OAuth2AuthorizationCodeBearer(
     authorizationUrl="https://accounts.google.com/o/oauth2/auth",
     tokenUrl="https://oauth2.googleapis.com/token"
 )
 
-# -- Pydantic Models for Request/Response Bodies --
+# -- Pydantic Models --
 
 class ExchangeCodeRequest(BaseModel):
     code: str
@@ -32,6 +38,36 @@ class RefreshTokenRequest(BaseModel):
 
 class VerifyTokenRequest(BaseModel):
     token: str
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str
+    expires_in: int = 3600
+    refresh_token: Optional[str] = None
+
+class AuthStatusResponse(BaseModel):
+    is_authenticated: bool
+    token_valid: Optional[bool] = None
+    has_refresh_token: Optional[bool] = None
+    error: Optional[str] = None
+
+# -- Authentication Utility --
+
+async def get_current_user_email(token: str = Depends(oauth2_scheme)):
+    """
+    Dependency to extract user email from valid token.
+    Will raise 401 automatically if token is invalid.
+    """
+    try:
+        # Get user info from token
+        user_data = await run_in_threadpool(lambda: get_credentials_from_token(token))
+        return user_data['email']
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid authentication credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
 # -- Endpoints --
 
@@ -98,7 +134,7 @@ async def callback(code: str, state: str = Query(None)):
             detail=f"Failed to get tokens: {str(e)}"
         )
 
-@router.post("/exchange")
+@router.post("/exchange", response_model=TokenResponse)
 async def exchange_code(request: ExchangeCodeRequest):
     """
     Exchanges an authorization code for tokens and stores them in the database.
@@ -114,19 +150,19 @@ async def exchange_code(request: ExchangeCodeRequest):
         # Exchange auth code for tokens and store them in MongoDB
         tokens = await run_in_threadpool(lambda: get_tokens_from_code(request.code, request.user_email))
         
-        return {
-            "access_token": tokens["token"],
-            "token_type": "bearer",
-            "expires_in": 3600,
-            "refresh_token": tokens.get("refresh_token")
-        }
+        return TokenResponse(
+            access_token=tokens["token"],
+            token_type="bearer",
+            expires_in=3600,
+            refresh_token=tokens.get("refresh_token")
+        )
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f"Failed to exchange code for tokens: {str(e)}"
         )
 
-@router.get("/token")
+@router.get("/token", response_model=TokenResponse)
 async def get_token(user_email: str = Query(...)):
     """
     Retrieves the stored access token for the user.
@@ -135,50 +171,75 @@ async def get_token(user_email: str = Query(...)):
     try:
         # Fetch stored token from MongoDB
         token = await run_in_threadpool(lambda: get_credentials(user_email))
-        return {"access_token": token, "token_type": "bearer"}
+        return TokenResponse(
+            access_token=token,
+            token_type="bearer"
+        )
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f"Token retrieval failed: {str(e)}"
         )
 
-@router.post("/refresh")
-async def refresh_token(request: RefreshTokenRequest):
+@router.post("/refresh", response_model=TokenResponse)
+async def refresh_token(
+    request: RefreshTokenRequest,
+    current_user_email: str = Depends(get_current_user_email)
+):
     """
     Forces a refresh of the user's token, if a refresh token is available.
+    Requires authentication.
     """
     try:
+        # Security check: only allow refreshing your own token
+        if current_user_email != request.user_email:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You can only refresh your own token"
+            )
+
         # Refresh token using stored credentials in MongoDB
         token = await run_in_threadpool(lambda: get_credentials(request.user_email))
-        return {"access_token": token, "token_type": "bearer"}
+        return TokenResponse(
+            access_token=token,
+            token_type="bearer"
+        )
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f"Token refresh failed: {str(e)}"
         )
 
-@router.get("/status")
-async def auth_status(user_email: str = Query(...)):
+@router.get("/status", response_model=AuthStatusResponse)
+async def auth_status(
+    user_email: str = Query(...),
+    token: str = Depends(oauth2_scheme)
+):
     """
     Returns the user's authentication status.
+    Requires authentication.
     """
     try:
         credentials = await run_in_threadpool(lambda: get_credentials(user_email))
-        return {
-            "is_authenticated": credentials is not None,
-            "token_valid": credentials is not None,
-            "has_refresh_token": bool(credentials.refresh_token if credentials else False)
-        }
+        return AuthStatusResponse(
+            is_authenticated=credentials is not None,
+            token_valid=credentials is not None,
+            has_refresh_token=bool(credentials.refresh_token if credentials else False)
+        )
     except Exception as e:
-        return {
-            "is_authenticated": False,
-            "error": str(e)
-        }
+        return AuthStatusResponse(
+            is_authenticated=False,
+            error=str(e)
+        )
 
 @router.post("/verify")
-async def verify_token(request: VerifyTokenRequest):
+async def verify_token(
+    request: VerifyTokenRequest,
+    token: str = Depends(oauth2_scheme)  # Requiring auth ensures only authenticated users can verify tokens
+):
     """
     Verifies a given access token by refreshing it.
+    Requires authentication.
     """
     try:
         if not request.token:
@@ -190,7 +251,7 @@ async def verify_token(request: VerifyTokenRequest):
             token_uri="https://oauth2.googleapis.com/token"
         )
         
-        request_obj = Request()
+        request_obj = GoogleRequest()
         credentials.refresh(request_obj)
         
         return {"verified": True}

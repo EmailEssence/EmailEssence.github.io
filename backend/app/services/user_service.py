@@ -2,7 +2,7 @@ from database import db
 from app.models.user_model import UserSchema
 from bson import ObjectId
 
-async def get_or_create_user(user_info, credentials):
+async def get_or_create_user(user_info, credentials=None):
     """Finds or creates a user in the database based on Google OAuth data."""
     google_id = user_info["id"]  # Unique Google ID
     existing_user = await db.users.find_one({"google_id": google_id})
@@ -12,22 +12,24 @@ async def get_or_create_user(user_info, credentials):
         existing_user["_id"] = str(existing_user["_id"])
         return existing_user
 
-    # Create new user record
-    new_user = UserSchema(
-        google_id=google_id,
-        email=user_info["email"],
-        name=user_info["name"],
-        picture=user_info.get("picture"),
-        locale=user_info.get("locale"),
-        oauth={
+    # Create OAuth data dict if credentials are provided
+    oauth_data = {}
+    if credentials:
+        oauth_data = {
             "access_token": credentials.token,
             "refresh_token": credentials.refresh_token,
             "token_uri": credentials.token_uri,
             "client_id": credentials.client_id,
             "client_secret": credentials.client_secret,
             "scopes": credentials.scopes
-        },
-        preferences={},
+        }
+
+    # Create new user record
+    new_user = UserSchema(
+        google_id=google_id,
+        email=user_info["email"],
+        name=user_info.get("name", user_info.get("email").split("@")[0]),
+        oauth=oauth_data
     )
 
     # Insert into MongoDB
