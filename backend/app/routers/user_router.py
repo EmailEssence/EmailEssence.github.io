@@ -72,31 +72,6 @@ async def delete_user_info(user_id: str):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found or delete failed")
     return JSONResponse(content={"message": "User deleted successfully"}, status_code=status.HTTP_200_OK)
 
-@router.put("/preferences")
-async def update_preferences(preferences: dict, token: str = Depends(oauth2_scheme)):
-    """
-    Allows users to update their preferences.
-    """
-    try:
-        credentials = await run_in_threadpool(get_credentials)
-        if not credentials.valid:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid Google OAuth token")
-        
-        service = await run_in_threadpool(lambda: build("oauth2", "v2", credentials=credentials))
-        user_info = await run_in_threadpool(lambda: service.userinfo().get().execute())
-
-        if not user_info:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Failed to retrieve user info")
-        
-        await db.users.update_one(
-            {"google_id": user_info["id"]},
-            {"$set": {"preferences": preferences}}
-        )
-        return JSONResponse(content={"message": "Preferences updated successfully"}, status_code=status.HTTP_200_OK)
-
-    except Exception as e:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to update preferences: {str(e)}")
-
 @router.get("/preferences")
 async def get_user_preferences(token: str = Depends(oauth2_scheme)):
     """
