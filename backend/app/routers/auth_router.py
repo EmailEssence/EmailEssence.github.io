@@ -7,8 +7,8 @@ from fastapi import APIRouter, HTTPException, status, Depends, Request, Body, Qu
 from fastapi.security import OAuth2AuthorizationCodeBearer
 from fastapi.responses import RedirectResponse
 from google.auth.transport.requests import Request as GoogleRequest
-from starlette.concurrency import run_in_threadpool
 from google.oauth2.credentials import Credentials
+from starlette.concurrency import run_in_threadpool
 from typing import Dict
 
 from app.services.auth_service import create_authorization_url, get_tokens_from_code, get_credentials
@@ -23,28 +23,24 @@ oauth2_scheme = OAuth2AuthorizationCodeBearer(
 @router.get("/login")
 async def login(redirect_uri: str = Query(..., description="Frontend URI to redirect back to after authentication")):
     """
-    Initiates the OAuth flow with Google, storing the frontend's redirect URI in the state parameter
+    Initiates the OAuth flow with Google, storing the frontend's redirect URI in the state parameter.
     """
     try:
-        # Create a custom state that includes the redirect URI
+        # Create a state object that includes the frontend redirect URI
         custom_state = {
             "redirect_uri": redirect_uri,
             "nonce": str(uuid.uuid4())  # Add a nonce for security
         }
         
-        # Encode custom state to pass to Google
+        # Encode the state as a base64 string
         encoded_custom_state = base64.urlsafe_b64encode(json.dumps(custom_state).encode()).decode()
         
-        # Use the existing service to get the authorization URL
+        # Get the authorization URL from auth_service.py
         authorization_url, _ = create_authorization_url()
         
-        # Append our custom state to the authorization URL
-        if '?' in authorization_url:
-            authorization_url = authorization_url.split('&state=')[0]  # Remove any existing state
-            authorization_url += f"&state={encoded_custom_state}"
-        else:
-            authorization_url += f"?state={encoded_custom_state}"
-            
+        # Append the state parameter to the authorization URL
+        authorization_url += f"&state={encoded_custom_state}"
+        
         return RedirectResponse(authorization_url)
     except Exception as e:
         raise HTTPException(
@@ -55,28 +51,28 @@ async def login(redirect_uri: str = Query(..., description="Frontend URI to redi
 @router.get("/callback")
 async def callback(code: str, state: str = Query(None)):
     """
-    Handles the OAuth callback from Google
+    Handles the OAuth callback from Google and exchanges the authorization code for access tokens.
     """
     try:
-        # Decode the state parameter to get the frontend's redirect URI
         if not state:
             raise ValueError("Missing state parameter")
-            
+        
+        # Decode state to retrieve frontend redirect URI
         decoded_state = json.loads(base64.urlsafe_b64decode(state).decode())
         frontend_url = decoded_state.get("redirect_uri")
-        
+
         if not frontend_url:
             raise ValueError("Missing redirect URI in state parameter")
-        
-        tokens = await run_in_threadpool(lambda: get_tokens_from_code(code))
-        
-        # Add token to redirect URL as a hash parameter
+
+        # Exchange authorization code for access tokens
+        tokens = await run_in_threadpool(lambda: get_tokens_from_code(code, None))  # No user email in callback
+
+        # Redirect user to frontend with token
         auth_state = {
             "authenticated": True,
             "token": tokens['token']
         }
-        
-        # URL encode the state
+
         encoded_state = urllib.parse.quote(json.dumps(auth_state))
         return RedirectResponse(
             url=f"{frontend_url}/#auth={encoded_state}"
@@ -87,22 +83,47 @@ async def callback(code: str, state: str = Query(None)):
             detail=f"Failed to get tokens: {str(e)}"
         )
 
-@router.get("/token")
-async def get_token(token: str = Depends(oauth2_scheme)):
+@router.post("/exchange")
+async def exchange_code(data: Dict[str, str] = Body(...)):
     """
-    Returns the current valid token or refreshes if expired
+    Exchanges an authorization code for tokens and stores them in the database.
+    Requires the user's email to associate the tokens.
     """
     try:
-        credentials = await run_in_threadpool(get_credentials)
-        if not credentials.valid:
-            if credentials.expired and credentials.refresh_token:
-                await run_in_threadpool(lambda: credentials.refresh(GoogleRequest()))
-            else:
-                raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Token expired and cannot be refreshed"
-                )
-        return {"access_token": credentials.token, "token_type": "bearer"}
+        code = data.get("code")
+        user_email = data.get("user_email")  # Required to store in MongoDB
+
+        if not code or not user_email:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Authorization code and user email are required"
+            )
+        
+        # Exchange auth code for tokens and store them in MongoDB
+        tokens = await run_in_threadpool(lambda: get_tokens_from_code(code, user_email))
+        
+        return {
+            "access_token": tokens["token"],
+            "token_type": "bearer",
+            "expires_in": 3600,
+            "refresh_token": tokens.get("refresh_token")
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"Failed to exchange code for tokens: {str(e)}"
+        )
+
+@router.get("/token")
+async def get_token(user_email: str = Query(...)):
+    """
+    Retrieves the stored access token for the user.
+    If expired, it will refresh the token automatically.
+    """
+    try:
+        # Fetch stored token from MongoDB
+        token = await run_in_threadpool(lambda: get_credentials(user_email))
+        return {"access_token": token, "token_type": "bearer"}
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -110,19 +131,14 @@ async def get_token(token: str = Depends(oauth2_scheme)):
         )
 
 @router.post("/refresh")
-async def refresh_token():
+async def refresh_token(user_email: str = Body(...)):
     """
-    Forces a token refresh regardless of current token state
+    Forces a refresh of the user's token, if a refresh token is available.
     """
     try:
-        credentials = await run_in_threadpool(get_credentials)
-        if credentials.refresh_token:
-            await run_in_threadpool(lambda: credentials.refresh(GoogleRequest()))
-            return {"access_token": credentials.token, "token_type": "bearer"}
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="No refresh token available"
-        )
+        # Refresh token using stored credentials in MongoDB
+        token = await run_in_threadpool(lambda: get_credentials(user_email))
+        return {"access_token": token, "token_type": "bearer"}
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -130,16 +146,15 @@ async def refresh_token():
         )
 
 @router.get("/status")
-async def auth_status():
+async def auth_status(user_email: str = Query(...)):
     """
-    Returns the current authentication status and token validity
+    Returns the user's authentication status.
     """
     try:
-        credentials = await run_in_threadpool(get_credentials)
+        credentials = await run_in_threadpool(lambda: get_credentials(user_email))
         return {
             "is_authenticated": credentials is not None,
-            "token_valid": credentials.valid if credentials else False,
-            "token_expired": credentials.expired if credentials else True,
+            "token_valid": credentials is not None,
             "has_refresh_token": bool(credentials.refresh_token if credentials else False)
         }
     except Exception as e:
@@ -151,56 +166,23 @@ async def auth_status():
 @router.post("/verify")
 async def verify_token(data: Dict[str, str] = Body(...)):
     """
-    Verifies token directly with Google
-    Accepts token object in request body
+    Verifies a given access token by refreshing it.
     """
     try:
-        token = data.get('token')
+        token = data.get("token")
         if not token:
             return {"verified": False}
 
-        # Create credentials object with just the token
+        # Validate token with Google OAuth
         credentials = Credentials(
             token=token,
             token_uri="https://oauth2.googleapis.com/token"
         )
         
-        # Try to refresh/verify the token
         request = Request()
         credentials.refresh(request)
         
         return {"verified": True}
         
     except Exception as e:
-        # Any error means token is invalid
         return {"verified": False}
-
-@router.post("/exchange")
-async def exchange_code(data: Dict[str, str] = Body(...)):
-    """
-    Exchanges an authorization code for tokens
-    Accepts the authorization code in the request body
-    """
-    try:
-        code = data.get("code")
-        if not code:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Authorization code is required"
-            )
-        
-        # Exchange the code for tokens
-        tokens = await run_in_threadpool(lambda: get_tokens_from_code(code))
-        
-        # Return the tokens to the frontend
-        return {
-            "access_token": tokens["token"],
-            "token_type": "bearer",
-            "expires_in": 3600,  # Typical expiration time
-            "refresh_token": tokens.get("refresh_token")
-        }
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Failed to exchange code for tokens: {str(e)}"
-        )
