@@ -10,7 +10,7 @@ from starlette.concurrency import run_in_threadpool
 
 from app.models import UserSchema
 from app.services.auth_service import get_tokens_from_code, get_credentials
-from app.services.user_service import get_or_create_user, create_user, get_user_by_id, update_user, delete_user
+from app.services.user_service import get_or_create_user, get_user_by_id, update_user, delete_user
 from database import db
 
 router = APIRouter()
