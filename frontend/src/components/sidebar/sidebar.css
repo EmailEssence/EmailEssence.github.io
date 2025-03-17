@@ -50,13 +50,12 @@
 /* controls color of icon and icon text when button is unselected */
 .sidebar .container .icon,
 .sidebar .container .icon p {
-  color: var(--white);
-  /* background-color: ; background color of unselected buttons */
+  color: var(--color-icon);
 }
 
 /* controls color of icon and icon text when button is selected */
 .sidebar .container.selected .icon,
 .sidebar .container.selected .icon p {
-  color: var(--white);
-  /* background-color: ; background color of selected button */
+  color: var(--color-icon);
+  background-color: var(--color-sidebar-selected);
 }
