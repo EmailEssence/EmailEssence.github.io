@@ -8,6 +8,7 @@ from pydantic import BaseModel
 from typing import Optional, Dict
 from app.models import UserSchema
 from database import db
+from google.oauth2.credentials import Credentials
 
 load_dotenv()
 
@@ -148,3 +149,39 @@ def get_redirect_uri():
         return 'http://localhost:8000/auth/callback'
     else:
         return 'https://ee-backend-w86t.onrender.com/auth/callback'
+
+async def get_credentials_from_token(token: str):
+    """
+    Validates a token and returns user information from Google.
+    Used for authenticating API requests.
+    """
+    try:
+        # Create credentials object from the token
+        credentials = Credentials(
+            token=token,
+            token_uri="https://oauth2.googleapis.com/token",
+            client_id=os.getenv('GOOGLE_CLIENT_ID'),
+            client_secret=os.getenv('GOOGLE_CLIENT_SECRET')
+        )
+        
+        # Verify token is valid by creating a service
+        service = build('oauth2', 'v2', credentials=credentials)
+        
+        # Get user info from Google
+        user_info = service.userinfo().get().execute()
+        
+        if not user_info or not user_info.get('email'):
+            raise ValueError("Unable to retrieve user email from token")
+            
+        # Return both user info and credentials
+        return {
+            'user_info': user_info,
+            'credentials': credentials,
+            'email': user_info.get('email')
+        }
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, 
+            detail=f"Invalid token: {str(e)}"
+        )
