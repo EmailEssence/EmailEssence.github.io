@@ -73,6 +73,7 @@ async def get_summarizer(
 @router.get("/", response_model=List[SummarySchema])
 async def summarize_emails_endpoint(
     refresh: bool = Query(False, description="Force regeneration of summaries"),
+    auto_generate: bool = Query(True, description="Auto-generate missing summaries"),
     summarizer: AdaptiveSummarizer[EmailSchema] = Depends(get_summarizer),
     summary_service: SummaryService = Depends(get_summary_service)
 ):
@@ -113,8 +114,11 @@ async def summarize_emails_endpoint(
             if not missing_emails:
                 return existing_summaries
             
-            # Otherwise, only summarize the missing ones
-            emails = missing_emails
+            # Otherwise, only summarize the missing ones if auto_generate is True
+            if auto_generate:
+                emails = missing_emails
+            else:
+                return existing_summaries
         
         # Generate new summaries for emails that need them
         new_summaries = await summarizer.summarize(
@@ -220,21 +224,41 @@ async def get_all_summaries(
 @router.get("/batch", response_model=List[SummarySchema])
 async def get_summaries_by_ids(
     ids: List[str] = Query(..., description="List of email IDs to fetch summaries for"),
+    summarizer: AdaptiveSummarizer[EmailSchema] = Depends(get_summarizer),
     summary_service: SummaryService = Depends(get_summary_service)
 ):
     """
-    Retrieve multiple summaries by their email IDs.
+    Retrieve multiple summaries by their email IDs, generating any that don't exist.
     
     Args:
         ids: List of email IDs to fetch summaries for
         
     Returns:
-        List[SummarySchema]: List of found summaries
+        List[SummarySchema]: List of found or newly generated summaries
     """
     try:
-        return await summary_service.get_summaries_by_ids(ids)
+        # Get existing summaries first
+        existing_summaries = await summary_service.get_summaries_by_ids(ids)
+        
+        # Check if we need to generate any missing summaries
+        found_ids = {summary.email_id for summary in existing_summaries}
+        missing_ids = [id for id in ids if id not in found_ids]
+        
+        # Generate any missing summaries
+        new_summaries = []
+        for email_id in missing_ids:
+            try:
+                summary = await summary_service.get_or_create_summary(email_id, summarizer)
+                new_summaries.append(summary)
+            except Exception as e:
+                logging.warning(f"Could not auto-generate summary for email {email_id}: {e}")
+                # Continue with other emails even if one fails
+        
+        # Combine existing and new summaries
+        return existing_summaries + new_summaries
+        
     except Exception as e:
-        logging.error(f"Error retrieving summaries by IDs: {str(e)}", exc_info=True)
+        logging.error(f"Error retrieving/generating summaries by IDs: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=500,
             detail="Failed to retrieve email summaries"
@@ -243,27 +267,25 @@ async def get_summaries_by_ids(
 @router.get("/{email_id}", response_model=SummarySchema)
 async def get_summary_by_id(
     email_id: str,
+    summarizer: AdaptiveSummarizer[EmailSchema] = Depends(get_summarizer),
     summary_service: SummaryService = Depends(get_summary_service)
 ):
     """
-    Retrieve a specific summary by email ID.
+    Retrieve a specific summary by email ID, generating it if not found.
     
     Args:
         email_id: ID of the email
         
     Returns:
-        SummarySchema: Summary if found
-        
-    Raises:
-        HTTPException: If summary not found
+        SummarySchema: Summary found or newly generated
     """
-    summary = await summary_service.get_summary(email_id)
-    if not summary:
-        raise HTTPException(
-            status_code=404,
-            detail=f"Summary for email {email_id} not found"
-        )
-    return summary
+    try:
+        return await summary_service.get_or_create_summary(email_id, summarizer)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        logging.error(f"Error retrieving/generating summary: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve summary for email {email_id}")
 
 @router.delete("/{email_id}")
 async def delete_summary(

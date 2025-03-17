@@ -1,11 +1,16 @@
 import logging
 from typing import List, Optional, Dict, Any
 import pymongo
-from bson import ObjectId
 from datetime import datetime, timezone, timedelta
 
-from app.models import SummarySchema
+from app.models import EmailSchema, SummarySchema
 from database import db
+from app.services.summarization.base import AdaptiveSummarizer
+from app.services.summarization import (
+  ProcessingStrategy, 
+  OpenAIEmailSummarizer,
+  GeminiEmailSummarizer
+)
 
 # Create module-specific logger
 logger = logging.getLogger(__name__)
@@ -302,4 +307,51 @@ class SummaryService:
             return summaries
         except Exception as e:
             logger.error(f"Failed to retrieve summaries by IDs: {e}")
-            raise 
+            raise
+    
+    async def get_or_create_summary(
+        self, 
+        email_id: str, 
+        summarizer: AdaptiveSummarizer[EmailSchema]
+    ) -> SummarySchema:
+        """
+        Get a summary if it exists, or create and save it if not.
+        
+        Args:
+            email_id: ID of the email to summarize
+            summarizer: Summarizer instance to use for generation
+            
+        Returns:
+            SummarySchema: Existing or newly created summary
+            
+        Raises:
+            Exception: If email not found or summarization fails
+        """
+        # Try to get existing summary
+        summary = await self.get_summary(email_id)
+        if summary:
+            return summary
+        
+        # If not found, fetch email and generate summary
+        from app.services import email_service
+        from app.models import EmailSchema
+        
+        email_dict = await email_service.get_email(email_id)
+        if not email_dict:
+            raise ValueError(f"Email {email_id} not found")
+        
+        email = EmailSchema(**email_dict)
+        
+        # Generate summary
+        summaries = await summarizer.summarize(
+            [email],
+            strategy=ProcessingStrategy.SINGLE
+        )
+        
+        summary = summaries[0]
+        
+        # Store the summary
+        await self.save_summary(summary)
+        
+        logger.info(f"Auto-generated summary for email {email_id}")
+        return summary 
