@@ -2,6 +2,7 @@
 from pydantic_settings import BaseSettings
 from functools import lru_cache
 from enum import Enum
+from typing import Optional
 
 class SummarizerProvider(str, Enum):
     OPENAI = "openai"
@@ -21,6 +22,10 @@ class Settings(BaseSettings):
     
     # Environment
     environment: str = "development"
+    
+    # Backend URLs
+    backend_base_url: Optional[str] = None
+    oauth_callback_url: Optional[str] = None
 
     # AI Providers
     openai_api_key: str

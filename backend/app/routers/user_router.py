@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, status, Depends
-from fastapi.security import OAuth2AuthorizationCodeBearer
+from fastapi.security import OAuth2PasswordBearer
 from fastapi.responses import JSONResponse
 
 from google.auth.transport.requests import Request as GoogleRequest
@@ -15,17 +15,15 @@ from database import db
 
 router = APIRouter()
 
-oauth2_scheme = OAuth2AuthorizationCodeBearer(
-    authorizationUrl="https://accounts.google.com/o/oauth2/auth",
-    tokenUrl="https://oauth2.googleapis.com/token"
-)
+# OAuth authentication scheme
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token", description="Enter the token you received from the login flow (without Bearer prefix)")
 
 async def get_current_user_info(token: str = Depends(oauth2_scheme)):
     """
     Validates token and returns user information.
     """
     try:
-        user_data = await run_in_threadpool(lambda: get_credentials_from_token(token))
+        user_data = await get_credentials_from_token(token)
         return user_data
     except Exception as e:
         raise HTTPException(

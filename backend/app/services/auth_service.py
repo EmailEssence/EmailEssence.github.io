@@ -9,8 +9,10 @@ from typing import Optional, Dict
 from app.models import UserSchema
 from database import db
 from google.oauth2.credentials import Credentials
+from starlette.concurrency import run_in_threadpool
+from app.utils.config import get_settings
 
-load_dotenv()
+settings = get_settings()
 
 SCOPES = [
     'https://mail.google.com/',
@@ -27,13 +29,13 @@ class TokenData(BaseModel):
     client_secret: str
     scopes: list
 
-def create_authorization_url() -> Dict[str, str]:
+def create_authorization_url(custom_state=None) -> Dict[str, str]:
     """ Generates Google OAuth2 authorization URL """
-    client_id = os.getenv('GOOGLE_CLIENT_ID')
-    client_secret = os.getenv('GOOGLE_CLIENT_SECRET')
+    client_id = settings.google_client_id
+    client_secret = settings.google_client_secret
 
     if not client_id or not client_secret:
-        raise HTTPException(status_code=500, detail="Google API credentials not found in environment variables.")
+        raise HTTPException(status_code=500, detail="Google API credentials not found in settings.")
 
     client_config = {
         "web": {
@@ -48,18 +50,27 @@ def create_authorization_url() -> Dict[str, str]:
     flow = Flow.from_client_config(client_config, SCOPES)
     flow.redirect_uri = get_redirect_uri()
 
-    authorization_url, state = flow.authorization_url(
-        access_type='offline',
-        include_granted_scopes='true'
-    )
+    # Use our custom state if provided, otherwise Flow will generate one
+    if custom_state:
+        authorization_url, _ = flow.authorization_url(
+            access_type='offline',
+            include_granted_scopes='true',
+            state=custom_state
+        )
+    else:
+        authorization_url, state = flow.authorization_url(
+            access_type='offline',
+            include_granted_scopes='true'
+        )
+        custom_state = state
 
-    return {"authorization_url": authorization_url, "state": state}
+    return {"authorization_url": authorization_url, "state": custom_state}
 
 async def get_tokens_from_code(code: str, user_email: str) -> Dict[str, str]:
     """ Exchanges authorization code for access & refresh tokens, then stores them in the database """
     try:
-        client_id = os.getenv('GOOGLE_CLIENT_ID')
-        client_secret = os.getenv('GOOGLE_CLIENT_SECRET')
+        client_id = settings.google_client_id
+        client_secret = settings.google_client_secret
 
         client_config = {
             "web": {
@@ -85,12 +96,14 @@ async def get_tokens_from_code(code: str, user_email: str) -> Dict[str, str]:
             'scopes': credentials.scopes
         }
 
-        # Store in MongoDB
-        await db.tokens.update_one(
-            {"user_email": user_email},
-            {"$set": token_data},
-            upsert=True
-        )
+        # If we have a user_email, store the tokens in the database
+        if user_email:
+            # Store in MongoDB
+            await db.tokens.update_one(
+                {"user_email": user_email},
+                {"$set": token_data},
+                upsert=True
+            )
 
         return token_data
     except Exception as e:
@@ -137,11 +150,11 @@ async def get_credentials(user_email: str) -> Optional[TokenData]:
 
 def get_redirect_uri():
     """ Returns the backend callback URL for OAuth """
-    if callback_url := os.getenv('OAUTH_CALLBACK_URL'):
+    if callback_url := settings.oauth_callback_url:
         return callback_url
 
-    environment = os.getenv('ENVIRONMENT', 'development')
-    base_url = os.getenv('BACKEND_BASE_URL')
+    environment = settings.environment
+    base_url = settings.backend_base_url
 
     if base_url:
         return f"{base_url.rstrip('/')}/auth/callback"
@@ -160,15 +173,19 @@ async def get_credentials_from_token(token: str):
         credentials = Credentials(
             token=token,
             token_uri="https://oauth2.googleapis.com/token",
-            client_id=os.getenv('GOOGLE_CLIENT_ID'),
-            client_secret=os.getenv('GOOGLE_CLIENT_SECRET')
+            client_id=settings.google_client_id,
+            client_secret=settings.google_client_secret
         )
         
-        # Verify token is valid by creating a service
-        service = build('oauth2', 'v2', credentials=credentials)
+        # Run potentially blocking Google API call in threadpool
+        service = await run_in_threadpool(lambda: 
+            build('oauth2', 'v2', credentials=credentials)
+        )
         
-        # Get user info from Google
-        user_info = service.userinfo().get().execute()
+        # Run potentially blocking Google API call in threadpool
+        user_info = await run_in_threadpool(lambda: 
+            service.userinfo().get().execute()
+        )
         
         if not user_info or not user_info.get('email'):
             raise ValueError("Unable to retrieve user email from token")
