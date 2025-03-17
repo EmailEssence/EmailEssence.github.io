@@ -3,13 +3,14 @@ import urllib.parse
 import base64
 import uuid
 
-from fastapi import APIRouter, HTTPException, status, Depends, Request, Body, Query
+from fastapi import APIRouter, HTTPException, status, Depends, Request, Query
 from fastapi.security import OAuth2AuthorizationCodeBearer
 from fastapi.responses import RedirectResponse
 from google.auth.transport.requests import Request as GoogleRequest
 from google.oauth2.credentials import Credentials
 from starlette.concurrency import run_in_threadpool
-from typing import Dict
+from typing import Dict, Optional
+from pydantic import BaseModel, EmailStr
 
 from app.services.auth_service import create_authorization_url, get_tokens_from_code, get_credentials
 
@@ -19,6 +20,20 @@ oauth2_scheme = OAuth2AuthorizationCodeBearer(
     authorizationUrl="https://accounts.google.com/o/oauth2/auth",
     tokenUrl="https://oauth2.googleapis.com/token"
 )
+
+# -- Pydantic Models for Request/Response Bodies --
+
+class ExchangeCodeRequest(BaseModel):
+    code: str
+    user_email: EmailStr
+
+class RefreshTokenRequest(BaseModel):
+    user_email: EmailStr
+
+class VerifyTokenRequest(BaseModel):
+    token: str
+
+# -- Endpoints --
 
 @router.get("/login")
 async def login(redirect_uri: str = Query(..., description="Frontend URI to redirect back to after authentication")):
@@ -84,23 +99,20 @@ async def callback(code: str, state: str = Query(None)):
         )
 
 @router.post("/exchange")
-async def exchange_code(data: Dict[str, str] = Body(...)):
+async def exchange_code(request: ExchangeCodeRequest):
     """
     Exchanges an authorization code for tokens and stores them in the database.
     Requires the user's email to associate the tokens.
     """
     try:
-        code = data.get("code")
-        user_email = data.get("user_email")  # Required to store in MongoDB
-
-        if not code or not user_email:
+        if not request.code or not request.user_email:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Authorization code and user email are required"
             )
         
         # Exchange auth code for tokens and store them in MongoDB
-        tokens = await run_in_threadpool(lambda: get_tokens_from_code(code, user_email))
+        tokens = await run_in_threadpool(lambda: get_tokens_from_code(request.code, request.user_email))
         
         return {
             "access_token": tokens["token"],
@@ -131,13 +143,13 @@ async def get_token(user_email: str = Query(...)):
         )
 
 @router.post("/refresh")
-async def refresh_token(user_email: str = Body(...)):
+async def refresh_token(request: RefreshTokenRequest):
     """
     Forces a refresh of the user's token, if a refresh token is available.
     """
     try:
         # Refresh token using stored credentials in MongoDB
-        token = await run_in_threadpool(lambda: get_credentials(user_email))
+        token = await run_in_threadpool(lambda: get_credentials(request.user_email))
         return {"access_token": token, "token_type": "bearer"}
     except Exception as e:
         raise HTTPException(
@@ -164,23 +176,22 @@ async def auth_status(user_email: str = Query(...)):
         }
 
 @router.post("/verify")
-async def verify_token(data: Dict[str, str] = Body(...)):
+async def verify_token(request: VerifyTokenRequest):
     """
     Verifies a given access token by refreshing it.
     """
     try:
-        token = data.get("token")
-        if not token:
+        if not request.token:
             return {"verified": False}
 
         # Validate token with Google OAuth
         credentials = Credentials(
-            token=token,
+            token=request.token,
             token_uri="https://oauth2.googleapis.com/token"
         )
         
-        request = Request()
-        credentials.refresh(request)
+        request_obj = Request()
+        credentials.refresh(request_obj)
         
         return {"verified": True}
         
