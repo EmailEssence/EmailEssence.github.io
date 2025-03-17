@@ -35,3 +35,45 @@ async def get_or_create_user(user_info, credentials):
     new_user_dict = new_user.model_dump()
     new_user_dict["_id"] = str(inserted_id.inserted_id)  # Convert ObjectId to string
     return new_user_dict
+
+async def get_user_by_id(user_id: str):
+    """Retrieve user by ID."""
+    if not ObjectId.is_valid(user_id):
+        return None
+    user = await db.users.find_one({"_id": ObjectId(user_id)})
+    if user:
+        user["_id"] = str(user["_id"])  # Convert ObjectId to string for frontend compatibility
+    return user
+
+
+async def update_user(user_id: str, user_data: dict):
+    """Update a user's information."""
+    if not ObjectId.is_valid(user_id):
+        return None
+    result = await db.users.update_one({"_id": ObjectId(user_id)}, {"$set": user_data})
+    if result.modified_count == 0:
+        return None  # No update performed
+    return await get_user_by_id(user_id)
+
+
+async def delete_user(user_id: str):
+    """Delete a user from the database."""
+    if not ObjectId.is_valid(user_id):
+        return False
+    result = await db.users.delete_one({"_id": ObjectId(user_id)})
+    return result.deleted_count > 0
+
+
+async def get_user_preferences(google_id: str):
+    """Retrieve only user preferences."""
+    user = await db.users.find_one({"google_id": google_id}, {"preferences": 1, "_id": 0})
+    return user.get("preferences", {}) if user else None
+
+
+async def update_user_preferences(google_id: str, preferences: dict):
+    """Update user preferences."""
+    result = await db.users.update_one(
+        {"google_id": google_id},
+        {"$set": {"preferences": preferences}}
+    )
+    return result.modified_count > 0
