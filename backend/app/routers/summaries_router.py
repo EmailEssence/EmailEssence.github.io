@@ -8,7 +8,8 @@ from app.services import email_service
 from app.services.summarization.base import AdaptiveSummarizer
 from app.services.summarization import (
   ProcessingStrategy, 
-  OpenAIEmailSummarizer
+  OpenAIEmailSummarizer,
+  GeminiEmailSummarizer
 )
 
 router = APIRouter()
@@ -28,6 +29,19 @@ async def get_summarizer(
                 )
             return OpenAIEmailSummarizer(
                 api_key=settings.openai_api_key,
+                prompt_version=settings.summarizer_prompt_version,
+                model=settings.summarizer_model,
+                batch_threshold=settings.summarizer_batch_threshold
+            )
+        case SummarizerProvider.GOOGLE:
+            if not settings.google_api_key:
+                raise HTTPException(
+                    status_code=500,
+                    detail="Google API key not configured"
+                )
+            return GeminiEmailSummarizer(
+                api_key=settings.google_api_key,
+                prompt_version=settings.summarizer_prompt_version,
                 model=settings.summarizer_model,
                 batch_threshold=settings.summarizer_batch_threshold
             )
