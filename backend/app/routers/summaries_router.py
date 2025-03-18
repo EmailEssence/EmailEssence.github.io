@@ -1,6 +1,6 @@
 import logging
 from typing import List, Optional, Annotated
-from fastapi import APIRouter, HTTPException, Depends, Query
+from fastapi import APIRouter, HTTPException, Depends, Query, Path
 from contextlib import asynccontextmanager
 
 from app.utils.config import Settings, get_settings, SummarizerProvider
@@ -340,7 +340,7 @@ async def search_by_keyword(
 
 @router.get("/recent/{days}", response_model=List[SummarySchema])
 async def get_recent_summaries(
-    days: int = Query(7, ge=1, le=90, description="Number of days to look back"),
+    days: int = Path(...),
     limit: int = Query(20, ge=1, le=100, description="Maximum number of results"),
     summary_service: SummaryService = Depends(get_summary_service)
 ):
