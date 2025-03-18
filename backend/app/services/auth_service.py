@@ -21,6 +21,10 @@ SCOPES = [
     'https://www.googleapis.com/auth/userinfo.profile'
 ]
 
+# Debugging helper function
+def debug(message: str):
+    print(f"[DEBUG] {message}")
+
 class TokenData(BaseModel):
     token: str
     refresh_token: Optional[str] = None
@@ -31,10 +35,13 @@ class TokenData(BaseModel):
 
 def create_authorization_url(custom_state=None) -> Dict[str, str]:
     """ Generates Google OAuth2 authorization URL """
+    debug("Generating Google OAuth2 authorization URL...")
+    
     client_id = settings.google_client_id
     client_secret = settings.google_client_secret
 
     if not client_id or not client_secret:
+        debug("[ERROR] Google API credentials missing.")
         raise HTTPException(status_code=500, detail="Google API credentials not found in settings.")
 
     client_config = {
@@ -50,7 +57,8 @@ def create_authorization_url(custom_state=None) -> Dict[str, str]:
     flow = Flow.from_client_config(client_config, SCOPES)
     flow.redirect_uri = get_redirect_uri()
 
-    # Use our custom state if provided, otherwise Flow will generate one
+    debug(f"Using redirect URI: {flow.redirect_uri}")
+# Use our custom state if provided, otherwise Flow will generate one
     if custom_state:
         authorization_url, _ = flow.authorization_url(
             access_type='offline',
@@ -64,10 +72,13 @@ def create_authorization_url(custom_state=None) -> Dict[str, str]:
         )
         custom_state = state
 
+    debug(f"Authorization URL generated: {authorization_url}")
     return {"authorization_url": authorization_url, "state": custom_state}
 
 async def get_tokens_from_code(code: str, user_email: str) -> Dict[str, str]:
     """ Exchanges authorization code for access & refresh tokens, then stores them in the database """
+    debug(f"Exchanging authorization code for tokens... User: {user_email}")
+
     try:
         client_id = settings.google_client_id
         client_secret = settings.google_client_secret
@@ -87,6 +98,8 @@ async def get_tokens_from_code(code: str, user_email: str) -> Dict[str, str]:
         flow.fetch_token(code=code)
         credentials = flow.credentials
 
+        debug("Token successfully fetched from Google.")
+
         token_data = {
             'token': credentials.token,
             'refresh_token': credentials.refresh_token,
@@ -98,32 +111,42 @@ async def get_tokens_from_code(code: str, user_email: str) -> Dict[str, str]:
 
         # If we have a user_email, store the tokens in the database
         if user_email:
+            debug(f"Storing tokens in database for {user_email}...")
             # Store in MongoDB
             await db.tokens.update_one(
                 {"user_email": user_email},
                 {"$set": token_data},
                 upsert=True
             )
+            debug("Tokens successfully stored.")
 
         return token_data
     except Exception as e:
+        debug(f"[ERROR] Auth code exchange failed: {str(e)}")
         raise HTTPException(status_code=400, detail=f"Auth code exchange failed: {str(e)}")
 
 async def get_credentials(user_email: str) -> Optional[TokenData]:
     """ Retrieves credentials from the database, refreshing the token if needed """
+    debug(f"Retrieving credentials for user: {user_email}")
+
     token_record = await db.tokens.find_one({"user_email": user_email})
     
     if not token_record:
+        debug("[ERROR] No credentials found in database.")
         raise HTTPException(status_code=401, detail="No credentials found. User needs to authenticate.")
 
     credentials = TokenData(**token_record)
+    debug(f"Credentials found for user: {user_email}")
 
+    # Refresh if expired
     if not credentials.token:
+        debug("[ERROR] Stored token is invalid. Re-authentication required.")
         raise HTTPException(status_code=401, detail="Invalid token stored. Please re-authenticate.")
 
     # Refresh if expired
     if credentials.refresh_token:
         try:
+            debug("Refreshing token...")
             flow = Flow.from_client_config({
                 "web": {
                     "client_id": credentials.client_id,
@@ -134,23 +157,29 @@ async def get_credentials(user_email: str) -> Optional[TokenData]:
                 }
             }, SCOPES)
             flow.credentials.refresh(Request())
-
+            
+            
             # Update the database with the new token
             await db.tokens.update_one(
                 {"user_email": user_email},
                 {"$set": {"token": flow.credentials.token}}
             )
 
+            debug("Token successfully refreshed.")
             return flow.credentials.token
 
         except Exception as e:
+            debug(f"[ERROR] Token refresh failed: {str(e)}")
             raise HTTPException(status_code=401, detail=f"Token refresh failed: {str(e)}")
 
     return credentials.token
 
 def get_redirect_uri():
     """ Returns the backend callback URL for OAuth """
+    debug("Retrieving redirect URI...")
+
     if callback_url := settings.oauth_callback_url:
+        debug(f"Using environment-specified callback URL: {callback_url}")
         return callback_url
 
     environment = settings.environment
@@ -163,11 +192,14 @@ def get_redirect_uri():
     else:
         return 'https://ee-backend-w86t.onrender.com/auth/callback'
 
+
 async def get_credentials_from_token(token: str):
     """
     Validates a token and returns user information from Google.
     Used for authenticating API requests.
     """
+    debug("Validating token and retrieving user information...")
+
     try:
         # Create credentials object from the token
         credentials = Credentials(
@@ -186,10 +218,13 @@ async def get_credentials_from_token(token: str):
         user_info = await run_in_threadpool(lambda: 
             service.userinfo().get().execute()
         )
-        
+
         if not user_info or not user_info.get('email'):
+            debug("[ERROR] Unable to retrieve user email from token.")
             raise ValueError("Unable to retrieve user email from token")
-            
+
+        debug(f"User info retrieved: {user_info.get('email')}")
+
         # Return both user info and credentials
         return {
             'user_info': user_info,
@@ -198,6 +233,7 @@ async def get_credentials_from_token(token: str):
         }
         
     except Exception as e:
+        debug(f"[ERROR] Token validation failed: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, 
             detail=f"Invalid token: {str(e)}"

@@ -16,6 +16,7 @@ from googleapiclient.discovery import build
 from database import db
 
 from app.services.auth_service import create_authorization_url, get_tokens_from_code, get_credentials, get_credentials_from_token, SCOPES, get_redirect_uri
+from app.services.user_service import get_or_create_user
 from app.utils.config import get_settings
 
 router = APIRouter()
@@ -71,31 +72,39 @@ async def get_current_user_email(token: str = Depends(oauth2_scheme)):
 
 # -- Endpoints --
 
+# Debugging helper function
+def debug(message: str):
+    print(f"[DEBUG] {message}")
+
 @router.get("/login", description="Start the OAuth process to get access to protected endpoints. Set redirect_uri to 'http://localhost:8000/docs' for testing in Swagger.")
 async def login(redirect_uri: str = Query(..., description="Frontend URI to redirect back to after authentication. Use http://localhost:8000/docs for Swagger testing.")):
     """
     Initiates the OAuth flow with Google, storing the frontend's redirect URI in the state parameter.
     For testing in Swagger UI, use 'http://localhost:8000/docs' as the redirect_uri.
     """
+    debug(f"Login initiated - Redirect URI: {redirect_uri}")
+
     try:
         # Create a state object that includes the frontend redirect URI
         custom_state = {
             "redirect_uri": redirect_uri,
             "nonce": str(uuid.uuid4())  # Add a nonce for security
         }
-        
+
         # Encode the state as a base64 string
         encoded_custom_state = base64.urlsafe_b64encode(json.dumps(custom_state).encode()).decode()
-        
+
         # Get the authorization URL from auth_service.py - PASS OUR STATE
         result = create_authorization_url(encoded_custom_state)
         authorization_url = result["authorization_url"]
-        
-        print(f"Authorization URL: {authorization_url}")
+
+        debug(f"Generated Google OAuth URL: {authorization_url}")
         
         # Now redirect to the correct URL
         return RedirectResponse(authorization_url)
+
     except Exception as e:
+        debug(f"[ERROR] Login failed: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to create authorization URL: {str(e)}"
@@ -106,6 +115,8 @@ async def callback(code: str, state: str = Query(None)):
     """
     Handles the OAuth callback from Google and exchanges the authorization code for access tokens.
     """
+    debug(f"Received callback with code: {code}")
+    
     try:
         if not state:
             raise ValueError("Missing state parameter")
@@ -113,6 +124,8 @@ async def callback(code: str, state: str = Query(None)):
         # Decode state to retrieve frontend redirect URI
         decoded_state = json.loads(base64.urlsafe_b64decode(state).decode())
         frontend_url = decoded_state.get("redirect_uri")
+
+        debug(f"Decoded state - Redirecting to frontend: {frontend_url}")
 
         if not frontend_url:
             raise ValueError("Missing redirect URI in state parameter")
@@ -140,8 +153,11 @@ async def callback(code: str, state: str = Query(None)):
         flow.redirect_uri = get_redirect_uri()
         
         # Get tokens from the authorization code
+        debug("Fetching OAuth token from Google...")
         flow.fetch_token(code=code)
         credentials = flow.credentials
+        
+        debug("OAuth token successfully retrieved")
 
         # Now use the credentials to get user info and extract email
         service = await run_in_threadpool(lambda: 
@@ -153,6 +169,8 @@ async def callback(code: str, state: str = Query(None)):
         )
         
         user_email = user_info.get('email')
+        debug(f"User email retrieved: {user_email}")
+        
         if not user_email:
             raise ValueError("Could not retrieve user email from Google")
         
@@ -167,11 +185,23 @@ async def callback(code: str, state: str = Query(None)):
         }
         
         # Store in MongoDB
+        debug(f"Storing tokens in database for {user_email}...")
         await db.tokens.update_one(
             {"user_email": user_email},
             {"$set": token_data},
             upsert=True
         )
+        debug("Tokens successfully stored in database")
+        
+        user = await get_or_create_user(user_info, credentials)  # Create user if not found
+        debug(f"User ensured in database: {user.get('email', 'Unknown')}")
+
+        # Prepare auth response for frontend
+        auth_state = {
+            "authenticated": True,
+            "token": credentials.token
+        }
+        
         
         # Special handling for Swagger UI testing
         if "localhost:8000/docs" in frontend_url or "/docs" in frontend_url:
@@ -207,6 +237,8 @@ async def exchange_code(request: ExchangeCodeRequest):
     Exchanges an authorization code for tokens and stores them in the database.
     Requires the user's email to associate the tokens.
     """
+    
+    debug(f"Exchanging OAuth code for user: {request.user_email}")
     try:
         if not request.code or not request.user_email:
             raise HTTPException(
@@ -217,13 +249,16 @@ async def exchange_code(request: ExchangeCodeRequest):
         # Exchange auth code for tokens and store them in MongoDB
         tokens = await run_in_threadpool(lambda: get_tokens_from_code(request.code, request.user_email))
         
+        debug(f"Token exchange successful for {request.user_email}")
         return TokenResponse(
             access_token=tokens["token"],
             token_type="bearer",
             expires_in=3600,
             refresh_token=tokens.get("refresh_token")
         )
+        
     except Exception as e:
+        debug(f"[ERROR] Code exchange failed: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f"Failed to exchange code for tokens: {str(e)}"
@@ -235,6 +270,7 @@ async def get_token(user_email: str = Query(...)):
     Retrieves the stored access token for the user.
     If expired, it will refresh the token automatically.
     """
+    
     try:
         # Fetch stored token from MongoDB
         token = await run_in_threadpool(lambda: get_credentials(user_email))
@@ -283,10 +319,15 @@ async def auth_status(token: str = Depends(oauth2_scheme)):
     Returns the user's authentication status.
     Requires authentication.
     """
+    
+    debug(f"User email extracted from token: {user_email}")
+    
     try:
         # Extract user info from the token
         user_data = await get_credentials_from_token(token)
         user_email = user_data['email']
+        
+        debug(f"User email extracted from token: {user_email}")
         
         # Get detailed credentials from the database using that email
         try:
@@ -317,6 +358,7 @@ async def auth_status(token: str = Depends(oauth2_scheme)):
             
     except Exception as e:
         # Token validation failed
+        debug(f"[ERROR] Auth status check failed: {str(e)}")
         return AuthStatusResponse(
             is_authenticated=False,
             token_valid=False,
