@@ -37,3 +37,8 @@ class ModelBackend(Protocol):
         contents: List[str],
         config: Optional[ModelConfig] = None
     ) -> List[tuple[str, List[str]]]: ...
+
+    @property
+    def model_info(self) -> Dict[str, str]:
+        """Return information about the model being used."""
+        ...
