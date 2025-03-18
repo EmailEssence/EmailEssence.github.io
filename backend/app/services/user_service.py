@@ -1,5 +1,5 @@
 from database import db
-from app.models.user_model import UserSchema
+from app.models.user_model import UserSchema, OAuthSchema
 from bson import ObjectId
 
 # Debugging helper function
@@ -22,17 +22,19 @@ async def get_or_create_user(user_info, credentials=None):
     debug(f"User not found. Creating new user with email: {user_info['email']}")
 
     # Create OAuth data dict if credentials are provided
+    # Currently passes OAuth object directly to the schema
     oauth_data = {}
     if credentials:
-        oauth_data = {
-            "access_token": credentials.token,
-            "refresh_token": credentials.refresh_token,
-            "token_uri": credentials.token_uri,
-            "client_id": credentials.client_id,
-            "client_secret": credentials.client_secret,
-            "scopes": credentials.scopes
-        }
-        debug(f"OAuth credentials included for {user_info['email']}.")
+        oauth_data = OAuthSchema(
+        token=credentials.token,
+        refresh_token=credentials.refresh_token,
+        token_uri=credentials.token_uri,
+        client_id=credentials.client_id,
+        client_secret=credentials.client_secret,
+        scopes=credentials.scopes  # Handles list correctly
+    ) if credentials else None
+    
+    debug(f"OAuth credentials included for {user_info['email']}.")
 
     # Create new user record
     new_user = UserSchema(

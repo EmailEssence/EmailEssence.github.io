@@ -193,6 +193,7 @@ async def callback(code: str, state: str = Query(None)):
         )
         debug("Tokens successfully stored in database")
         
+        # Store user in database if not found
         user = await get_or_create_user(user_info, credentials)  # Create user if not found
         debug(f"User ensured in database: {user.get('email', 'Unknown')}")
 
