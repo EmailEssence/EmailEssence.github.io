@@ -2,6 +2,11 @@ from pydantic import BaseModel, EmailStr, Field
 from typing import Optional, Dict, List
 from bson import ObjectId
 
+class PreferencesSchema(BaseModel):
+    summaries: bool = True
+    theme: str = "light"
+    fetch_frequency: str = "120"
+
 # OAuth schema object to enforce structure (Might not be necessary)
 class OAuthSchema(BaseModel):
     token: str 
@@ -16,9 +21,4 @@ class UserSchema(BaseModel):
     email: EmailStr
     name: str
     oauth: OAuthSchema  # Stores OAuth tokens (provider, access_token, refresh_token)
-
-    preferences: Dict[str, bool] = {
-        "summaries": True,
-        "theme": "light",
-        "fetch_frequency": "120"
-    }
+    preferences: PreferencesSchema 
