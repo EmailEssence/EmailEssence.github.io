@@ -187,7 +187,7 @@ def get_redirect_uri():
     if base_url:
         return f"{base_url.rstrip('/')}/auth/callback"
     elif environment == 'development':
-        return 'http://localhost:8000/auth/callback'
+        return 'http://localhost:3000/auth/callback'
     else:
         return 'https://ee-backend-w86t.onrender.com/auth/callback'
 
