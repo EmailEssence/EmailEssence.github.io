@@ -13,7 +13,7 @@ from contextlib import asynccontextmanager
 
 from app.utils.config import Settings, get_settings, SummarizerProvider
 from app.models import EmailSchema, SummarySchema
-from app.services import email_service
+from app.services.email_service import EmailService
 from app.services.summarization.base import AdaptiveSummarizer
 from app.services.summarization import (
   ProcessingStrategy, 
@@ -27,6 +27,8 @@ router = APIRouter()
 
 # Create a global summary service instance
 summary_service = SummaryService()
+# Create a global email service instance
+email_service = EmailService()
 
 # Initialize the service before handling requests via dependency
 async def initialize_summary_service():
