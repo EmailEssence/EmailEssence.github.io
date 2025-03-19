@@ -26,7 +26,6 @@ async function getEmails(extension) {
   }
 }
 
-// eslint-disable-next-line no-unused-vars
 async function getSummaries(emailIds) {
   const option = {
     method: "GET",
