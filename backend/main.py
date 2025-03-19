@@ -33,6 +33,7 @@ app.add_middleware(
         "http://127.0.0.1:5173",  # Vite with IP
         "http://127.0.0.1:4200",  # Angular with IP
         "https://emailessence.github.io",
+        "https://ee-backend-w86t.onrender.com",  # Your backend deployment URL
     ],
     allow_credentials=True,
     allow_methods=["*"],  # Allows all methods
