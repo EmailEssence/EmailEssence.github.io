@@ -1,3 +1,11 @@
+"""
+Summaries router for Email Essence.
+
+This module handles all operations related to email summaries, including generating summaries,
+retrieving existing summaries, and managing summary data. It leverages various summarization
+strategies to provide concise representations of emails.
+"""
+
 import logging
 from typing import List, Optional, Annotated
 from fastapi import APIRouter, HTTPException, Depends, Query, Path
@@ -22,7 +30,12 @@ summary_service = SummaryService()
 
 # Initialize the service before handling requests via dependency
 async def initialize_summary_service():
-    """Ensure summary service is initialized."""
+    """
+    Ensure summary service is initialized.
+    
+    Returns:
+        SummaryService: Initialized summary service instance
+    """
     initialized = getattr(summary_service, "_initialized", False)
     if not initialized:
         await summary_service.initialize()
@@ -31,6 +44,12 @@ async def initialize_summary_service():
 
 # Dependency to get initialized summary service
 async def get_summary_service():
+    """
+    Dependency that returns an initialized summary service.
+    
+    Returns:
+        SummaryService: Initialized summary service instance
+    """
     return await initialize_summary_service()
 
 async def get_summarizer(
@@ -38,6 +57,15 @@ async def get_summarizer(
 ) -> AdaptiveSummarizer[EmailSchema]:
     """
     Factory function for creating the appropriate summarizer based on settings.
+    
+    Args:
+        settings: Application settings containing summarizer configuration
+        
+    Returns:
+        AdaptiveSummarizer: Configured email summarizer implementation
+        
+    Raises:
+        ValueError: If the configured summarizer provider is not supported
     """
     match settings.summarizer_provider:
         case SummarizerProvider.OPENAI:
@@ -71,7 +99,12 @@ async def get_summarizer(
                 detail=f"Unsupported summarizer provider: {settings.summarizer_provider}"
             )
 
-@router.get("/", response_model=List[SummarySchema])
+@router.get(
+    "/", 
+    response_model=List[SummarySchema],
+    summary="Get summaries for user's emails",
+    description="Retrieves summaries for the current user's emails with option to regenerate"
+)
 async def summarize_emails_endpoint(
     refresh: bool = Query(False, description="Force regeneration of summaries"),
     auto_generate: bool = Query(True, description="Auto-generate missing summaries"),
@@ -80,13 +113,20 @@ async def summarize_emails_endpoint(
     user: dict = Depends(get_current_user)
 ):
     """
-    Fetch emails and generate summaries using the configured summarizer.
+    Get summaries for all emails of the current user.
     
     Args:
         refresh: Whether to force regeneration of summaries
+        auto_generate: Whether to automatically generate missing summaries
+        summarizer: The summarizer implementation to use
+        summary_service: The summary service for data operations
+        user: Current authenticated user
         
     Returns:
-        List[SummarySchema]: List of generated email summaries
+        List[SummarySchema]: List of email summaries
+        
+    Raises:
+        HTTPException: If summary retrieval or generation fails
     """
     try:
         user_id = str(user.get("_id", user.get("google_id")))
@@ -147,7 +187,12 @@ async def summarize_emails_endpoint(
             detail="Failed to generate email summaries"
         )
 
-@router.post("/summarize", response_model=SummarySchema)
+@router.post(
+    "/summarize", 
+    response_model=SummarySchema,
+    summary="Summarize a single email",
+    description="Generates or retrieves a summary for a single email"
+)
 async def summarize_single_email(
     email: EmailSchema,
     refresh: bool = Query(False, description="Force regeneration of summary"),
@@ -159,11 +204,17 @@ async def summarize_single_email(
     Generate a summary for a single email.
     
     Args:
-        email: Email to summarize
+        email: The email to summarize
         refresh: Whether to force regeneration of the summary
+        summarizer: The summarizer implementation to use
+        summary_service: The summary service for data operations
+        user: Current authenticated user
         
     Returns:
-        SummarySchema: Generated summary
+        SummarySchema: Generated email summary
+        
+    Raises:
+        HTTPException: If summary generation fails
     """
     try:
         user_id = str(user.get("_id", user.get("google_id")))
@@ -194,7 +245,12 @@ async def summarize_single_email(
             detail="Failed to generate email summary"
         )
 
-@router.get("/all", response_model=List[SummarySchema])
+@router.get(
+    "/all", 
+    response_model=List[SummarySchema],
+    summary="Get all summaries",
+    description="Retrieves all summaries with pagination, sorting, and filtering options"
+)
 async def get_all_summaries(
     skip: int = Query(0, ge=0, description="Number of summaries to skip"),
     limit: int = Query(20, ge=1, le=100, description="Maximum number of summaries to return"),
@@ -204,16 +260,21 @@ async def get_all_summaries(
     user: dict = Depends(get_current_user)
 ):
     """
-    Retrieve stored summaries with pagination and sorting.
+    Get all summaries with pagination and sorting.
     
     Args:
-        skip: Number of records to skip
-        limit: Maximum number of records to return
+        skip: Number of summaries to skip (for pagination)
+        limit: Maximum number of summaries to return
         sort_by: Field to sort by
-        sort_order: Sort direction ("asc" or "desc")
+        sort_order: Sort direction (asc or desc)
+        summary_service: The summary service for data operations
+        user: Current authenticated user
         
     Returns:
-        List[SummarySchema]: List of summaries
+        List[SummarySchema]: Paginated list of summaries
+        
+    Raises:
+        HTTPException: If retrieval fails
     """
     try:
         user_id = str(user.get("_id", user.get("google_id")))
@@ -231,7 +292,12 @@ async def get_all_summaries(
             detail="Failed to retrieve email summaries"
         )
 
-@router.get("/batch", response_model=List[SummarySchema])
+@router.get(
+    "/batch", 
+    response_model=List[SummarySchema],
+    summary="Get summaries by email IDs",
+    description="Retrieves summaries for a batch of email IDs"
+)
 async def get_summaries_by_ids(
     ids: List[str] = Query(..., description="List of email IDs to fetch summaries for"),
     summarizer: AdaptiveSummarizer[EmailSchema] = Depends(get_summarizer),
@@ -239,13 +305,19 @@ async def get_summaries_by_ids(
     user: dict = Depends(get_current_user)
 ):
     """
-    Retrieve multiple summaries by their email IDs, generating any that don't exist.
+    Get summaries for a batch of email IDs.
     
     Args:
         ids: List of email IDs to fetch summaries for
+        summarizer: The summarizer implementation to use
+        summary_service: The summary service for data operations
+        user: Current authenticated user
         
     Returns:
-        List[SummarySchema]: List of found or newly generated summaries
+        List[SummarySchema]: List of summaries for the requested email IDs
+        
+    Raises:
+        HTTPException: If batch retrieval fails
     """
     try:
         user_id = str(user.get("_id", user.get("google_id")))
@@ -277,7 +349,12 @@ async def get_summaries_by_ids(
             detail="Failed to retrieve email summaries"
         )
 
-@router.get("/{email_id}", response_model=SummarySchema)
+@router.get(
+    "/{email_id}", 
+    response_model=SummarySchema,
+    summary="Get summary by email ID",
+    description="Retrieves or generates a summary for a specific email"
+)
 async def get_summary_by_id(
     email_id: str,
     summarizer: AdaptiveSummarizer[EmailSchema] = Depends(get_summarizer),
@@ -285,13 +362,19 @@ async def get_summary_by_id(
     user: dict = Depends(get_current_user)
 ):
     """
-    Retrieve a specific summary by email ID, generating it if not found.
+    Get summary for a specific email ID.
     
     Args:
-        email_id: ID of the email
+        email_id: ID of the email to get summary for
+        summarizer: The summarizer implementation to use
+        summary_service: The summary service for data operations
+        user: Current authenticated user
         
     Returns:
-        SummarySchema: Summary found or newly generated
+        SummarySchema: The summary for the specified email
+        
+    Raises:
+        HTTPException: If the summary cannot be retrieved or generated
     """
     try:
         user_id = str(user.get("_id", user.get("google_id")))
@@ -302,23 +385,30 @@ async def get_summary_by_id(
         logging.error(f"Error retrieving/generating summary: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to retrieve summary for email {email_id}")
 
-@router.delete("/{email_id}")
+@router.delete(
+    "/{email_id}",
+    status_code=204,
+    summary="Delete summary",
+    description="Deletes a summary for a specific email"
+)
 async def delete_summary(
     email_id: str,
     summary_service: SummaryService = Depends(get_summary_service),
     user: dict = Depends(get_current_user)
 ):
     """
-    Delete a specific summary.
+    Delete a summary for a specific email ID.
     
     Args:
-        email_id: ID of the email
+        email_id: ID of the email whose summary should be deleted
+        summary_service: The summary service for data operations
+        user: Current authenticated user
         
     Returns:
-        dict: Status message
+        None
         
     Raises:
-        HTTPException: If summary not found
+        HTTPException: If the summary cannot be deleted
     """
     user_id = str(user.get("_id", user.get("google_id")))
     deleted = await summary_service.delete_summary(email_id, user_id)
@@ -329,7 +419,12 @@ async def delete_summary(
         )
     return {"message": f"Summary for email {email_id} deleted"}
 
-@router.get("/keyword/{keyword}", response_model=List[SummarySchema])
+@router.get(
+    "/keyword/{keyword}", 
+    response_model=List[SummarySchema],
+    summary="Search summaries by keyword",
+    description="Retrieves summaries that contain the specified keyword"
+)
 async def search_by_keyword(
     keyword: str,
     limit: int = Query(10, ge=1, le=50, description="Maximum number of results"),
@@ -337,14 +432,19 @@ async def search_by_keyword(
     user: dict = Depends(get_current_user)
 ):
     """
-    Search for summaries containing a specific keyword.
+    Search summaries by keyword.
     
     Args:
-        keyword: Keyword to search for
+        keyword: The search term to look for in summaries
         limit: Maximum number of results to return
+        summary_service: The summary service for data operations
+        user: Current authenticated user
         
     Returns:
-        List[SummarySchema]: Matching summaries
+        List[SummarySchema]: List of summaries containing the keyword
+        
+    Raises:
+        HTTPException: If the search fails
     """
     try:
         user_id = str(user.get("_id", user.get("google_id")))
@@ -357,7 +457,12 @@ async def search_by_keyword(
             detail="Failed to search summaries"
         )
 
-@router.get("/recent/{days}", response_model=List[SummarySchema])
+@router.get(
+    "/recent/{days}", 
+    response_model=List[SummarySchema],
+    summary="Get recent summaries",
+    description="Retrieves summaries from the specified number of recent days"
+)
 async def get_recent_summaries(
     days: int = Path(...),
     limit: int = Query(20, ge=1, le=100, description="Maximum number of results"),
@@ -365,14 +470,19 @@ async def get_recent_summaries(
     user: dict = Depends(get_current_user)
 ):
     """
-    Get summaries generated within recent days.
+    Get summaries from the specified number of recent days.
     
     Args:
         days: Number of days to look back
         limit: Maximum number of results to return
+        summary_service: The summary service for data operations
+        user: Current authenticated user
         
     Returns:
-        List[SummarySchema]: Recent summaries
+        List[SummarySchema]: List of recent summaries
+        
+    Raises:
+        HTTPException: If the retrieval fails
     """
     try:
         user_id = str(user.get("_id", user.get("google_id")))

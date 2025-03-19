@@ -1,3 +1,11 @@
+"""
+Authentication router for Email Essence.
+
+This module handles all authentication-related endpoints including OAuth2 flow with Google,
+token management, and authentication status verification. It supports secure access to Gmail
+via OAuth2 to retrieve and process email data.
+"""
+
 import json
 import urllib.parse
 import base64
@@ -31,22 +39,27 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token", description="Enter 
 # -- Pydantic Models --
 
 class ExchangeCodeRequest(BaseModel):
+    """Request model for exchanging an OAuth authorization code for tokens"""
     code: str
     user_email: EmailStr
 
 class RefreshTokenRequest(BaseModel):
+    """Request model for refreshing an access token"""
     user_email: EmailStr
 
 class VerifyTokenRequest(BaseModel):
+    """Request model for token verification"""
     token: str
 
 class TokenResponse(BaseModel):
+    """Response model for token-related endpoints"""
     access_token: str
     token_type: str
     expires_in: int = 3600
     refresh_token: Optional[str] = None
 
 class AuthStatusResponse(BaseModel):
+    """Response model for authentication status"""
     is_authenticated: bool
     token_valid: Optional[bool] = None
     has_refresh_token: Optional[bool] = None
@@ -58,6 +71,15 @@ async def get_current_user_email(token: str = Depends(oauth2_scheme)):
     """
     Dependency to extract user email from valid token.
     Will raise 401 automatically if token is invalid.
+    
+    Args:
+        token: JWT token from OAuth2 authentication
+        
+    Returns:
+        str: User's email address
+        
+    Raises:
+        HTTPException: 401 error if token is invalid
     """
     try:
         # Get user info from token
@@ -76,11 +98,25 @@ async def get_current_user_email(token: str = Depends(oauth2_scheme)):
 def debug(message: str):
     print(f"[DEBUG] {message}")
 
-@router.get("/login", description="Start the OAuth process to get access to protected endpoints. Set redirect_uri to 'http://localhost:8000/docs' for testing in Swagger.")
-async def login(redirect_uri: str = Query(..., description="Frontend URI to redirect back to after authentication. Use http://localhost:8000/docs for Swagger testing.")):
+@router.get(
+    "/login", 
+    summary="Start Google OAuth login flow",
+    description="Initiates the OAuth2 authentication process with Google. Redirects to Google's consent screen.",
+    response_class=RedirectResponse
+)
+async def login(redirect_uri: str = Query(
+    ..., 
+    description="Frontend URI to redirect back to after authentication. Use http://localhost:8000/docs for Swagger testing."
+)):
     """
     Initiates the OAuth flow with Google, storing the frontend's redirect URI in the state parameter.
     For testing in Swagger UI, use 'http://localhost:8000/docs' as the redirect_uri.
+    
+    Args:
+        redirect_uri: Frontend URI to redirect back to after successful authentication
+        
+    Returns:
+        RedirectResponse: Redirects to Google's authentication page
     """
     debug(f"Login initiated - Redirect URI: {redirect_uri}")
 

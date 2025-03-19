@@ -1,3 +1,11 @@
+"""
+Email router for Email Essence.
+
+This module handles all email-related operations including retrieving emails,
+fetching individual email details, marking emails as read, and deleting emails.
+It provides a set of REST endpoints for interacting with the user's email data.
+"""
+
 import logging
 from typing import List, Optional
 from fastapi import APIRouter, HTTPException, Query, Depends, status
@@ -37,12 +45,18 @@ def get_email_service() -> EmailService:
     return EmailService()
 
 class EmailResponse(BaseModel):
+    """Response model for email listing endpoints"""
     emails: List[EmailSchema]
     total: int
     has_more: bool
     debug_info: dict
 
-@router.get("/", response_model=EmailResponse)
+@router.get(
+    "/", 
+    response_model=EmailResponse,
+    summary="List emails",
+    description="Retrieves emails with filtering, sorting, and pagination options"
+)
 async def retrieve_emails(
     skip: int = Query(default=0, ge=0, description="Number of emails to skip"),
     limit: int = Query(default=20, ge=1, le=100, description="Maximum number of emails to return"),
@@ -60,6 +74,24 @@ async def retrieve_emails(
     
     This endpoint serves as the main method for fetching emails from the system.
     It can optionally refresh from IMAP first before returning results.
+    
+    Args:
+        skip: Number of emails to skip (for pagination)
+        limit: Maximum number of emails to return
+        unread_only: Whether to only return unread emails
+        category: Filter emails by category
+        search: Search term to filter emails by subject and body
+        sort_by: Field to sort results by
+        sort_order: Direction to sort results
+        refresh: Whether to refresh emails from IMAP before returning
+        email_service: Email service instance
+        user: Current authenticated user
+        
+    Returns:
+        EmailResponse: List of emails with pagination info
+        
+    Raises:
+        HTTPException: If email retrieval fails
     """
     debug_info = {
         "request_params": {
@@ -110,15 +142,30 @@ async def retrieve_emails(
         logger.exception(error_msg)  # This logs the full stack trace
         raise HTTPException(status_code=500, detail=error_msg)
 
-# Get a single email by ID
-@router.get("/{email_id}", response_model=EmailSchema)
+@router.get(
+    "/{email_id}", 
+    response_model=EmailSchema,
+    summary="Get email by ID",
+    description="Retrieves a specific email by its ID"
+)
 async def retrieve_email(
     email_id: str, 
     email_service: EmailService = Depends(get_email_service),
     user: dict = Depends(get_current_user)
 ):
     """
-    Retrieve a single email by its unique ID.
+    Retrieve a specific email by its ID.
+    
+    Args:
+        email_id: Unique identifier for the email
+        email_service: Email service instance
+        user: Current authenticated user
+        
+    Returns:
+        EmailSchema: The requested email
+        
+    Raises:
+        HTTPException: If email not found
     """
     user_id = user.get("_id", user.get("google_id"))
     email = await email_service.get_email(email_id, user_id)
@@ -126,17 +173,30 @@ async def retrieve_email(
         raise HTTPException(status_code=404, detail="Email not found")
     return email
 
-# Mark an email as read
-@router.put("/{email_id}/read", response_model=EmailSchema)
+@router.put(
+    "/{email_id}/read", 
+    response_model=EmailSchema,
+    summary="Mark email as read",
+    description="Marks a specific email as read"
+)
 async def mark_email_as_read(
     email_id: str,
     email_service: EmailService = Depends(get_email_service),
     user: dict = Depends(get_current_user)
 ):
     """
-    Mark an email as read.
+    Mark a specific email as read.
     
-    Updates the is_read flag to true for the specified email.
+    Args:
+        email_id: Unique identifier for the email
+        email_service: Email service instance
+        user: Current authenticated user
+        
+    Returns:
+        EmailSchema: The updated email
+        
+    Raises:
+        HTTPException: If email not found or update fails
     """
     user_id = user.get("_id", user.get("google_id"))
     updated_email = await email_service.mark_email_as_read(email_id, user_id)
@@ -144,17 +204,30 @@ async def mark_email_as_read(
         raise HTTPException(status_code=404, detail="Email not found")
     return updated_email
 
-# Delete an email
-@router.delete("/{email_id}")
+@router.delete(
+    "/{email_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Delete email",
+    description="Deletes a specific email"
+)
 async def delete_email(
     email_id: str,
     email_service: EmailService = Depends(get_email_service),
     user: dict = Depends(get_current_user)
 ):
     """
-    Delete an email by ID.
+    Delete a specific email.
     
-    Completely removes the email from the database.
+    Args:
+        email_id: Unique identifier for the email
+        email_service: Email service instance
+        user: Current authenticated user
+        
+    Returns:
+        None
+        
+    Raises:
+        HTTPException: If email not found or deletion fails
     """
     user_id = user.get("_id", user.get("google_id"))
     success = await email_service.delete_email(email_id, user_id)
@@ -162,17 +235,30 @@ async def delete_email(
         raise HTTPException(status_code=404, detail="Email not found")
     return {"message": "Email deleted successfully"}
 
-@router.get("/{email_id}/reader-view", response_model=ReaderViewResponse)
+@router.get(
+    "/{email_id}/reader-view", 
+    response_model=ReaderViewResponse,
+    summary="Get email reader view",
+    description="Returns a reader-friendly version of an email"
+)
 async def get_email_reader_view(
     email_id: str,
     email_service: EmailService = Depends(get_email_service),
     user: dict = Depends(get_current_user)
 ):
     """
-    Get a reader-view friendly version of the email content.
+    Get a reader-friendly version of an email.
     
-    This endpoint processes the email content to provide a clean,
-    readable version focusing on the main content.
+    Args:
+        email_id: Unique identifier for the email
+        email_service: Email service instance
+        user: Current authenticated user
+        
+    Returns:
+        ReaderViewResponse: Reader-friendly version of the email
+        
+    Raises:
+        HTTPException: If email not found or processing fails
     """
     try:
         logger.debug(f"Reader view requested for email {email_id}")

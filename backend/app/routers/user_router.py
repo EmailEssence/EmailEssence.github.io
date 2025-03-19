@@ -1,3 +1,10 @@
+"""
+User router for Email Essence.
+
+This module handles user profile management, preferences, and user-related operations.
+It provides endpoints for retrieving and updating user information and preferences.
+"""
+
 from fastapi import APIRouter, HTTPException, status, Depends
 from fastapi.security import OAuth2PasswordBearer
 from fastapi.responses import JSONResponse
@@ -20,11 +27,21 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token", description="Enter 
 
 # Debugging helper function
 def debug(message: str):
+    """Print debug messages with a consistent format"""
     print(f"[DEBUG] {message}")
 
 async def get_current_user_info(token: str = Depends(oauth2_scheme)):
     """
     Validates token and returns user information.
+    
+    Args:
+        token: JWT token from OAuth2 authentication
+        
+    Returns:
+        dict: User information and credentials
+        
+    Raises:
+        HTTPException: 401 error if token is invalid
     """
     debug(f"Validating token for user authentication...")
     
@@ -39,10 +56,24 @@ async def get_current_user_info(token: str = Depends(oauth2_scheme)):
             detail=f"Invalid authentication: {str(e)}"
         )
 
-@router.get("/me")
+@router.get(
+    "/me", 
+    response_model=UserSchema,
+    summary="Get current user profile",
+    description="Retrieves the authenticated user's profile information or creates a new user record if one doesn't exist"
+)
 async def get_current_user(user_data: dict = Depends(get_current_user_info)):
     """
     Retrieve user details or create user if they don't exist.
+    
+    Args:
+        user_data: User information and credentials from token validation
+        
+    Returns:
+        UserSchema: User profile information
+        
+    Raises:
+        HTTPException: If user retrieval fails
     """
     debug("Retrieving current user...")
     
@@ -63,10 +94,23 @@ async def get_current_user(user_data: dict = Depends(get_current_user_info)):
             detail=f"Failed to retrieve user: {str(e)}"
         )
 
-@router.get("/preferences")
+@router.get(
+    "/preferences",
+    summary="Get user preferences",
+    description="Retrieves the authenticated user's preference settings"
+)
 async def get_user_preferences(user_data: dict = Depends(get_current_user_info)):
     """
-    Retrieve user preferences without exposing the full user model.
+    Retrieves the user's preferences from their profile.
+    
+    Args:
+        user_data: User information from token validation
+        
+    Returns:
+        dict: User preference settings
+        
+    Raises:
+        HTTPException: If preferences cannot be retrieved
     """
     debug("Retrieving user preferences...")
     
@@ -90,13 +134,27 @@ async def get_user_preferences(user_data: dict = Depends(get_current_user_info))
             detail=f"Failed to retrieve user preferences: {str(e)}"
         )
 
-@router.put("/preferences")
+@router.put(
+    "/preferences",
+    summary="Update user preferences",
+    description="Updates the authenticated user's preference settings"
+)
 async def update_preferences(
     preferences: dict, 
     user_data: dict = Depends(get_current_user_info)
 ):
     """
-    Allows users to update their preferences.
+    Updates the user's preference settings.
+    
+    Args:
+        preferences: Dictionary of preference settings to update
+        user_data: User information from token validation
+        
+    Returns:
+        dict: Updated user preferences
+        
+    Raises:
+        HTTPException: If preference update fails
     """
     
     debug("Updating user preferences...")
@@ -119,10 +177,24 @@ async def update_preferences(
             detail=f"Failed to update preferences: {str(e)}"
         )
 
-@router.get("/{user_id}")
+@router.get(
+    "/{user_id}",
+    response_model=UserSchema,
+    summary="Get user by ID",
+    description="Retrieves user information by user ID"
+)
 async def get_user(user_id: str):
     """
-    Retrieve a user by ID.
+    Retrieves a user by their ID.
+    
+    Args:
+        user_id: Unique identifier for the user
+        
+    Returns:
+        UserSchema: User profile information
+        
+    Raises:
+        HTTPException: If user not found
     """
     debug(f"Retrieving user with ID: {user_id}")
     
@@ -134,10 +206,25 @@ async def get_user(user_id: str):
     debug(f"User retrieved successfully: {user.get('email', 'Unknown')}")
     return user
 
-@router.put("/{user_id}")
+@router.put(
+    "/{user_id}",
+    response_model=UserSchema,
+    summary="Update user",
+    description="Updates user information by user ID"
+)
 async def update_user_info(user_id: str, user_data: dict):
     """
-    Update user details.
+    Updates a user's information.
+    
+    Args:
+        user_id: Unique identifier for the user
+        user_data: User information to update
+        
+    Returns:
+        UserSchema: Updated user profile
+        
+    Raises:
+        HTTPException: If user update fails
     """
     debug(f"Updating user: {user_id}")
     
@@ -149,10 +236,24 @@ async def update_user_info(user_id: str, user_data: dict):
     debug(f"User updated successfully: {user_id}")
     return updated_user
 
-@router.delete("/{user_id}")
+@router.delete(
+    "/{user_id}",
+    summary="Delete user",
+    description="Deletes a user account by user ID",
+    status_code=status.HTTP_204_NO_CONTENT
+)
 async def delete_user_info(user_id: str):
     """
-    Delete a user by ID.
+    Deletes a user from the system.
+    
+    Args:
+        user_id: Unique identifier for the user
+        
+    Returns:
+        None
+        
+    Raises:
+        HTTPException: If user deletion fails
     """
     debug(f"Deleting user: {user_id}")
     
