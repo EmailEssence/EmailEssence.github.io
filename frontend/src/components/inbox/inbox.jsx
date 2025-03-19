@@ -145,7 +145,6 @@ function ReaderView({ curEmail }) {
       const doc = parser.parseFromString(curEmail.body, "text/html");
       const article = new Readability(doc).parse();
       setText(article.textContent);
-      setText(curEmail.body);
     }
     setDisplaying(!displaying);
   }
