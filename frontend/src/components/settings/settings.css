@@ -1,17 +1,4 @@
-:root {
-  --font-family: sans-serif;
-  --font-size: 15px;
-  --font-weight-normal: 300;
-  --font-weight-bold: 600;
-  --color-text: #000;
-  --color-background: #fff;
-  --color-border: #cfd0d0;
-  --color-selected-background: #d9d9d9;
-  --color-selected-text: #000;
-  --color-hover-background: #e0e0e0;
-  --color-toggle-border: #a3a3a3;
-  --color-toggle-background: white;
-}
+@import url("../../main.css");
 
 body {
   font-family: var(--font-family);
@@ -26,18 +13,16 @@ body {
   flex-shrink: 0;
   border: 1px solid var(--color-border);
   background: var(--color-background);
-  box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
 }
 
 .settings-block {
   width: auto;
   height: auto;
   flex-shrink: 0;
-  padding: 0 20px;
+  padding: 1rem 20px;
   border: 1px solid var(--color-border);
   background: var(--color-background);
   box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
-  padding: 1rem;
   margin: 1rem;
   display: flex;
   align-items: center;
@@ -59,9 +44,7 @@ h2 {
   position: relative;
   display: inline-block;
   width: 40px;
-  /* Adjusted width */
   height: 20px;
-  /* Adjusted height */
 }
 
 /* Hide default HTML checkbox */
@@ -80,25 +63,18 @@ h2 {
   right: 0;
   bottom: 0;
   background-color: var(--color-border);
-  /* Default color */
-  -webkit-transition: 0.4s;
   transition: 0.4s;
   border-radius: 20px;
-  /* Adjusted border-radius */
 }
 
 .toggle:before {
   position: absolute;
   content: "";
   height: 15px;
-  /* Adjusted height */
   width: 15px;
-  /* Adjusted width */
   left: 3px;
-  /* Adjusted left position */
   bottom: 3px;
-  /* Adjusted bottom position */
-  background-color: white;
+  background-color: var(--color-background);
   transition: 0.4s;
   border-radius: 50%;
 }
@@ -106,7 +82,6 @@ h2 {
 /* When the checkbox is checked, add a background color */
 .switch input:checked + .toggle {
   background-color: var(--color-toggle-border);
-  /* Color after toggle */
 }
 
 /* Move the slider when the checkbox is checked */
@@ -141,11 +116,9 @@ h2 {
 
 .settings .metric {
   margin-left: -15px;
-
-  color: #5e5e5e;
-  font-family: sans-serif;
+  color: var(--grey-2);
+  font-family: var(--font-family);
   font-size: 10px;
-  font-style: normal;
   font-weight: 200;
   line-height: normal;
 }
@@ -156,15 +129,12 @@ h2 {
   right: 0;
   margin-top: 5px;
   margin-right: 16px;
-
   border: 2px solid var(--color-border);
   border-radius: 4px;
   padding: 5px 10px;
-  color: #000;
-
-  font-family: var(--Label-Large-Font, sans-serif);
-  font-size: var(--Label-Large-Size, 14px);
-
+  color: var(--color-text);
+  font-family: var(--font-family);
+  font-size: 14px;
   display: flex;
   width: 60px;
   height: 30px;
@@ -181,7 +151,7 @@ h2 {
   outline: none;
   opacity: 0.7;
   transition: opacity 0.2s;
-  color: #a3a3a3;
+  color: var(--color-text);
   margin-top: 1rem;
 }
 
@@ -194,53 +164,13 @@ h2 {
   width: 30px;
   height: 10px;
   border-radius: 2px;
-  background: #5e5e5e;
+  background: var(--color-slider-thumb);
 }
 
 .settings .slider::-moz-range-thumb {
   width: 20px;
   height: 20px;
-  background: var(--color-toggle-border);
+  background: var(--color-background);
   border-radius: 2px;
-  color: #a3a3a3;
-}
-
-.theme-toggle-group {
-  margin-left: auto;
-  display: flex;
-  border: 2px solid var(--color-toggle-border);
-  border-radius: 5px;
-  overflow: hidden;
-}
-
-.theme-toggle-item:not(:last-child) {
-  border-right: 2px solid var(--color-toggle-border);
-}
-
-.theme-toggle-item {
-  flex: 1;
-  padding: 5px 20px;
-  border: none;
-  background-color: var(--color-toggle-background);
-  color: var(--color-text);
-  text-align: center;
-  font-family: var(--font-family);
-  font-size: var(--font-size);
-  font-weight: var(--font-weight-normal);
-  line-height: normal;
-  transition: background-color 0.2s, color 0.2s;
-}
-
-.theme-toggle-item.selected {
-  background-color: var(--color-selected-background);
-  color: var(--color-selected-text);
-}
-
-.theme-toggle-item:hover {
-  background-color: var(--color-hover-background);
-}
-
-.theme-toggle-item:focus {
-  outline: 2px solid var(--color-focus-outline);
-  outline-offset: 2px;
+  color: var(--color-slider-thumb);
 }

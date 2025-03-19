@@ -31,9 +31,14 @@
   z-index: 1;
 }
 
-.inbox-word {
+.inbox-display .inbox-word {
   font-size: 1.5rem;
   font-weight: 600;
+}
+
+.inbox-display .inbox-icon {
+  height: 1.4rem;
+  width: 1.4rem;
 }
 
 .inbox-display .emails {

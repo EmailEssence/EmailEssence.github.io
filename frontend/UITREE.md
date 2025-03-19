@@ -4,38 +4,44 @@
 
 ## Login
 
-## Register
+## Client
 
-## Dashboard
+### Dashboard
 
-### WeightedEmailList
+#### WeightedEmailList
 
 - WEListEmail
 
-### MiniViewPanel
+#### MiniViewPanel
 
-#### MiniViewHead
+##### MiniViewHead
 
 - InboxArrow
 - FullScreenIcon
 
-#### MiniViewBody
+##### MiniViewBody
 
 - MiniViewEmail
 
-## Inbox
+### Inbox
 
-### InboxEmailList
+#### InboxEmailList
 
 - InboxArrow
 - EmailEntry
 
-### EmailDisplay
+#### EmailDisplay
 
 - ReaderView
 
-## Settings
+### Settings
 
 - SummariesInInbox
 - EmailFetchInterval
 - Theme
+
+### SideBar
+
+- Button (Logo)
+- Button (Inbox)
+- Button (Settings)
