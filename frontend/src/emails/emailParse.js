@@ -38,7 +38,7 @@ async function getSummaries(emailIds) {
   try {
     const queryParams = new URLSearchParams();
     emailIds.forEach(id => queryParams.append('ids', id));
-    const req = new Request(`${baseUrl}/batch?${queryParams}`, option);
+    const req = new Request(`${baseUrl}/summaries/batch?${queryParams}`, option);
     const response = await fetch(req);
     if (!response.ok) {
       throw new Error(`Failed to retrieve summaries: ${response.statusText}`);
@@ -68,11 +68,11 @@ function parseDate(date) {
 export default async function fetchEmails(numRequested) {
   try {
     // Fetch both emails and summaries concurrently
-    const emails = await Promise.all(getEmails(numRequested));
+    const emails = await getEmails(numRequested);
     const ids = emails.emails.map((email) => {
       return email.email_id;
     });
-    const summaries = await Promise.all(getSummaries(ids));
+    const summaries = await getSummaries(ids);
     // Validate array responses
     if (!Array.isArray(emails.emails)) {
       console.error("Invalid emails response:", emails);
