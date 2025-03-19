@@ -5,14 +5,14 @@ from enum import Enum
 from typing import Optional
 
 class SummarizerProvider(str, Enum):
-    OPENAI = "openai"
-    GOOGLE = "gemini" # Currently Best option  
+    OPENAI = "openai" # Currently Best option 
+    GOOGLE = "gemini"  
     # TODO: Add DeepSeek
     LOCAL = "local"
 
     @classmethod
     def default(cls) -> "SummarizerProvider":
-        return cls.GOOGLE
+        return cls.OPENAI
 
 
 class ProviderModel(str, Enum):
@@ -38,7 +38,7 @@ class ProviderModel(str, Enum):
         }
 
 
-        return defaults.get(provider, cls.GEMINI_2_FLASH_LITE)
+        return defaults.get(provider, cls.GPT_4O_MINI)
 
 class PromptVersion(str, Enum):
     V1 = "v1"

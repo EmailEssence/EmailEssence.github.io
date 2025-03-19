@@ -1,7 +1,8 @@
 from typing import Dict, TypeVar, List, Optional
 from datetime import datetime, timezone
 import json
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 from tenacity import (
     retry,
     stop_after_attempt,
@@ -35,6 +36,8 @@ class GeminiBackend(ModelBackend):
     ):
         # Initialize Gemini client
         self.client = genai.Client(api_key=api_key)
+        # Get the async client
+        self.async_client = self.client.aio
         self.prompt_manager = prompt_manager
         self.model = model
         self.temperature = temperature
@@ -59,13 +62,20 @@ class GeminiBackend(ModelBackend):
             f"{self.prompt_manager.get_user_prompt(content)}"
         )
         
-        response = await self.client.models.generate_content_async(
+        # Import GenerateContentConfig
+        
+        
+        # Create config object with required parameters
+        gemini_config = types.GenerateContentConfig(
+            temperature=cfg.get("temperature", self.temperature),
+            max_output_tokens=cfg.get("max_tokens", self.max_tokens),
+        )
+        
+        # Use the async client with the correct parameter structure
+        response = await self.async_client.models.generate_content(
             model=cfg.get("model", self.model),
-            contents=[prompt],
-            generation_config={
-                "temperature": cfg.get("temperature", self.temperature),
-                "max_output_tokens": cfg.get("max_tokens", self.max_tokens),
-            }
+            contents=prompt,
+            config=gemini_config
         )
         
         try:
@@ -112,14 +122,15 @@ class GeminiEmailSummarizer(OpenAIEmailSummarizer):
             model=model,
         )
         super().__init__(
-            model_backend=backend,
-            prompt_manager=prompt_manager,
+            api_key=api_key,
+            model=model,
             batch_threshold=batch_threshold,
             max_batch_size=max_batch_size,
             timeout=timeout,
-
-            base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
+            prompt_version=prompt_version
         )
+        self._backend = backend
+        self._prompt_manager = prompt_manager
 
     def create_summary(
         self,

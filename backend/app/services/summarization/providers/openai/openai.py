@@ -159,5 +159,6 @@ class OpenAIEmailSummarizer(AdaptiveSummarizer[EmailSchema]):
             email_id=email_id,
             summary_text=summary_text,
             keywords=keywords,
-            generated_at=datetime.now(timezone.utc)
+            generated_at=datetime.now(timezone.utc),
+            model_info=self._backend.model_info
         )
