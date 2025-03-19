@@ -30,9 +30,9 @@ export default function Client({
   useEffect(() => {
     const clock = setInterval(async () => {
       try {
-        const newEmails = isDevMode ? fetchDev() : await fetchEmailsAlt();
-        if (newEmails.length > 0)
-          setEmailsByDate([...newEmails, ...emailsByDate]);
+        // const newEmails = isDevMode ? fetchDev() : await fetchEmailsAlt();
+        // if (newEmails.length > 0)
+        //   setEmailsByDate([...newEmails, ...emailsByDate]);
       } catch (error) {
         console.error(`Loading Emails Error: ${error}`);
       }
