@@ -29,6 +29,7 @@ dependencies = [
     "python-multipart>=0.0.20",
     "google[genai]>=3.0.0",
     "google-generativeai>=0.8.4",
+    "google-genai>=1.7.0",
 ]
 
 [project.optional-dependencies]
