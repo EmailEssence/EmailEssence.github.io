@@ -1,8 +1,7 @@
 /* eslint-disable react/prop-types */
-import { color1E, colorD9, colorE9 } from "../../assets/constants";
 import InboxIcon from "../../assets/InboxIcon";
-import SettingsIcon from "../../assets/SettingsIcon";
 import Logo from "../../assets/Logo";
+import SettingsIcon from "../../assets/SettingsIcon";
 import "./sidebar.css";
 
 export default function SideBar({
@@ -23,7 +22,7 @@ export default function SideBar({
           onClick={() => handlePageChange("inbox")}
           name="inbox"
         >
-          <InboxIcon color={selected === "inbox" ? color1E : colorE9} />
+          <InboxIcon/>
         </Button>
         <div></div>
         <Button
@@ -32,7 +31,7 @@ export default function SideBar({
           onClick={() => handlePageChange("settings")}
           name="settings"
         >
-          <SettingsIcon color={selected === "settings" ? color1E : colorE9} />
+          <SettingsIcon/>
         </Button>
       </div>
     </div>
@@ -42,24 +41,23 @@ export default function SideBar({
 function Button({ expanded, curState = "N", onClick, name, children }) {
   const text =
     name.length > 0 ? `${name[0].toUpperCase()}${name.slice(1)}` : "";
-  const colors =
+  const selectedClass =
     curState === name
-      ? { main: colorD9, sub: color1E }
-      : { main: color1E, sub: colorE9 };
+      ? " selected"
+      : "";
   return (
     <div>
       <div
-        className="container"
+        className={`container${selectedClass}`}
         onClick={onClick}
-        style={{
-          backgroundColor: colors.main,
-        }}
       >
         <div className="icon">
           <div className={text.length < 1 ? "logo" : ""}>{children}</div>
-          {expanded && <p style={{ color: colors.sub }}>{text}</p>}
+          {expanded && <p>{text}</p>}
         </div>
       </div>
     </div>
   );
 }
+
+

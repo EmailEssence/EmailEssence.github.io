@@ -1,13 +1,22 @@
 /* eslint-disable react/prop-types */
-import { useReducer } from "react";
+import { useEffect, useReducer } from "react";
 import "./client.css";
 import Dashboard from "./components/dashboard/dashboard";
 import Inbox from "./components/inbox/inbox";
 import { Settings } from "./components/settings/settings";
 import SideBar from "./components/sidebar/sidebar";
+import { fetchDev, isDevMode, baseUrl } from "./emails/emailParse";
 import { clientReducer, userPreferencesReducer } from "./reducers";
 
-export default function Client({ emailsByDate }) {
+export default function Client({
+  emailsByDate,
+  setEmailsByDate,
+  defaultUserPreferences = {
+    isChecked: true,
+    emailFetchInterval: 120,
+    theme: "light",
+  },
+}) {
   const [client, dispatchClient] = useReducer(clientReducer, {
     curPage: "dashboard",
     expandedSideBar: false,
@@ -15,8 +24,23 @@ export default function Client({ emailsByDate }) {
   });
   const [userPreferences, dispatchUserPreferences] = useReducer(
     userPreferencesReducer,
-    { isChecked: false, emailFetchInterval: 0, theme: "system" }
+    defaultUserPreferences
   );
+
+  useEffect(() => {
+    const clock = setInterval(async () => {
+      try {
+        // const newEmails = isDevMode ? fetchDev() : await fetchEmailsAlt();
+        // if (newEmails.length > 0)
+        //   setEmailsByDate([...newEmails, ...emailsByDate]);
+      } catch (error) {
+        console.error(`Loading Emails Error: ${error}`);
+      }
+    }, userPreferences.emailFetchInterval * 1000);
+    return () => clearInterval(clock);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userPreferences.emailFetchInterval]);
+
   const root = document.querySelector(":root");
   root.style.setProperty(
     "--sidebar-width",
@@ -113,4 +137,28 @@ export default function Client({ emailsByDate }) {
   };
 
   return <div className="page">{emailClient()}</div>;
+}
+
+async function fetchEmailsAlt() {
+  const option = {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
+      "Content-Type": "application/json",
+    },
+  };
+  try {
+    const req = new Request(
+      `${baseUrl}/emails/?skip=0&limit=100&unread_only=true&sort_by=received_at&sort_order=desc&refresh=true`,
+      option
+    );
+    const response = await fetch(req);
+    if (!response.ok) {
+      throw new Error(`Failed to retrieve emails: ${response.statusText}`);
+    }
+    return await response.json();
+  } catch (error) {
+    console.error("Email fetch error:", error);
+    return []; // Return empty array on error for graceful degradation
+  }
 }

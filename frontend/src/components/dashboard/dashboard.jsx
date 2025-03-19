@@ -1,11 +1,11 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable react/prop-types */
+import { useEffect, useRef, useState } from "react";
 import FullScreenIcon from "../../assets/FullScreenIcon";
 import InboxIcon from "../../assets/InboxArrow";
-import { getTop5 } from "../../emails/emailParse";
 import ViewIcon from "../../assets/ViewIcon";
 import { emailsPerPage } from "../../assets/constants";
-import { useState, useRef, useEffect } from "react";
+import { getTop5 } from "../../emails/emailParse";
 import "./miniview.css";
 import "./weightedEmailList.css";
 
