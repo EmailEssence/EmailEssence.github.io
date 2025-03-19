@@ -77,6 +77,32 @@ This will:
 - Mount the .env file for configuration
 - Expose the service on port 8000
 
+### Using Pre-built Docker Image (Recommended for Frontend Team)
+
+To quickly get started without building the image locally, you can pull the pre-built image from our Docker registry:
+
+1. Pull the latest image:
+
+```bash
+docker pull emailessence/emailessence-backend:latest
+```
+
+2. Run the container with environment variables:
+
+```bash
+# Option 1: Using an .env file
+docker run -p 8000:8000 --env-file .env emailessence/emailessence-backend:latest
+
+# Option 2: Providing environment variables directly
+docker run -p 8000:8000 \
+    -e google_client_id=your_client_id \
+    -e google_client_secret=your_secret \
+    -e email_account=your_email \
+    -e mongo_uri=mongodb://user:pass@host:port/db \
+    -e openai_api_key=your_api_key \
+    emailessence/emailessence-backend:latest
+```
+
 ### Building and Running the Docker Image Manually
 
 If you prefer to build and run the Docker image directly:
@@ -88,12 +114,30 @@ If you prefer to build and run the Docker image directly:
 docker build -f backend/Dockerfile -t email-essence-backend .
 ```
 
-2. Run the container:
+2. Run the container with environment variables:
 
 ```bash
 # Run with environment variables from .env file
-docker run -p 8000:8000 --env-file .env -v ./backend:/app email-essence-backend
+docker run -p 8000:8000 --env-file .env email-essence-backend
 ```
+
+## Deployment
+
+### Render Deployment
+
+For Render deployments, environment variables are configured through the Render dashboard:
+
+1. Go to your service in the Render dashboard
+2. Navigate to the "Environment" tab
+3. Add each required environment variable:
+   - `google_client_id`
+   - `google_client_secret`
+   - `email_account`
+   - `mongo_uri`
+   - `openai_api_key`
+   - Any optional variables you wish to override
+
+This separates your development environment configuration from your production deployment, following security best practices.
 
 ## API Documentation
 

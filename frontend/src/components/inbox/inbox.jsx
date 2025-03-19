@@ -1,14 +1,28 @@
 /* eslint-disable react/prop-types */
 // import ReaderViewIcon from "../../assets/ReaderView";
 import ArrowIcon from "../../assets/InboxArrow";
+import {
+  color00,
+  colorD9,
+  colorTP,
+  colorB0,
+  emailsPerPage,
+} from "../../assets/constants";
+import { useState, useRef, useEffect } from "react";
 import "./emailDisplay.css";
 import "./emailEntry.css";
 import "./emailList.css";
 
-export default function Inbox({ emailList, setCurEmail, curEmail }) {
+export default function Inbox({
+  displaySummaries,
+  emailList,
+  setCurEmail,
+  curEmail,
+}) {
   return (
     <div className="inbox-display">
       <InboxEmailList
+        displaySummaries={displaySummaries}
         emailList={emailList}
         curEmail={curEmail}
         onClick={setCurEmail}
@@ -18,44 +32,71 @@ export default function Inbox({ emailList, setCurEmail, curEmail }) {
   );
 }
 
-function EmailEntry({ email, onClick, selected }) {
+function EmailEntry({ displaySummary, email, onClick, selected }) {
+  const colors = selected
+    ? { main: colorD9, median: color00 }
+    : { main: colorTP, median: colorB0 };
   const date = getDate(email.received_at);
   return (
     <div
-      className="entry"
-      style={{ backgroundColor: selected ? "#D9D9D9" : "transparent" }}
+      className={`entry${displaySummary ? "" : " no-summary"}`}
+      style={{ backgroundColor: colors.main }}
       onClick={onClick}
     >
       <div className="indicator-container">
-        <div className={!email.is_read && "indicator"}></div>
+        <div className={email.is_read ? "" : "indicator"}></div>
       </div>
       <div className="head">
         <div className="from">{getSenderName(email.sender)}</div>
         <div className="date">{date}</div>
       </div>
       <div className="title">{email.subject}</div>
-      <div className="separator-container">
+      <div className="median-container">
         <div
-          className="separator"
-          style={{ backgroundColor: selected ? "#000000" : "#B0B0B0" }}
+          className="median"
+          style={{ backgroundColor: colors.median }}
         ></div>
       </div>
-      <div className="summary">{email.summary_text}</div>
+      {displaySummary && <div className="summary">{email.summary_text}</div>}
     </div>
   );
 }
 
-function InboxEmailList({ emailList, curEmail, onClick }) {
+function InboxEmailList({ displaySummaries, emailList, curEmail, onClick }) {
+  const [pages, setPages] = useState(1);
+  const ref = useRef(null);
+  const maxEmails =
+    pages * emailsPerPage < emailList.length
+      ? pages * emailsPerPage
+      : emailList.length;
+  const hasUnloadedEmails = maxEmails < emailList.length;
+
+  const handleScroll = () => {
+    const fullyScrolled =
+      Math.abs(
+        ref.current.scrollHeight -
+          ref.current.clientHeight -
+          ref.current.scrollTop
+      ) <= 1;
+    if (fullyScrolled && hasUnloadedEmails) {
+      setPages(pages + 1);
+    }
+  };
+
+  useEffect(() => {
+    handleScroll();
+  }, [pages]); // Fixes minimum for large screens, but runs effect after every load which is unnecessary
+
   const emails = () => {
     const returnBlock = [];
-    for (const email of emailList) {
-      let selected = email === curEmail;
+    for (let i = 0; i < maxEmails; i++) {
       returnBlock.push(
         <EmailEntry
-          key={email.email_id}
-          email={email}
-          onClick={() => onClick(email)}
-          selected={selected}
+          key={emailList[i].email_id}
+          displaySummary={displaySummaries}
+          email={emailList[i]}
+          onClick={() => onClick(emailList[i])}
+          selected={emailList[i] === curEmail}
         />
       );
     }
@@ -73,7 +114,9 @@ function InboxEmailList({ emailList, curEmail, onClick }) {
       </div>
       <div className="divider"></div>
       <div className="email-container">
-        <div className="emails">{emails()}</div>
+        <div className="emails" ref={ref} onScroll={handleScroll}>
+          {emails()}
+        </div>
       </div>
     </div>
   );

@@ -1,7 +1,11 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable react/prop-types */
 import FullScreenIcon from "../../assets/FullScreenIcon";
 import InboxIcon from "../../assets/InboxArrow";
-// import ViewIcon from "../../assets/ViewIcon";
+import { getTop5 } from "../../emails/emailParse";
+import ViewIcon from "../../assets/ViewIcon";
+import { emailsPerPage } from "../../assets/constants";
+import { useState, useRef, useEffect } from "react";
 import "./miniview.css";
 import "./weightedEmailList.css";
 
@@ -32,12 +36,13 @@ export default function Dashboard({
 
 function WeightedEmailList({ emailList, setCurEmail, handlePageChange }) {
   const emails = () => {
+    const WEList = getTop5(emailList);
     const returnBlock = [];
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < WEList.length; i++) {
       returnBlock.push(
         <WEListEmail
-          key={emailList[i].email_id}
-          email={emailList[i]}
+          key={WEList[i].email_id}
+          email={WEList[i]}
           setCurEmail={setCurEmail}
           handlePageChange={handlePageChange}
         />
@@ -59,8 +64,7 @@ function WEListEmail({ email, setCurEmail, handlePageChange }) {
           handlePageChange("inbox");
         }}
       >
-        {/* <ViewIcon /> */}
-        <img src="./src/assets/oldAssets/ViewIcon.svg" alt="View Icon" />
+        <ViewIcon />
       </div>
     </div>
   );
@@ -100,13 +104,37 @@ function MiniViewHead({ handlePageChange }) {
 }
 
 function MiniViewBody({ emailList, setCurEmail, handlePageChange }) {
+  const [pages, setPages] = useState(1);
+  const ref = useRef(null);
+  const maxEmails =
+    pages * emailsPerPage < emailList.length
+      ? pages * emailsPerPage
+      : emailList.length;
+  const hasUnloadedEmails = maxEmails < emailList.length;
+
+  const handleScroll = () => {
+    const fullyScrolled =
+      Math.abs(
+        ref.current.scrollHeight -
+          ref.current.clientHeight -
+          ref.current.scrollTop
+      ) <= 1;
+    if (fullyScrolled && hasUnloadedEmails) {
+      setPages(pages + 1);
+    }
+  };
+
+  useEffect(() => {
+    handleScroll();
+  }, [pages]); // Fixes minimum for large screens, but runs effect after every load which is unnecessary
+
   const emails = () => {
     const returnBlock = [];
-    for (const email of emailList) {
+    for (let i = 0; i < maxEmails; i++) {
       returnBlock.push(
         <MiniViewEmail
-          key={email.email_id}
-          email={email}
+          key={emailList[i].email_id}
+          email={emailList[i]}
           setCurEmail={setCurEmail}
           handlePageChange={handlePageChange}
         />
@@ -114,7 +142,11 @@ function MiniViewBody({ emailList, setCurEmail, handlePageChange }) {
     }
     return returnBlock;
   };
-  return <div className="body-container">{emails()}</div>;
+  return (
+    <div className="body-container" ref={ref} onScroll={handleScroll}>
+      {emails()}
+    </div>
+  );
 }
 
 function MiniViewEmail({ email, setCurEmail, handlePageChange }) {
