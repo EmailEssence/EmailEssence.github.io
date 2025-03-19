@@ -72,7 +72,6 @@ def create_authorization_url(custom_state=None) -> Dict[str, str]:
         )
         custom_state = state
 
-    debug(f"Authorization URL generated: {authorization_url}")
     return {"authorization_url": authorization_url, "state": custom_state}
 
 async def get_tokens_from_code(code: str, user_email: str) -> Dict[str, str]:

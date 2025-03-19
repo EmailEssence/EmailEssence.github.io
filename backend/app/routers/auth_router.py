@@ -321,8 +321,6 @@ async def auth_status(token: str = Depends(oauth2_scheme)):
     Requires authentication.
     """
     
-    debug(f"User email extracted from token: {user_email}")
-    
     try:
         # Extract user info from the token
         user_data = await get_credentials_from_token(token)

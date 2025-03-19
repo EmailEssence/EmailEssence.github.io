@@ -63,51 +63,6 @@ async def get_current_user(user_data: dict = Depends(get_current_user_info)):
             detail=f"Failed to retrieve user: {str(e)}"
         )
 
-@router.get("/{user_id}")
-async def get_user(user_id: str):
-    """
-    Retrieve a user by ID.
-    """
-    debug(f"Retrieving user with ID: {user_id}")
-    
-    user = await get_user_by_id(user_id)
-    if not user:
-        debug(f"[ERROR] User not found: {user_id}")
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-    
-    debug(f"User retrieved successfully: {user.get('email', 'Unknown')}")
-    return user
-
-@router.put("/{user_id}")
-async def update_user_info(user_id: str, user_data: dict):
-    """
-    Update user details.
-    """
-    debug(f"Updating user: {user_id}")
-    
-    updated_user = await update_user(user_id, user_data)
-    if not updated_user:
-        debug(f"[ERROR] User update failed: {user_id}")
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found or update failed")
-    
-    debug(f"User updated successfully: {user_id}")
-    return updated_user
-
-@router.delete("/{user_id}")
-async def delete_user_info(user_id: str):
-    """
-    Delete a user by ID.
-    """
-    debug(f"Deleting user: {user_id}")
-    
-    success = await delete_user(user_id)
-    if not success:
-        debug(f"[ERROR] User delete failed: {user_id}")
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found or delete failed")
-    
-    debug(f"User deleted successfully: {user_id}")
-    return JSONResponse(content={"message": "User deleted successfully"}, status_code=status.HTTP_200_OK)
-
 @router.get("/preferences")
 async def get_user_preferences(user_data: dict = Depends(get_current_user_info)):
     """
@@ -163,4 +118,49 @@ async def update_preferences(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to update preferences: {str(e)}"
         )
+
+@router.get("/{user_id}")
+async def get_user(user_id: str):
+    """
+    Retrieve a user by ID.
+    """
+    debug(f"Retrieving user with ID: {user_id}")
+    
+    user = await get_user_by_id(user_id)
+    if not user:
+        debug(f"[ERROR] User not found: {user_id}")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    
+    debug(f"User retrieved successfully: {user.get('email', 'Unknown')}")
+    return user
+
+@router.put("/{user_id}")
+async def update_user_info(user_id: str, user_data: dict):
+    """
+    Update user details.
+    """
+    debug(f"Updating user: {user_id}")
+    
+    updated_user = await update_user(user_id, user_data)
+    if not updated_user:
+        debug(f"[ERROR] User update failed: {user_id}")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found or update failed")
+    
+    debug(f"User updated successfully: {user_id}")
+    return updated_user
+
+@router.delete("/{user_id}")
+async def delete_user_info(user_id: str):
+    """
+    Delete a user by ID.
+    """
+    debug(f"Deleting user: {user_id}")
+    
+    success = await delete_user(user_id)
+    if not success:
+        debug(f"[ERROR] User delete failed: {user_id}")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found or delete failed")
+    
+    debug(f"User deleted successfully: {user_id}")
+    return JSONResponse(content={"message": "User deleted successfully"}, status_code=status.HTTP_200_OK)
     
