@@ -10,10 +10,13 @@ router = APIRouter()
 
 # Configure logging with format and level
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S'
 )
+
+# Add specific configuration for pymongo's logger
+logging.getLogger('pymongo').setLevel(logging.WARNING)
 
 # Create module-specific logger
 logger = logging.getLogger(__name__)
