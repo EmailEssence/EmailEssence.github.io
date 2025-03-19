@@ -13,6 +13,7 @@ from app.services.summarization import (
   GeminiEmailSummarizer
 )
 from app.services.summary_service import SummaryService
+from app.routers.user_router import get_current_user
 
 router = APIRouter()
 
@@ -75,7 +76,8 @@ async def summarize_emails_endpoint(
     refresh: bool = Query(False, description="Force regeneration of summaries"),
     auto_generate: bool = Query(True, description="Auto-generate missing summaries"),
     summarizer: AdaptiveSummarizer[EmailSchema] = Depends(get_summarizer),
-    summary_service: SummaryService = Depends(get_summary_service)
+    summary_service: SummaryService = Depends(get_summary_service),
+    user: dict = Depends(get_current_user)
 ):
     """
     Fetch emails and generate summaries using the configured summarizer.
@@ -87,8 +89,10 @@ async def summarize_emails_endpoint(
         List[SummarySchema]: List of generated email summaries
     """
     try:
+        user_id = str(user.get("_id", user.get("google_id")))
+        
         # Fetch emails
-        emails_data = await email_service.fetch_emails()
+        emails_data, _, _ = await email_service.fetch_emails(user_id=user_id)
         emails = [EmailSchema(**email_dict) for email_dict in emails_data]
         
         if not emails:
@@ -104,7 +108,7 @@ async def summarize_emails_endpoint(
             missing_emails = []
             
             for email in emails:
-                summary = await summary_service.get_summary(email.email_id)
+                summary = await summary_service.get_summary(email.email_id, user_id)
                 if summary:
                     existing_summaries.append(summary)
                 else:
@@ -127,7 +131,7 @@ async def summarize_emails_endpoint(
         )
         
         # Store the new summaries
-        await summary_service.save_summaries_batch(new_summaries)
+        await summary_service.save_summaries_batch(new_summaries, user_id)
         
         # Return all summaries (existing + new)
         if not refresh and 'existing_summaries' in locals():
@@ -148,7 +152,8 @@ async def summarize_single_email(
     email: EmailSchema,
     refresh: bool = Query(False, description="Force regeneration of summary"),
     summarizer: AdaptiveSummarizer[EmailSchema] = Depends(get_summarizer),
-    summary_service: SummaryService = Depends(get_summary_service)
+    summary_service: SummaryService = Depends(get_summary_service),
+    user: dict = Depends(get_current_user)
 ):
     """
     Generate a summary for a single email.
@@ -161,9 +166,11 @@ async def summarize_single_email(
         SummarySchema: Generated summary
     """
     try:
+        user_id = str(user.get("_id", user.get("google_id")))
+        
         # Check if summary already exists
         if not refresh:
-            existing_summary = await summary_service.get_summary(email.email_id)
+            existing_summary = await summary_service.get_summary(email.email_id, user_id)
             if existing_summary:
                 return existing_summary
         
@@ -176,7 +183,7 @@ async def summarize_single_email(
         summary = summaries[0]
         
         # Store the summary
-        await summary_service.save_summary(summary)
+        await summary_service.save_summary(summary, user_id)
         
         return summary
         
@@ -193,7 +200,8 @@ async def get_all_summaries(
     limit: int = Query(20, ge=1, le=100, description="Maximum number of summaries to return"),
     sort_by: str = Query("generated_at", description="Field to sort by"),
     sort_order: str = Query("desc", description="Sort direction (asc or desc)"),
-    summary_service: SummaryService = Depends(get_summary_service)
+    summary_service: SummaryService = Depends(get_summary_service),
+    user: dict = Depends(get_current_user)
 ):
     """
     Retrieve stored summaries with pagination and sorting.
@@ -208,11 +216,13 @@ async def get_all_summaries(
         List[SummarySchema]: List of summaries
     """
     try:
+        user_id = str(user.get("_id", user.get("google_id")))
         return await summary_service.get_summaries(
             skip=skip,
             limit=limit,
             sort_by=sort_by,
-            sort_order=sort_order
+            sort_order=sort_order,
+            user_id=user_id
         )
     except Exception as e:
         logging.error(f"Error retrieving summaries: {str(e)}", exc_info=True)
@@ -225,7 +235,8 @@ async def get_all_summaries(
 async def get_summaries_by_ids(
     ids: List[str] = Query(..., description="List of email IDs to fetch summaries for"),
     summarizer: AdaptiveSummarizer[EmailSchema] = Depends(get_summarizer),
-    summary_service: SummaryService = Depends(get_summary_service)
+    summary_service: SummaryService = Depends(get_summary_service),
+    user: dict = Depends(get_current_user)
 ):
     """
     Retrieve multiple summaries by their email IDs, generating any that don't exist.
@@ -237,8 +248,10 @@ async def get_summaries_by_ids(
         List[SummarySchema]: List of found or newly generated summaries
     """
     try:
+        user_id = str(user.get("_id", user.get("google_id")))
+        
         # Get existing summaries first
-        existing_summaries = await summary_service.get_summaries_by_ids(ids)
+        existing_summaries = await summary_service.get_summaries_by_ids(ids, user_id)
         
         # Check if we need to generate any missing summaries
         found_ids = {summary.email_id for summary in existing_summaries}
@@ -248,7 +261,7 @@ async def get_summaries_by_ids(
         new_summaries = []
         for email_id in missing_ids:
             try:
-                summary = await summary_service.get_or_create_summary(email_id, summarizer)
+                summary = await summary_service.get_or_create_summary(email_id, summarizer, user_id)
                 new_summaries.append(summary)
             except Exception as e:
                 logging.warning(f"Could not auto-generate summary for email {email_id}: {e}")
@@ -268,7 +281,8 @@ async def get_summaries_by_ids(
 async def get_summary_by_id(
     email_id: str,
     summarizer: AdaptiveSummarizer[EmailSchema] = Depends(get_summarizer),
-    summary_service: SummaryService = Depends(get_summary_service)
+    summary_service: SummaryService = Depends(get_summary_service),
+    user: dict = Depends(get_current_user)
 ):
     """
     Retrieve a specific summary by email ID, generating it if not found.
@@ -280,7 +294,8 @@ async def get_summary_by_id(
         SummarySchema: Summary found or newly generated
     """
     try:
-        return await summary_service.get_or_create_summary(email_id, summarizer)
+        user_id = str(user.get("_id", user.get("google_id")))
+        return await summary_service.get_or_create_summary(email_id, summarizer, user_id)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
@@ -290,7 +305,8 @@ async def get_summary_by_id(
 @router.delete("/{email_id}")
 async def delete_summary(
     email_id: str,
-    summary_service: SummaryService = Depends(get_summary_service)
+    summary_service: SummaryService = Depends(get_summary_service),
+    user: dict = Depends(get_current_user)
 ):
     """
     Delete a specific summary.
@@ -304,7 +320,8 @@ async def delete_summary(
     Raises:
         HTTPException: If summary not found
     """
-    deleted = await summary_service.delete_summary(email_id)
+    user_id = str(user.get("_id", user.get("google_id")))
+    deleted = await summary_service.delete_summary(email_id, user_id)
     if not deleted:
         raise HTTPException(
             status_code=404,
@@ -316,7 +333,8 @@ async def delete_summary(
 async def search_by_keyword(
     keyword: str,
     limit: int = Query(10, ge=1, le=50, description="Maximum number of results"),
-    summary_service: SummaryService = Depends(get_summary_service)
+    summary_service: SummaryService = Depends(get_summary_service),
+    user: dict = Depends(get_current_user)
 ):
     """
     Search for summaries containing a specific keyword.
@@ -329,7 +347,8 @@ async def search_by_keyword(
         List[SummarySchema]: Matching summaries
     """
     try:
-        results = await summary_service.search_by_keywords([keyword], limit=limit)
+        user_id = str(user.get("_id", user.get("google_id")))
+        results = await summary_service.search_by_keywords([keyword], limit=limit, user_id=user_id)
         return results
     except Exception as e:
         logging.error(f"Error searching summaries by keyword: {str(e)}", exc_info=True)
@@ -342,7 +361,8 @@ async def search_by_keyword(
 async def get_recent_summaries(
     days: int = Path(...),
     limit: int = Query(20, ge=1, le=100, description="Maximum number of results"),
-    summary_service: SummaryService = Depends(get_summary_service)
+    summary_service: SummaryService = Depends(get_summary_service),
+    user: dict = Depends(get_current_user)
 ):
     """
     Get summaries generated within recent days.
@@ -355,7 +375,8 @@ async def get_recent_summaries(
         List[SummarySchema]: Recent summaries
     """
     try:
-        results = await summary_service.get_recent_summaries(days=days, limit=limit)
+        user_id = str(user.get("_id", user.get("google_id")))
+        results = await summary_service.get_recent_summaries(days=days, limit=limit, user_id=user_id)
         return results
     except Exception as e:
         logging.error(f"Error retrieving recent summaries: {str(e)}", exc_info=True)
