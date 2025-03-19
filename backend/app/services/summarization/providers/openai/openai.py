@@ -1,4 +1,4 @@
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict, TypeVar
 from datetime import datetime, timezone
 import asyncio
 import json
@@ -15,9 +15,15 @@ from tenacity import (
     retry_if_exception_type
 )
 # internal
-from ..base import AdaptiveSummarizer
-from ..types import ModelBackend, ModelConfig
+from app.services.summarization.base import AdaptiveSummarizer
+from app.services.summarization.types import ModelBackend, ModelConfig
 from app.models import EmailSchema, SummarySchema
+from app.utils.config import ProviderModel, SummarizerProvider
+from app.services.summarization.prompts import PromptManager
+from .prompts import OpenAIPromptManager
+from app.utils.config import PromptVersion
+
+T = TypeVar('T')
 
 class OpenAIBackend(ModelBackend):
     """OpenAI implementation of the ModelBackend protocol."""
@@ -25,28 +31,16 @@ class OpenAIBackend(ModelBackend):
     def __init__(
         self,
         api_key: str,
-        model: str = "gpt-4o-mini",
+        prompt_manager: PromptManager,
+        model: str = ProviderModel.default_for_provider(SummarizerProvider.OPENAI),
         temperature: float = 0.3,
-        max_tokens: int = 150
+        max_tokens: int = 150,
     ):
         self.client = AsyncOpenAI(api_key=api_key)
+        self.prompt_manager = prompt_manager
         self.model = model
         self.temperature = temperature
         self.max_tokens = max_tokens
-        
-    def _create_system_prompt(self) -> str:
-        return (
-            "You are a precise email summarizer. Create a concise, factual "
-            "single-sentence summary that captures the key message or request. "
-            "Additionally, extract 3-5 key topics or themes. "
-            "Format your response as JSON with 'summary' and 'keywords' fields."
-        )
-        
-    def _create_user_prompt(self, content: str) -> str:
-        return (
-            "Please summarize this email and extract key topics.\n\n"
-            f"Email Content:\n{content}"
-        )
 
     @retry(
         retry=retry_if_exception_type((
@@ -62,12 +56,18 @@ class OpenAIBackend(ModelBackend):
         content: str,
         config: Optional[ModelConfig] = None
     ) -> tuple[str, List[str]]:
-        """Generate a summary for a single email."""
+        """Generate a summary for a single email using managed prompts."""
         cfg = config or {}
         
         messages = [
-            {"role": "system", "content": self._create_system_prompt()},
-            {"role": "user", "content": self._create_user_prompt(content)}
+            {
+                "role": "system", 
+                "content": self.prompt_manager.get_system_prompt()
+             },
+            {
+                "role": "user", 
+                "content": self.prompt_manager.get_user_prompt(content)
+            }
         ]
         
         response = await self.client.chat.completions.create(
@@ -75,7 +75,7 @@ class OpenAIBackend(ModelBackend):
             messages=messages,
             temperature=cfg.get("temperature", self.temperature),
             max_tokens=cfg.get("max_tokens", self.max_tokens),
-            response_format={"type": "json_object"}
+            response_format=self.prompt_manager.get_response_format()
         )
         
         # Parse the response
@@ -87,6 +87,7 @@ class OpenAIBackend(ModelBackend):
             summary = response.choices[0].message.content
             return summary.strip(), []
 
+    # TODO: Implement batch processing in a more efficient way that actually lowers resource usage and token limits ie. chunking
     async def batch_generate_summaries(
         self,
         contents: List[str],
@@ -104,23 +105,34 @@ class OpenAIBackend(ModelBackend):
             *[_process_with_semaphore(content) for content in contents]
         )
 
+    @property
+    def model_info(self) -> Dict[str, str]:
+        return {
+            "provider": "OpenAI",
+            "model": self.model
+        }
+
 class OpenAIEmailSummarizer(AdaptiveSummarizer[EmailSchema]):
     """Email summarizer implementation using OpenAI's API."""
     
     def __init__(
         self,
         api_key: str,
-        model: str = "gpt-4-turbo-preview", # Redundant
+        model: str = "gpt-4o-mini",
         batch_threshold: int = 10,
         max_batch_size: int = 50,
-        timeout: float = 30.0
+        timeout: float = 30.0,
+        prompt_version: PromptVersion = PromptVersion.latest(),
     ):
+        prompt_manager = OpenAIPromptManager(prompt_version=prompt_version)
         backend = OpenAIBackend(
             api_key=api_key,
-            model=model
+            prompt_manager=prompt_manager,
+            model=model,
         )
         super().__init__(
             model_backend=backend,
+            prompt_manager=prompt_manager,
             batch_threshold=batch_threshold,
             max_batch_size=max_batch_size,
             timeout=timeout
@@ -147,5 +159,6 @@ class OpenAIEmailSummarizer(AdaptiveSummarizer[EmailSchema]):
             email_id=email_id,
             summary_text=summary_text,
             keywords=keywords,
-            generated_at=datetime.now(timezone.utc)
+            generated_at=datetime.now(timezone.utc),
+            model_info=self._backend.model_info
         )

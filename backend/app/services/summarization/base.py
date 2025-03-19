@@ -5,7 +5,14 @@ import asyncio
 import logging
 
 from app.models import SummarySchema, EmailSchema
-from .types import ModelBackend, ProcessingStrategy, SummaryMetrics, ModelConfig
+from app.services.summarization.types import(
+    ModelBackend, 
+    ProcessingStrategy, 
+    SummaryMetrics, 
+    ModelConfig
+) 
+from app.services.summarization.prompts import PromptManager
+from app.utils.config import PromptVersion
 
 """ ( Pipeline )
     EmailSchema → content preparation → LLM processing → SummarySchema
@@ -23,12 +30,14 @@ class AdaptiveSummarizer(ABC, Generic[T]):
     def __init__(
         self,
         model_backend: ModelBackend,
+        prompt_manager: PromptManager,
         batch_threshold: int = 10,
         max_batch_size: int = 50,
         timeout: float = 30.0,
         model_config: Optional[ModelConfig] = None
     ):
         self._backend = model_backend
+        self._prompt_manager = prompt_manager
         self.batch_threshold = batch_threshold
         self.max_batch_size = max_batch_size
         self.timeout = timeout
@@ -55,8 +64,20 @@ class AdaptiveSummarizer(ABC, Generic[T]):
         summary_text: str,
         keywords: List[str]
     ) -> SummarySchema:
-        """Create a SummarySchema instance from processing results"""
-        raise NotImplementedError
+        """Create a SummarySchema from processing results."""
+        
+        model_info = self._backend.model_info if hasattr(self._backend, 'model_info') else {
+            "provider": "Unknown",
+            "model": "Unknown"
+        }
+        
+        return SummarySchema(
+            email_id=email_id,
+            summary_text=summary_text,
+            keywords=keywords,
+            generated_at=datetime.now(timezone.utc),
+            model_info=model_info  # Make sure this is always passed
+        )
 
     async def process_single(self, email: T) -> SummarySchema:
         """Process a single item through the model pipeline"""
@@ -176,6 +197,14 @@ class AdaptiveSummarizer(ABC, Generic[T]):
                 if len(items) < self.batch_threshold:
                     return [await self.process_single(item) for item in items]
                 return await self.process_batch(items)
+
+    @property
+    def prompt_manager(self) -> PromptManager:
+        return self._prompt_manager
+
+    @property
+    def prompt_version(self) -> PromptVersion:
+        return self._prompt_version
 
     @property
     def metrics(self) -> List[SummaryMetrics]:

@@ -1,135 +1,239 @@
 import os
-import pickle
 from google_auth_oauthlib.flow import Flow
 from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
 from dotenv import load_dotenv
 from fastapi import HTTPException, status
+from pydantic import BaseModel
+from typing import Optional, Dict
+from app.models import UserSchema
+from database import db
+from google.oauth2.credentials import Credentials
+from starlette.concurrency import run_in_threadpool
+from app.utils.config import get_settings
 
-load_dotenv()
+settings = get_settings()
 
-SCOPES = ['https://mail.google.com/']
+SCOPES = [
+    'https://mail.google.com/',
+    'https://www.googleapis.com/auth/userinfo.email',
+    'openid',
+    'https://www.googleapis.com/auth/userinfo.profile'
+]
 
-def create_authorization_url():
-    # Load client ID and client secret from environment variables
-    client_id = os.getenv('GOOGLE_CLIENT_ID')
-    client_secret = os.getenv('GOOGLE_CLIENT_SECRET')
+# Debugging helper function
+def debug(message: str):
+    print(f"[DEBUG] {message}")
+
+class TokenData(BaseModel):
+    token: str
+    refresh_token: Optional[str] = None
+    token_uri: str
+    client_id: str
+    client_secret: str
+    scopes: list
+
+def create_authorization_url(custom_state=None) -> Dict[str, str]:
+    """ Generates Google OAuth2 authorization URL """
+    debug("Generating Google OAuth2 authorization URL...")
+    
+    client_id = settings.google_client_id
+    client_secret = settings.google_client_secret
 
     if not client_id or not client_secret:
-        raise Exception("Google API credentials not found in environment variables.")
+        debug("[ERROR] Google API credentials missing.")
+        raise HTTPException(status_code=500, detail="Google API credentials not found in settings.")
 
-    # Construct the client configuration
-    client_config = {
-        "web": {  # Changed from "installed" to "web"
-            "client_id": client_id,
-            "client_secret": client_secret,
-            "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-            "token_uri": "https://oauth2.googleapis.com/token",
-            "redirect_uris": get_redirect_uri()
-        }
-    }
-
-    flow = Flow.from_client_config(client_config, SCOPES)
-    flow.redirect_uri = get_redirect_uri()
-    
-    authorization_url, state = flow.authorization_url(
-        access_type='offline',
-        include_granted_scopes='true'
-    )
-    
-    return authorization_url, state
-
-def get_tokens_from_code(code):
-    client_id = os.getenv('GOOGLE_CLIENT_ID')
-    client_secret = os.getenv('GOOGLE_CLIENT_SECRET')
-    
     client_config = {
         "web": {
             "client_id": client_id,
             "client_secret": client_secret,
             "auth_uri": "https://accounts.google.com/o/oauth2/auth",
             "token_uri": "https://oauth2.googleapis.com/token",
-            "redirect_uris": get_redirect_uri()
+            "redirect_uris": [get_redirect_uri()]
         }
     }
 
     flow = Flow.from_client_config(client_config, SCOPES)
     flow.redirect_uri = get_redirect_uri()
+
+    debug(f"Using redirect URI: {flow.redirect_uri}")
+# Use our custom state if provided, otherwise Flow will generate one
+    if custom_state:
+        authorization_url, _ = flow.authorization_url(
+            access_type='offline',
+            include_granted_scopes='true',
+            state=custom_state
+        )
+    else:
+        authorization_url, state = flow.authorization_url(
+            access_type='offline',
+            include_granted_scopes='true'
+        )
+        custom_state = state
+
+    return {"authorization_url": authorization_url, "state": custom_state}
+
+async def get_tokens_from_code(code: str, user_email: str) -> Dict[str, str]:
+    """ Exchanges authorization code for access & refresh tokens, then stores them in the database """
+    debug(f"Exchanging authorization code for tokens... User: {user_email}")
+
+    try:
+        client_id = settings.google_client_id
+        client_secret = settings.google_client_secret
+
+        client_config = {
+            "web": {
+                "client_id": client_id,
+                "client_secret": client_secret,
+                "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+                "token_uri": "https://oauth2.googleapis.com/token",
+                "redirect_uris": [get_redirect_uri()]
+            }
+        }
+
+        flow = Flow.from_client_config(client_config, SCOPES)
+        flow.redirect_uri = get_redirect_uri()
+        flow.fetch_token(code=code)
+        credentials = flow.credentials
+
+        debug("Token successfully fetched from Google.")
+
+        token_data = {
+            'token': credentials.token,
+            'refresh_token': credentials.refresh_token,
+            'token_uri': credentials.token_uri,
+            'client_id': credentials.client_id,
+            'client_secret': credentials.client_secret,
+            'scopes': credentials.scopes
+        }
+
+        # If we have a user_email, store the tokens in the database
+        if user_email:
+            debug(f"Storing tokens in database for {user_email}...")
+            # Store in MongoDB
+            await db.tokens.update_one(
+                {"user_email": user_email},
+                {"$set": token_data},
+                upsert=True
+            )
+            debug("Tokens successfully stored.")
+
+        return token_data
+    except Exception as e:
+        debug(f"[ERROR] Auth code exchange failed: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Auth code exchange failed: {str(e)}")
+
+async def get_credentials(user_email: str) -> Optional[TokenData]:
+    """ Retrieves credentials from the database, refreshing the token if needed """
+    debug(f"Retrieving credentials for user: {user_email}")
+
+    token_record = await db.tokens.find_one({"user_email": user_email})
     
-    flow.fetch_token(code=code)
-    credentials = flow.credentials
-    
-    return {
-        'token': credentials.token,
-        'refresh_token': credentials.refresh_token,
-        'token_uri': credentials.token_uri,
-        'client_id': credentials.client_id,
-        'client_secret': credentials.client_secret,
-        'scopes': credentials.scopes
-    }
+    if not token_record:
+        debug("[ERROR] No credentials found in database.")
+        raise HTTPException(status_code=401, detail="No credentials found. User needs to authenticate.")
+
+    credentials = TokenData(**token_record)
+    debug(f"Credentials found for user: {user_email}")
+
+    # Refresh if expired
+    if not credentials.token:
+        debug("[ERROR] Stored token is invalid. Re-authentication required.")
+        raise HTTPException(status_code=401, detail="Invalid token stored. Please re-authenticate.")
+
+    # Refresh if expired
+    if credentials.refresh_token:
+        try:
+            debug("Refreshing token...")
+            flow = Flow.from_client_config({
+                "web": {
+                    "client_id": credentials.client_id,
+                    "client_secret": credentials.client_secret,
+                    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+                    "token_uri": "https://oauth2.googleapis.com/token",
+                    "redirect_uris": [get_redirect_uri()]
+                }
+            }, SCOPES)
+            flow.credentials.refresh(Request())
+            
+            
+            # Update the database with the new token
+            await db.tokens.update_one(
+                {"user_email": user_email},
+                {"$set": {"token": flow.credentials.token}}
+            )
+
+            debug("Token successfully refreshed.")
+            return flow.credentials.token
+
+        except Exception as e:
+            debug(f"[ERROR] Token refresh failed: {str(e)}")
+            raise HTTPException(status_code=401, detail=f"Token refresh failed: {str(e)}")
+
+    return credentials.token
 
 def get_redirect_uri():
-    """
-    Returns the backend callback URL for OAuth
-    Can be overridden with OAUTH_CALLBACK_URL environment variable
-    """
-    # Allow complete override through env var
-    if callback_url := os.getenv('OAUTH_CALLBACK_URL'):
+    """ Returns the backend callback URL for OAuth """
+    debug("Retrieving redirect URI...")
+
+    if callback_url := settings.oauth_callback_url:
+        debug(f"Using environment-specified callback URL: {callback_url}")
         return callback_url
-    
-    # Otherwise build based on environment
-    environment = os.getenv('ENVIRONMENT', 'development')
-    base_url = os.getenv('BACKEND_BASE_URL')
-    
+
+    environment = settings.environment
+    base_url = settings.backend_base_url
+
     if base_url:
-        # Use configured base URL
         return f"{base_url.rstrip('/')}/auth/callback"
     elif environment == 'development':
         return 'http://localhost:8000/auth/callback'
     else:
         return 'https://ee-backend-w86t.onrender.com/auth/callback'
 
-def get_credentials():
+
+async def get_credentials_from_token(token: str):
     """
-    Retrieves or creates Google OAuth2 credentials
+    Validates a token and returns user information from Google.
+    Used for authenticating API requests.
     """
-    client_id = os.getenv('GOOGLE_CLIENT_ID')
-    client_secret = os.getenv('GOOGLE_CLIENT_SECRET')
-    
-    if not client_id or not client_secret:
-        raise Exception("Google API credentials not found in environment variables.")
+    debug("Validating token and retrieving user information...")
+
+    try:
+        # Create credentials object from the token
+        credentials = Credentials(
+            token=token,
+            token_uri="https://oauth2.googleapis.com/token",
+            client_id=settings.google_client_id,
+            client_secret=settings.google_client_secret
+        )
         
-    # Try to load existing credentials
-    creds = None
-    token_path = 'token.pickle'
-    if os.path.exists(token_path):
-        with open(token_path, 'rb') as token:
-            creds = pickle.load(token)
-    
-    # If no valid credentials available, create new ones
-    if not creds or not creds.valid:
-        if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
-        else:
-            # Create new flow if we can't refresh
-            client_config = {
-                "web": {
-                    "client_id": client_id,
-                    "client_secret": client_secret,
-                    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-                    "token_uri": "https://oauth2.googleapis.com/token",
-                    "redirect_uris": [get_redirect_uri()]
-                }
-            }
-            flow = Flow.from_client_config(client_config, SCOPES)
-            flow.redirect_uri = get_redirect_uri()
-            
-            # Note: This will raise an exception if we don't have a valid token
-            # The frontend should handle this by redirecting to the login flow
-            raise Exception("No valid credentials available. User needs to authenticate.")
-    
-    # Save the credentials for future use
-    with open(token_path, 'wb') as token:
-        pickle.dump(creds, token)
-    
-    return creds
+        # Run potentially blocking Google API call in threadpool
+        service = await run_in_threadpool(lambda: 
+            build('oauth2', 'v2', credentials=credentials)
+        )
+        
+        # Run potentially blocking Google API call in threadpool
+        user_info = await run_in_threadpool(lambda: 
+            service.userinfo().get().execute()
+        )
+
+        if not user_info or not user_info.get('email'):
+            debug("[ERROR] Unable to retrieve user email from token.")
+            raise ValueError("Unable to retrieve user email from token")
+
+        debug(f"User info retrieved: {user_info.get('email')}")
+
+        # Return both user info and credentials
+        return {
+            'user_info': user_info,
+            'credentials': credentials,
+            'email': user_info.get('email')
+        }
+        
+    except Exception as e:
+        debug(f"[ERROR] Token validation failed: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, 
+            detail=f"Invalid token: {str(e)}"
+        )
