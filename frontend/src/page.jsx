@@ -28,15 +28,20 @@ export default function Page() {
   });
 
   useEffect(() => {
-    const hash = window.location.hash;
-    if (hash && hash.startsWith("#auth=")) {
-      handleOAuthCallback(handleAuthenticate);
+    if (!loggedIn) {
+      const intervalId = setInterval(() => {
+        const hash = window.location.hash;
+        if (hash && hash.startsWith("#auth=")) {
+          handleOAuthCallback(handleAuthenticate);
+        }
+        const code = window.location.href;
+        if (code && code.includes("code=")) {
+          handleOAuthCallback(handleAuthenticate);
+        }
+      }, 1000);
+      return () => clearInterval(intervalId);
     }
-    const code = window.location.href;
-    if (code && code.includes("code=")) {
-      handleOAuthCallback(handleAuthenticate);
-    }
-  }, []); // In array put State/Variable that will update once user is logged in
+  }, [loggedIn]); // In array put State/Variable that will update once user is logged in
 
   const handleAuthenticate = async (token) => {
     try {

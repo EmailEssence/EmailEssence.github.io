@@ -11,32 +11,30 @@ const parseURL = (url) => {
 };
 
 export const authenticate = async () => {
-  console.log("f1 point 1");
   // Check for auth hash and render OAuthCallback if present
   try {
     const redirect_uri = window.location.origin;
-    const response = await fetch(
-      `${baseUrl}/auth/login?redirect_uri=${redirect_uri}`
-    );
-    const data = await response.json();
-    console.log("f1 point 2");
-    if (data.authorization_url) {
-      window.open(data.authorization_url);
-      console.log("f1 point 3");
-      // window.location.href = data.authorization_url;
-    }
+    // const response = await fetch(
+    //   `${baseUrl}/auth/login?redirect_uri=${redirect_uri}`
+    // );
+    window.open(`${baseUrl}/auth/login?redirect_uri=${redirect_uri}`);
+    // const data = await response.json();
+    // console.log("f1 point 2");
+    // if (data.authorization_url) {
+    //   window.open(data.authorization_url);
+    //   console.log("f1 point 3");
+    //   // window.location.href = data.authorization_url;
+    // }
   } catch (error) {
     console.error("Login Error", error);
   } finally {
-    console.log("user is now logged in");
+    console.log("End authenticate function");
   }
 };
 
 export const handleOAuthCallback = async (handleAuthenticate) => {
   const hash = window.location.hash;
-  console.log("in hash function");
   if (hash && hash.startsWith("#auth=")) {
-    console.log("In hash hash");
     try {
       const encodedState = hash.substring(6);
       const authState = JSON.parse(decodeURIComponent(encodedState));
@@ -52,6 +50,7 @@ export const handleOAuthCallback = async (handleAuthenticate) => {
     }
   } else if (parseURL(window.location.href) !== "") {
     try {
+      console.log("In parseurl")
       const code = parseURL(window.location.href);
       const encodedState = code;
       console.log("encoded State: " + encodedState);
