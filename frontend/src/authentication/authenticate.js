@@ -11,15 +11,18 @@ const parseURL = (url) => {
 };
 
 export const authenticate = async () => {
-  console.log("Reached authenticate()");
+  console.log("f1 point 1");
   // Check for auth hash and render OAuthCallback if present
   try {
+    const redirect_uri = window.location.origin;
     const response = await fetch(
-      `${baseUrl}/auth/login?redirect_uri=http://localhost:3000`
+      `${baseUrl}/auth/login?redirect_uri=${redirect_uri}`
     );
     const data = await response.json();
+    console.log("f1 point 2");
     if (data.authorization_url) {
       window.open(data.authorization_url);
+      console.log("f1 point 3");
       // window.location.href = data.authorization_url;
     }
   } catch (error) {

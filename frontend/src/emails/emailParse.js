@@ -1,10 +1,9 @@
 import ems from "./retrieve_emails_response.json" with { type: 'json' };
 import sums from "./summarize_email_response.json" with { type: 'json' };
-export const isDevMode = true;
+export const isDevMode = false;
 export const baseUrl = isDevMode
   ? "http://localhost:8000"
-  : "http://localhost:8000";
-// https://ee-backend-w86t.onrender.com
+  : "https://ee-backend-w86t.onrender.com";
 
 async function getEmails(extension) {
   try {

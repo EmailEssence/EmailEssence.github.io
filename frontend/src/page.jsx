@@ -27,19 +27,6 @@ export default function Page() {
     theme: "light",
   });
 
-  useEffect(() => { // Get user preferences from the server and set the default user preferences state
-    const user_id = " "; // replace with actual user ID
-    async function getUserPreferences() {
-      try {
-        const preferences = await fetchUserPreferences(user_id);
-        setDefaultUserPreferences(preferences);
-      } catch (error) {
-        console.error(error);
-      }
-    }
-    getUserPreferences();
-  }, []);
-
   useEffect(() => {
     const hash = window.location.hash;
     if (hash && hash.startsWith("#auth=")) {
@@ -56,25 +43,47 @@ export default function Page() {
       setLoading(true);
       // Persist token
       localStorage.setItem("auth_token", token);
+      retrieveUserData();
+      setLoggedIn(true);
+      setAuthChanged(true); // Update authChanged state
+    } catch (error) {
+      handleAuthError(error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  const retrieveUserData = async () => {
+    try {
+      const user_id = null; // Get user ID
       const emails = await fetchEmails(0);
       if (!Array.isArray(emails)) {
         throw new Error("Invalid email response format");
       }
       const emailArray = Array.isArray(emails) ? emails : [];
-      console.log(emailArray);
       setEmailsByDate(emailArray);
-      setLoggedIn(true);
-      setAuthChanged(true); // Update authChanged state
+      if (user_id) getUserPreferences(user_id);
     } catch (error) {
-      console.error("Auth flow error:", error);
-      // Clear invalid token
-      localStorage.removeItem("auth_token");
-      setEmailsByDate([]);
-      setAuthChanged(true); // Update authChanged state
-    } finally {
-      setLoading(false);
+      handleAuthError(error);
     }
+  };
+
+  // Get user preferences from the server and set the default user preferences state
+  const getUserPreferences = async (user_id) => {
+    try {
+      const preferences = await fetchUserPreferences(user_id);
+      setDefaultUserPreferences(preferences);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleAuthError = (error) => {
+    console.error("Auth flow error:", error);
+    // Clear invalid token
+    localStorage.removeItem("auth_token");
+    setEmailsByDate([]);
+    setAuthChanged(true); // Update authChanged state
   };
 
   const display = () => {
