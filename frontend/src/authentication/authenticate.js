@@ -17,8 +17,6 @@ export const authenticate = async () => {
     window.location.href = `${baseUrl}/auth/login?redirect_uri=${redirect_uri}`;
   } catch (error) {
     console.error("Login Error", error);
-  } finally {
-    console.log("End authenticate function");
   }
 };
 
@@ -33,7 +31,6 @@ export const handleOAuthCallback = async (handleAuthenticate) => {
         const isAuthenticated = checkAuthStatus(authState.token);
         if (isAuthenticated) {
           handleAuthenticate(authState.token);
-          console.log(" we made it");
         } else {
           console.log("not authenticated");
         }
@@ -47,7 +44,6 @@ export const handleOAuthCallback = async (handleAuthenticate) => {
     try {
       const encodedState = parseURL(window.location.href);
       if (!containsEncodedComponents(encodedState)) {
-        console.log("doesnt contain encoded components");
         throw new Error("Wrong State");
       }
       const unencoded = decodeURIComponent(encodedState); //unrecognized: (%), (/)
@@ -56,7 +52,6 @@ export const handleOAuthCallback = async (handleAuthenticate) => {
         const isAuthenticated = checkAuthStatus(authState.token);
         if (isAuthenticated) {
           handleAuthenticate(authState.token);
-          console.log("we made it");
         } else {
           console.log("not authenticated");
         }

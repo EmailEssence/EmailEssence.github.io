@@ -88,7 +88,6 @@ export default async function fetchEmails(numRequested) {
         received_at: parseDate(email.received_at),
       };
     });
-    console.log(processedEmails);
     return processedEmails;
   } catch (error) {
     console.error("Email processing error:", error);

@@ -41,7 +41,6 @@ export default function Page() {
       } else {
         try {
           checkAuthStatus(localStorage.getItem("auth_token"));
-          console.log("Status checking");
         } catch (e) {
           console.log(e);
         }
