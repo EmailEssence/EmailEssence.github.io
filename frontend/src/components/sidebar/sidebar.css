@@ -35,6 +35,7 @@
   font-weight: 600;
 }
 
+/* dynamic icon constraints */
 .sidebar .icon > div {
   height: calc(var(--sidebar-icon-height) - 0.8vw);
   width: calc(var(--sidebar-icon-height) - 0.8vw);
@@ -47,13 +48,13 @@
   width: calc(var(--sidebar-icon-height) - 0.2vw);
 }
 
-/* controls color of icon and icon text when button is unselected */
+/* controls color of icon, and icon text when button is unselected */
 .sidebar .container .icon,
 .sidebar .container .icon p {
   color: var(--color-icon);
 }
 
-/* controls color of icon and icon text when button is selected */
+/* controls color of icon, icon text, and background when button is selected */
 .sidebar .container.selected .icon,
 .sidebar .container.selected .icon p {
   color: var(--color-icon);
