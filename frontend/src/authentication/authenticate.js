@@ -68,8 +68,7 @@ function containsEncodedComponents(x) {
   // ie ?,=,&,/ etc
   return decodeURI(x) !== decodeURIComponent(x);
 }
-//localhost:3000/auth/callback?state=eyJyZWRpcmVjdF91cmkiOiAiaHR0cDovL2xvY2FsaG9zdDozMDAwIiwgIm5vbmNlIjogImVhZTIwMjY2LWY0NjQtNDNjMi04NjY4LTcwMDljMGEwYjRlZSJ9&code=4/0AQSTgQEI2xz3ik8iEsE4GvWonHueX_ZDIUc8CEbtbh7aDTMaT3MkFMJxQwSL89ztSzWP9g&scope=email%20profile%20https://mail.google.com/%20openid%20https://www.googleapis.com/auth/userinfo.profile%20https://www.googleapis.com/auth/userinfo.email&authuser=1&prompt=consent
-//localhost:3000/auth/callback?state=eyJyZWRpcmVjdF91cmkiOiAiaHR0cDovL2xvY2FsaG9zdDozMDAwIiwgIm5vbmNlIjogIjM5MGVkZTZhLTVmNjMtNGQyYi04OWQwLWJjNjMwNDlhOWY1MyJ9&code=4%2F0AQSTgQGNmXUrk2Bzczx7ws3cpU-57UyfgGthRb_q708oqAyjx_IRUq6f8Nwf34RMpv6sDw&scope=email+profile+openid+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.profile+https%3A%2F%2Fmail.google.com%2F+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.email&authuser=1&prompt=none#
+
 export const checkAuthStatus = async (token) => {
   const option = {
     method: "GET",
