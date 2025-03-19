@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { baseUrl } from '../../emails/emailParse';
 import "./settings.css";
 
 export function Settings ({
@@ -10,7 +11,7 @@ export function Settings ({
   handleSetTheme,
 }) {
   const isDarkTheme = useSystemTheme();
-
+  // useEffect that sets the dark mode class when the theme is set to system
   useEffect(() => {
     if (theme === 'system') {
       if (isDarkTheme) {
@@ -131,19 +132,99 @@ const useSystemTheme = () => {
   return isDarkTheme;
 };
 
-
-
-// need to test these
-// my attempt at a function that gets the user preferences from the backend
-export const fetchUserPreferences = async (user_id) => {
-  const response = await fetch(`http://localhost:8000/user/${user_id}/preferences`);
+//  @router.get("/me"), gets current users profile, Retrieves the authenticated user's profile 
+export const fetchUserProfile = async() =>{
+  const response = await fetch(`${baseUrl}/user/me`, {
+    headers: {
+    },
+  });
   if (!response.ok) {
-    throw new Error(`Failed to fetch ${response.status}`);
+    throw new Error(`Failed to fetch users profile ${response.status}`);
   }
   return response.json();
-} 
+}
 
-// my attempt at a function saves the user preferences to the backend
+// @router.get("/preferences"), gets the user preferences, Retrieves the authenticated user's preferences settings
+export const fetchUserPreferences = async () => {
+  const response = await fetch(`${baseUrl}/user/preferences`, {
+    headers: {
+      Authorization: 'Bearer ${token}',
+      "Content-Type": "application/json",
+    },
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to fetch user preferences ${response.status}`);
+  }
+  return response.json();
+}
+
+// @router.put("/preferences"), updates the user preferences, Updates the authenticated user's preferences settings
+export const updateUserPreferences = async () => {
+  const response = await fetch('${baseUrl}/user/preferences', {
+    headers: {
+      Authorization: 'Bearer ${token}',
+      "Content-Type": "application/json",
+    },
+  });
+  if (!response.ok) {
+    throw new Error('Failed to update user preferences ${response.status}');
+  }
+  return response.json();
+}
+
+// @router.get ("/user_id"). gets user by ID, retrieves user information by user ID
+export const fetchUserById = async (user_id) => {
+  const response = await fetch('${baseUrl}/user/${user_id}', {
+    headers: {
+      Authorization: 'Bearer ${token}',
+      "Content-Type": "application/json",
+    }
+  });
+  if (!response.ok) {
+    throw new Error('Failed to fetch user by ID ${response.status}');
+  }
+  return response.json();
+}
+
+// @router.put("/user_id"), updates user, updates user information by user ID
+export const updateUserById = async (user_id) => {
+  const response = await fetch('${baseUrl}/user/${user_id}', {
+    headers: {
+      Authorization: 'Bearer ${token}',
+      "Content-Type": "application/json",
+    }
+  });
+  if (!response.ok) {
+    throw new Error('Failed to update user by ID ${response.status}');
+  }
+  return response.json();
+}
+
+// @router.delete( "/user_id"), deletes user, deletes user account by user ID
+export const deleteUserById = async (user_id) => {
+  const response = await fetch('${baseUrl}/user/${user_id}', {
+    headers: {
+      Authorization: 'Bearer ${token}',
+      "Content-Type": "application/json",
+    }
+  });
+  if (!response.ok) {
+    throw new Error('Failed to delete user by ID ${response.status}');
+  }
+  return response.json();
+}
+
+
+// function that gets the user preferences from the backend
+// export const fetchUserPreferences = async (user_id) => {
+//   const response = await fetch(`http://localhost:8000/preferences`);
+//   if (!response.ok) {
+//     throw new Error(`Failed to fetch ${response.status}`);
+//   }
+//   return response.json();
+// } 
+
+// function saves the user preferences to the backend
 export const saveUserPreferences = async (userPreferences) => {
   const response = await fetch(`http://localhost:8000/user/${user_id}/preferences`, {
     method: 'PUT',

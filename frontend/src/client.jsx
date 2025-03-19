@@ -8,7 +8,15 @@ import SideBar from "./components/sidebar/sidebar";
 import fetchEmails, { fetchDev, isDevMode } from "./emails/emailParse";
 import { clientReducer, userPreferencesReducer } from "./reducers";
 
-export default function Client({ emailsByDate, setEmailsByDate, defaultUserPreferences = { isChecked: true, emailFetchInterval: 120, theme: "light" } }) {
+export default function Client({
+  emailsByDate,
+  setEmailsByDate,
+  defaultUserPreferences = {
+    isChecked: true,
+    emailFetchInterval: 120,
+    theme: "light",
+  },
+}) {
   const [client, dispatchClient] = useReducer(clientReducer, {
     curPage: "dashboard",
     expandedSideBar: false,
@@ -20,17 +28,17 @@ export default function Client({ emailsByDate, setEmailsByDate, defaultUserPrefe
   );
 
   useEffect(() => {
-    const clock = setInterval(() => {
-      try {
-        const newEmails = isDevMode ? fetchDev() : fetchEmails(0);
-        if (newEmails.length !== emailsByDate.length)
-          setEmailsByDate(newEmails);
-        console.log("emails loaded");
-      } catch (error) {
-        console.error(`Loading Emails Error: ${error}`);
-      }
-    }, userPreferences.emailFetchInterval * 1000);
-    return () => clearInterval(clock);
+    // const clock = setInterval(() => {
+    //   try {
+    //     const newEmails = isDevMode ? fetchDev() : fetchEmails(0);
+    //     if (newEmails.length !== emailsByDate.length)
+    //       setEmailsByDate(newEmails);
+    //     console.log("emails loaded");
+    //   } catch (error) {
+    //     console.error(`Loading Emails Error: ${error}`);
+    //   }
+    // }, userPreferences.emailFetchInterval * 1000);
+    // return () => clearInterval(clock);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userPreferences.emailFetchInterval]);
 
