@@ -1,10 +1,13 @@
 import logging
 from typing import List, Optional
-from fastapi import APIRouter, HTTPException, Query, Depends
+from fastapi import APIRouter, HTTPException, Query, Depends, status
 from pydantic import BaseModel
 from app.services import EmailService
 from app.models import EmailSchema, ReaderViewResponse
 from functools import lru_cache
+from fastapi.security import OAuth2PasswordBearer
+from app.services.auth_service import get_credentials_from_token
+from app.routers.user_router import get_current_user_info, get_current_user
 
 router = APIRouter()
 
@@ -49,7 +52,8 @@ async def retrieve_emails(
     sort_by: str = Query(default="received_at", enum=["received_at", "sender", "subject"]),
     sort_order: str = Query(default="desc", enum=["asc", "desc"]),
     refresh: bool = Query(default=False, description="Whether to refresh emails from IMAP first"),
-    email_service: EmailService = Depends(get_email_service)
+    email_service: EmailService = Depends(get_email_service),
+    user: dict = Depends(get_current_user)
 ):
     """
     Retrieve emails with filtering, sorting, and pagination options.
@@ -72,9 +76,14 @@ async def retrieve_emails(
     
     try:
         # Log request parameters
-        logger.debug("Email retrieval request", extra={"params": debug_info["request_params"]})
+        logger.debug(f"Email retrieval request with refresh={refresh}", extra={"params": debug_info["request_params"]})
+        
+        # Get the user ID from the authenticated user
+        user_id = str(user.get("_id", user.get("google_id")))
+        logger.debug(f"User ID for email retrieval: {user_id}")
         
         emails, total, service_debug_info = await email_service.fetch_emails(
+            user_id=user_id,
             skip=skip,
             limit=limit,
             unread_only=unread_only,
@@ -105,12 +114,14 @@ async def retrieve_emails(
 @router.get("/{email_id}", response_model=EmailSchema)
 async def retrieve_email(
     email_id: str, 
-    email_service: EmailService = Depends(get_email_service)
+    email_service: EmailService = Depends(get_email_service),
+    user: dict = Depends(get_current_user)
 ):
     """
     Retrieve a single email by its unique ID.
     """
-    email = await email_service.get_email(email_id)  # Changed from fetch_email to get_email
+    user_id = user.get("_id", user.get("google_id"))
+    email = await email_service.get_email(email_id, user_id)
     if not email:
         raise HTTPException(status_code=404, detail="Email not found")
     return email
@@ -119,14 +130,16 @@ async def retrieve_email(
 @router.put("/{email_id}/read", response_model=EmailSchema)
 async def mark_email_as_read(
     email_id: str,
-    email_service: EmailService = Depends(get_email_service)
+    email_service: EmailService = Depends(get_email_service),
+    user: dict = Depends(get_current_user)
 ):
     """
     Mark an email as read.
     
     Updates the is_read flag to true for the specified email.
     """
-    updated_email = await email_service.mark_email_as_read(email_id)
+    user_id = user.get("_id", user.get("google_id"))
+    updated_email = await email_service.mark_email_as_read(email_id, user_id)
     if not updated_email:
         raise HTTPException(status_code=404, detail="Email not found")
     return updated_email
@@ -135,14 +148,16 @@ async def mark_email_as_read(
 @router.delete("/{email_id}")
 async def delete_email(
     email_id: str,
-    email_service: EmailService = Depends(get_email_service)
+    email_service: EmailService = Depends(get_email_service),
+    user: dict = Depends(get_current_user)
 ):
     """
     Delete an email by ID.
     
     Completely removes the email from the database.
     """
-    success = await email_service.delete_email(email_id)
+    user_id = user.get("_id", user.get("google_id"))
+    success = await email_service.delete_email(email_id, user_id)
     if not success:
         raise HTTPException(status_code=404, detail="Email not found")
     return {"message": "Email deleted successfully"}
@@ -150,7 +165,8 @@ async def delete_email(
 @router.get("/{email_id}/reader-view", response_model=ReaderViewResponse)
 async def get_email_reader_view(
     email_id: str,
-    email_service: EmailService = Depends(get_email_service)
+    email_service: EmailService = Depends(get_email_service),
+    user: dict = Depends(get_current_user)
 ):
     """
     Get a reader-view friendly version of the email content.
@@ -161,7 +177,8 @@ async def get_email_reader_view(
     try:
         logger.debug(f"Reader view requested for email {email_id}")
         
-        reader_content = await email_service.get_email_reader_view(email_id)
+        user_id = user.get("_id", user.get("google_id"))
+        reader_content = await email_service.get_email_reader_view(email_id, user_id)
         
         if not reader_content:
             raise HTTPException(status_code=404, detail="Email not found")

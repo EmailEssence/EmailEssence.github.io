@@ -12,6 +12,7 @@ from datetime import datetime
 from google.auth.transport.requests import Request
 from app.services import auth_service
 from fastapi import HTTPException, status, Query
+from bson.objectid import ObjectId
 
 from starlette.concurrency import run_in_threadpool
 
@@ -277,7 +278,7 @@ class EmailService:
         # TODO: Move print to logging for consistent log management
         try:
             print(f"🔍 Checking if email {uid} already exists in MongoDB...")
-            existing_email = await db.emails.find_one({"email_id": str(uid)})
+            existing_email = await db.emails.find_one({"email_id": str(uid), "user_id": email_data["user_id"]})
 
             if existing_email:
                 print(f"⚠️ Email {uid} already exists, skipping insert.")
@@ -289,14 +290,15 @@ class EmailService:
         except Exception as e:
             print(f"❌ Error inserting email {uid} into MongoDB: {e}")
 
-    async def get_emails_from_db(self, query: Dict = None, 
-                               skip: int = 0, limit: int = 100,
-                               sort_by: str = "received_at", 
-                               sort_order: str = "desc") -> List[dict]:
+    async def get_emails_from_db(self, user_id: str, query: Dict = None, 
+                                skip: int = 0, limit: int = 100,
+                                sort_by: str = "received_at", 
+                                sort_order: str = "desc") -> List[dict]:
         """
         Get emails from database with filtering options.
         
         Args:
+            user_id: ID of the user to get emails for
             query: Filter query to apply
             skip: Number of records to skip
             limit: Maximum number of records to return
@@ -310,8 +312,9 @@ class EmailService:
             # Determine sort direction
             sort_direction = -1 if sort_order == "desc" else 1
             
-            # Use provided query or empty dict
+            # Use provided query or empty dict and ensure user_id is included
             filter_query = query or {}
+            filter_query["user_id"] = user_id
             
             # Fetch emails with pagination and sorting
             stored_emails = await db.emails.find(filter_query) \
@@ -321,18 +324,19 @@ class EmailService:
                 .to_list(length=limit)
             
             if stored_emails:
-                logger.info(f"Retrieved {len(stored_emails)} emails from database")
+                logger.info(f"Retrieved {len(stored_emails)} emails from database for user {user_id}")
             return stored_emails
         except Exception as e:
-            logger.exception("Failed to retrieve emails from database")
+            logger.exception(f"Failed to retrieve emails from database for user {user_id}")
             raise HTTPException(status_code=500, detail=str(e))
 
-    async def get_email(self, email_id: str) -> Optional[dict]:
+    async def get_email(self, email_id: str, user_id: str) -> Optional[dict]:
         """
         Fetch a single email by ID.
         
         Args:
             email_id: Unique email identifier
+            user_id: ID of the email owner
             
         Returns:
             dict: Email data or None if not found
@@ -344,18 +348,24 @@ class EmailService:
         # TODO: Implement conflict resolution for emails modified in both places
         
         try:
-            email = await db.emails.find_one({"email_id": email_id})
+            email = await db.emails.find_one({"email_id": email_id, "user_id": user_id})
+            
+            if not email:
+                logger.warning(f"Email {email_id} not found for user {user_id}")
+                return None
+                
             return email
         except Exception as e:
-            logger.exception(f"Failed to fetch email {email_id}")
+            logger.exception(f"Failed to fetch email {email_id} for user {user_id}")
             raise HTTPException(status_code=500, detail=str(e))
             
-    async def mark_email_as_read(self, email_id: str) -> Optional[dict]:
+    async def mark_email_as_read(self, email_id: str, user_id: str) -> Optional[dict]:
         """
         Mark an email as read.
         
         Args:
             email_id: Unique email identifier
+            user_id: ID of the email owner
             
         Returns:
             dict: Updated email or None if not found
@@ -365,24 +375,26 @@ class EmailService:
         """
         try:
             result = await db.emails.update_one(
-                {"email_id": email_id},
+                {"email_id": email_id, "user_id": user_id},
                 {"$set": {"is_read": True}}
             )
             
             if result.matched_count == 0:
+                logger.warning(f"Email {email_id} not found for user {user_id} during mark as read")
                 return None
                 
-            return await db.emails.find_one({"email_id": email_id})
+            return await db.emails.find_one({"email_id": email_id, "user_id": user_id})
         except Exception as e:
-            logger.exception(f"Failed to mark email {email_id} as read")
+            logger.exception(f"Failed to mark email {email_id} as read for user {user_id}")
             raise HTTPException(status_code=500, detail=str(e))
         
-    async def delete_email(self, email_id: str) -> bool:
+    async def delete_email(self, email_id: str, user_id: str) -> bool:
         """
         Delete an email.
         
         Args:
             email_id: Unique email identifier
+            user_id: ID of the email owner
             
         Returns:
             bool: True if deleted, False if not found
@@ -391,31 +403,37 @@ class EmailService:
             HTTPException: If delete operation fails
         """
         try:
-            result = await db.emails.delete_one({"email_id": email_id})
+            result = await db.emails.delete_one({"email_id": email_id, "user_id": user_id})
+            
+            if result.deleted_count == 0:
+                logger.warning(f"Email {email_id} not found for user {user_id} during delete")
+                
             return result.deleted_count > 0
         except Exception as e:
-            logger.exception(f"Failed to delete email {email_id}")
+            logger.exception(f"Failed to delete email {email_id} for user {user_id}")
             raise HTTPException(status_code=500, detail=str(e))
     
     # -------------------------------------------------------------------------
     # Content Processing Methods
     # -------------------------------------------------------------------------
     
-    async def get_email_reader_view(self, email_id: str) -> Optional[ReaderViewResponse]:
+    async def get_email_reader_view(self, email_id: str, user_id: str) -> Optional[ReaderViewResponse]:
         """
         Process an email to generate a reader-view friendly version.
         
         Args:
             email_id: Unique email ID
+            user_id: ID of the email owner
             
         Returns:
             ReaderViewResponse: Reader-view content with metadata
         """
         try:
             # Retrieve the email
-            email_dict = await db.emails.find_one({"email_id": email_id})
+            email_dict = await db.emails.find_one({"email_id": email_id, "user_id": user_id})
             
             if not email_dict:
+                logger.warning(f"Email {email_id} not found for user {user_id} during reader view generation")
                 return None
                 
             # Convert dictionary to EmailSchema
@@ -483,32 +501,43 @@ class EmailService:
             )
             
         except Exception as e:
-            logger.exception(f"Failed to generate reader view for email {email_id}")
+            logger.exception(f"Failed to generate reader view for email {email_id} for user {user_id}")
             raise HTTPException(status_code=500, detail=str(e))
         
     # -------------------------------------------------------------------------
     # Public API Methods
     # -------------------------------------------------------------------------
     
-    async def fetch_emails(self, skip: int = 0, limit: int = 20,
+    async def fetch_emails(self, user_id: str, skip: int = 0, limit: int = 20,
                           unread_only: bool = False, category: Optional[str] = None,
                           search: Optional[str] = None, sort_by: str = "received_at",
                           sort_order: str = "desc", refresh: bool = False) -> tuple:
         """
         Main email fetching function that combines IMAP and database operations.
         
+        Args:
+            user_id: ID of the current user
+            skip: Number of emails to skip
+            limit: Maximum number of emails to return
+            unread_only: Filter for unread emails only
+            category: Filter by email category
+            search: Search in subject and body
+            sort_by: Field to sort by
+            sort_order: Sort direction ("asc" or "desc")
+            refresh: Whether to refresh emails from IMAP first (default: False)
+            
         Returns:
             tuple: (emails list, total count, debug info)
         """
         try:
-            debug_info = {"db_query": {}, "timing": {}, "source": "database"}
+            debug_info = {"db_query": {}, "timing": {}, "source": "database", "user_id": user_id}
             
             # If refresh requested, fetch from IMAP first
             if refresh:
-                await self._refresh_emails_from_imap(debug_info)
+                await self._refresh_emails_from_imap(user_id, debug_info)
             
             # Build database query
-            query = self._build_email_query(unread_only, category, search)
+            query = self._build_email_query(user_id, unread_only, category, search)
             debug_info["db_query"] = query
             
             # Determine sort direction
@@ -524,56 +553,134 @@ class EmailService:
             emails = await db.emails.find(query).sort([(sort_by, sort_direction)]).skip(skip).limit(limit).to_list(length=limit)
             debug_info["timing"]["main_query"] = (datetime.now() - start_time).total_seconds()
             
-            logger.info(f"Retrieved {len(emails)} emails out of {total} total")
+            logger.info(f"Retrieved {len(emails)} emails out of {total} total for user {user_id}")
             return emails, total, debug_info
             
         except Exception as e:
-            logger.exception("Email fetch operation failed")
+            logger.exception(f"Email fetch operation failed for user {user_id}")
             if isinstance(e, HTTPException):
                 raise e
             raise HTTPException(status_code=500, detail=str(e))
     
-    async def _refresh_emails_from_imap(self, debug_info: Dict[str, Any]) -> None:
-        """Internal method to refresh emails from IMAP"""
+    async def _refresh_emails_from_imap(self, user_id: str, debug_info: Dict[str, Any]) -> None:
+        """
+        Internal method to refresh emails from IMAP
+        
+        Args:
+            user_id: ID of the current user
+            debug_info: Dictionary to store debug information
+        """
         debug_info["source"] = "imap+database"
         debug_info["timing"]["imap_fetch_start"] = datetime.now().isoformat()
         
         start_time = datetime.now()
         try:
-            # Get OAuth token
-            token = await self.get_auth_token()
+            # Get user email account from user ID
+            logger.debug(f"Refreshing emails from IMAP for user ID: {user_id}")
             
-            # Check email account
-            if not self.default_email_account:
-                raise HTTPException(
-                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail="EMAIL_ACCOUNT environment variable not set"
-                )
+            # Try different strategies to find the user
+            user = None
+            
+            # First try: treating user_id as an ObjectId (MongoDB's _id)
+            try:
+                if ObjectId.is_valid(user_id):
+                    user = await db.users.find_one({"_id": ObjectId(user_id)})
+                    if user:
+                        logger.debug(f"Found user by ObjectId: {user.get('email')}")
+            except Exception as e:
+                logger.debug(f"Error finding user by ObjectId: {str(e)}")
+            
+            # Second try: use google_id
+            if not user:
+                user = await db.users.find_one({"google_id": user_id})
+                if user:
+                    logger.debug(f"Found user by google_id: {user.get('email')}")
+            
+            # If still not found, try email lookup as a last resort
+            if not user and '@' in user_id:
+                user = await db.users.find_one({"email": user_id})
+                if user:
+                    logger.debug(f"Found user by email: {user.get('email')}")
+            
+            if not user:
+                logger.error(f"User {user_id} not found in database during IMAP refresh")
+                debug_info["imap_error"] = f"User {user_id} not found"
+                return
+                
+            # Extract user email
+            user_email = user.get("email")
+            if not user_email:
+                logger.error(f"Email address not found for user {user_id}")
+                debug_info["imap_error"] = "User email not found"
+                return
+            
+            logger.info(f"Fetching emails for {user_email}")
+            
+            # Get OAuth token for the specific user
+            token_record = await db.tokens.find_one({"user_email": user_email})
+            if not token_record:
+                # Attempt to get token from user's oauth field
+                oauth_data = user.get("oauth")
+                if oauth_data and oauth_data.get("token"):
+                    token = oauth_data.get("token")
+                    logger.info(f"Using token from user's oauth data for {user_email}")
+                else:
+                    logger.error(f"No token found for user {user_id} with email {user_email}")
+                    debug_info["imap_error"] = "No token found for user"
+                    return
+            else:
+                token = token_record.get("token")
+                if not token:
+                    logger.error(f"Invalid token for user {user_id}")
+                    debug_info["imap_error"] = "Invalid token"
+                    return
+            
+            # Normalize user_id to string for storage
+            normalized_user_id = str(user.get("_id", user_id))
             
             # Fetch emails
+            logger.info(f"Fetching emails from IMAP for {user_email}")
             imap_emails = await self.fetch_from_imap(
                 token=token,
-                email_account=self.default_email_account,
+                email_account=user_email,
+                user_id=normalized_user_id,  # Use the normalized user ID
                 limit=50  # Fetch last 50 emails
             )
             
+            logger.info(f"Retrieved {len(imap_emails)} emails from IMAP for {user_email}")
+            
             # Save fetched emails
             for email_data in imap_emails:
+                # Ensure the email is associated with this user
+                email_data["user_id"] = normalized_user_id
                 await self.save_email_to_db(email_data, email_data["email_id"])
             
             debug_info["imap_fetch_count"] = len(imap_emails)
+            logger.info(f"Saved {len(imap_emails)} emails to database for {user_email}")
             
         except Exception as e:
-            logger.error(f"IMAP fetch failed: {str(e)}")
+            logger.exception(f"IMAP fetch failed for user {user_id}: {str(e)}")
             debug_info["imap_error"] = str(e)
             
         finally:
             debug_info["timing"]["imap_fetch_duration"] = (datetime.now() - start_time).total_seconds()
     
-    def _build_email_query(self, unread_only: bool, category: Optional[str], 
-                         search: Optional[str]) -> Dict[str, Any]:
-        """Build query filter for emails"""
-        query = {}
+    def _build_email_query(self, user_id: str, unread_only: bool, category: Optional[str], 
+                          search: Optional[str]) -> Dict[str, Any]:
+        """
+        Build query filter for emails
+        
+        Args:
+            user_id: ID of the current user
+            unread_only: Filter for unread emails only
+            category: Filter by email category
+            search: Search in subject and body
+            
+        Returns:
+            Dict[str, Any]: Query filter
+        """
+        # Always include user_id in the query
+        query = {"user_id": user_id}
         
         if unread_only:
             query["is_read"] = False
