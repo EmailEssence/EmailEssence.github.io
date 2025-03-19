@@ -27,6 +27,8 @@ dependencies = [
     "datetime>=5.5",
     "pydantic-settings>=2.7.1",
     "python-multipart>=0.0.20",
+    "google[genai]>=3.0.0",
+    "google-generativeai>=0.8.4",
 ]
 
 [project.optional-dependencies]
