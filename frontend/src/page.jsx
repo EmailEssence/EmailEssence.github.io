@@ -45,7 +45,7 @@ export default function Page() {
           console.log(e);
         }
       }
-    }, 5000);
+    }, 1000);
     return () => clearInterval(intervalId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loggedIn]); // In array put State/Variable that will update once user is logged in
@@ -55,11 +55,12 @@ export default function Page() {
       setLoading(true);
       // Persist token
       localStorage.setItem("auth_token", token);
-      retrieveUserData();
       setLoggedIn(true);
+      retrieveUserData();
       setAuthChanged(true); // Update authChanged state
     } catch (error) {
       handleAuthError(error);
+      setLoggedIn(false);
     } finally {
       setLoading(false);
     }
