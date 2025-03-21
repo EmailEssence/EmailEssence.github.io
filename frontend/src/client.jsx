@@ -5,7 +5,7 @@ import Dashboard from "./components/dashboard/dashboard";
 import Inbox from "./components/inbox/inbox";
 import { Settings } from "./components/settings/settings";
 import SideBar from "./components/sidebar/sidebar";
-import { fetchDev, isDevMode, baseUrl } from "./emails/emailParse";
+import fetchEmails from "./emails/emailParse";
 import { clientReducer, userPreferencesReducer } from "./reducers";
 
 export default function Client({
@@ -30,9 +30,15 @@ export default function Client({
   useEffect(() => {
     const clock = setInterval(async () => {
       try {
-        // const newEmails = isDevMode ? fetchDev() : await fetchEmailsAlt();
-        // if (newEmails.length > 0)
-        //   setEmailsByDate([...newEmails, ...emailsByDate]);
+        const requestedEmails = await fetchEmails(100); // Limited to 100 new emails per interval cycle
+        if (requestedEmails.length > 0) {
+          console.log(requestedEmails);
+          const newEmails = getNewEmails(requestedEmails, emailsByDate); // O(n^2) operation
+          console.log(newEmails);
+          if (newEmails.length > 0) {
+            setEmailsByDate([...newEmails, ...emailsByDate]);
+          }
+        }
       } catch (error) {
         console.error(`Loading Emails Error: ${error}`);
       }
@@ -139,26 +145,12 @@ export default function Client({
   return <div className="page">{emailClient()}</div>;
 }
 
-async function fetchEmailsAlt() {
-  const option = {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
-      "Content-Type": "application/json",
-    },
-  };
-  try {
-    const req = new Request(
-      `${baseUrl}/emails/?skip=0&limit=100&unread_only=true&sort_by=received_at&sort_order=desc&refresh=true`,
-      option
-    );
-    const response = await fetch(req);
-    if (!response.ok) {
-      throw new Error(`Failed to retrieve emails: ${response.statusText}`);
+function getNewEmails(requestedEmails, allEmails) {
+  return requestedEmails.filter((reqEmail) => {
+    let exists = false;
+    for (const email of allEmails) {
+      if (email.email_id === reqEmail.email_id) exists = true;
     }
-    return await response.json();
-  } catch (error) {
-    console.error("Email fetch error:", error);
-    return []; // Return empty array on error for graceful degradation
-  }
+    return !exists;
+  });
 }
