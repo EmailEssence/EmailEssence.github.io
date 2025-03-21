@@ -21,8 +21,6 @@ export default function Page() {
   const [loggedIn, setLoggedIn] = useState(
     () => !!localStorage.getItem("auth_token")
   );
-  // eslint-disable-next-line no-unused-vars
-  const [authChanged, setAuthChanged] = useState(false);
   const [defaultUserPreferences, setDefaultUserPreferences] = useState({
     isChecked: true,
     emailFetchInterval: 120,
@@ -30,25 +28,30 @@ export default function Page() {
   });
 
   useEffect(() => {
-    const intervalId = setInterval(() => {
-      if (!loggedIn) {
-        const hash = window.location.hash;
-        if (hash && hash.startsWith("#auth=")) {
-          handleOAuthCallback(handleAuthenticate);
-        } else if (parseURL(window.location.href) !== "") {
-          handleOAuthCallback(handleAuthenticate);
+    const intervalId = setInterval(
+      () => {
+        if (!loading) {
+          if (!loggedIn) {
+            const hash = window.location.hash;
+            if (hash && hash.startsWith("#auth=")) {
+              handleOAuthCallback(handleAuthenticate);
+            } else if (parseURL(window.location.href) !== "") {
+              handleOAuthCallback(handleAuthenticate);
+            }
+          } else {
+            try {
+              checkAuthStatus(localStorage.getItem("auth_token"));
+            } catch (e) {
+              console.log(e);
+            }
+          }
         }
-      } else {
-        try {
-          checkAuthStatus(localStorage.getItem("auth_token"));
-        } catch (e) {
-          console.log(e);
-        }
-      }
-    }, 1000);
+      },
+      loggedIn ? 5000 : 1000
+    );
     return () => clearInterval(intervalId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loggedIn]); // In array put State/Variable that will update once user is logged in
+  }, [loggedIn, loading]);
 
   const handleAuthenticate = async (token) => {
     try {
@@ -57,7 +60,6 @@ export default function Page() {
       localStorage.setItem("auth_token", token);
       setLoggedIn(true);
       retrieveUserData();
-      setAuthChanged(true); // Update authChanged state
     } catch (error) {
       handleAuthError(error);
       setLoggedIn(false);
@@ -96,7 +98,6 @@ export default function Page() {
     // Clear invalid token
     localStorage.removeItem("auth_token");
     setEmailsByDate([]);
-    setAuthChanged(true); // Update authChanged state
   };
 
   const display = () => {
