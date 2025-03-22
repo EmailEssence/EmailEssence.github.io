@@ -1,5 +1,3 @@
-/* eslint-disable react/prop-types */
-// import ReaderViewIcon from "../../assets/ReaderView";
 import { Readability } from "@mozilla/readability";
 import { useEffect, useRef, useState } from "react";
 import ReactDom from "react-dom";

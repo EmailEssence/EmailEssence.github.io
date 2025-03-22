@@ -1,4 +1,3 @@
-/* eslint-disable react/prop-types */
 import { useEffect, useReducer } from "react";
 import "./client.css";
 import Dashboard from "./components/dashboard/dashboard";

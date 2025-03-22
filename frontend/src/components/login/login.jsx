@@ -1,6 +1,4 @@
-/* eslint-disable react/prop-types */
 import styles from "./login.module.css";
-// import Logo from "../../assets/Logo";
 
 export const Login = ({ handleGoogleClick }) => {
   return (
