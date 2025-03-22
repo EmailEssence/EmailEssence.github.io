@@ -10,29 +10,27 @@ export default function SideBar({
   selected,
 }) {
   return (
-    <div>
-      <div className="sidebar">
-        <Button expanded={expanded} onClick={onLogoClick} name="">
-          <Logo />
-        </Button>
-        <Button
-          expanded={expanded}
-          curState={selected}
-          onClick={() => handlePageChange("inbox")}
-          name="inbox"
-        >
-          <InboxIcon />
-        </Button>
-        <div></div>
-        <Button
-          expanded={expanded}
-          curState={selected}
-          onClick={() => handlePageChange("settings")}
-          name="settings"
-        >
-          <SettingsIcon />
-        </Button>
-      </div>
+    <div className="sidebar">
+      <Button expanded={expanded} onClick={onLogoClick} name="">
+        <Logo />
+      </Button>
+      <Button
+        expanded={expanded}
+        curState={selected}
+        onClick={() => handlePageChange("inbox")}
+        name="inbox"
+      >
+        <InboxIcon />
+      </Button>
+      <div></div>
+      <Button
+        expanded={expanded}
+        curState={selected}
+        onClick={() => handlePageChange("settings")}
+        name="settings"
+      >
+        <SettingsIcon />
+      </Button>
     </div>
   );
 }

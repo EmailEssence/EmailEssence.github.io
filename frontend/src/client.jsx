@@ -46,6 +46,12 @@ export default function Client({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userPreferences.emailFetchInterval]);
 
+  const root = document.querySelector(":root");
+  root.style.setProperty(
+    "--sidebar-width",
+    `calc(${client.expandedSideBar ? "70px + 5vw" : "30px + 2vw"})`
+  );
+
   const handleLogoClick = () => {
     dispatchClient({
       type: "logoClick",
@@ -135,7 +141,7 @@ export default function Client({
     );
   };
 
-  return <div className="page">{emailClient()}</div>;
+  return <>{emailClient()}</>;
 }
 
 function getNewEmails(requestedEmails, allEmails) {
