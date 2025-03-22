@@ -7,9 +7,20 @@ import {
   Theme,
 } from "../components/settings/settings";
 
-// Unit Tests: Test individual functions, components, and utilities.
-// Integration Tests: Test component interactions(e.g., props, state changes).
-// End - to - End Tests: Ensure the app works as expected across user flows.
+// Mock window.matchMedia
+Object.defineProperty(window, "matchMedia", {
+  writable: true,
+  value: vi.fn().mockImplementation((query) => ({
+    matches: false, // Default to light mode
+    media: query,
+    onchange: null,
+    addListener: vi.fn(), // Deprecated
+    removeListener: vi.fn(), // Deprecated
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  })),
+});
 
 describe("Settings Components", () => {
   // Rendering Tests
