@@ -9,10 +9,12 @@ import Client from "./client";
 import { Login } from "./components/login/login";
 import { fetchUserPreferences } from "./components/settings/settings";
 import fetchEmails, { fetchDev, isDevMode } from "./emails/emailParse";
+import { useLocation } from "react-router-dom";
 
 const devEmails = isDevMode ? fetchDev() : [];
 
 export default function Page() {
+  const location = useLocation();
   const [emailsByDate, setEmailsByDate] = useState(
     isDevMode ? devEmails : null
   );
@@ -28,31 +30,49 @@ export default function Page() {
   });
 
   useEffect(() => {
-    const intervalId = setInterval(
-      () => {
-        if (!loading) {
-          if (!loggedIn) {
-            const hash = window.location.hash;
-            if (hash && hash.startsWith("#auth=")) {
-              handleOAuthCallback(handleAuthenticate);
-            } else if (parseURL(window.location.href) !== "") {
-              handleOAuthCallback(handleAuthenticate);
-            }
-          } else {
-            try {
-              checkAuthStatus(localStorage.getItem("auth_token"));
-              console.log("sending auth");
-            } catch (e) {
-              console.log(e);
-            }
-          }
+    if (loggedIn) {
+      const intervalId = setInterval(() => {
+        try {
+          checkAuthStatus(localStorage.getItem("auth_token"));
+          console.log("sending auth");
+        } catch (e) {
+          console.log(e);
         }
-      },
-      loggedIn ? 60000 : 500
-    );
-    return () => clearInterval(intervalId);
+      }, 60000);
+      return () => clearInterval(intervalId);
+    } else {
+      const hash = window.location.hash;
+      if (hash && hash.startsWith("#auth=")) {
+        handleOAuthCallback(handleAuthenticate);
+      } else if (parseURL(window.location.href) !== "") {
+        handleOAuthCallback(handleAuthenticate);
+      }
+    }
+    // const intervalId = setInterval(
+    //   () => {
+    //     if (!loading) {
+    //       if (!loggedIn) {
+    //         const hash = window.location.hash;
+    //         if (hash && hash.startsWith("#auth=")) {
+    //           handleOAuthCallback(handleAuthenticate);
+    //         } else if (parseURL(window.location.href) !== "") {
+    //           handleOAuthCallback(handleAuthenticate);
+    //         }
+    //       } else {
+    //         try {
+    //           checkAuthStatus(localStorage.getItem("auth_token"));
+    //           console.log("sending auth");
+    //         } catch (e) {
+    //           console.log(e);
+    //         }
+    //       }
+    //     }
+    //   },
+    //   loggedIn ? 60000 : 500
+    // );
+    // return () => clearInterval(intervalId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loggedIn, loading]);
+  }, [loggedIn, loading, location]);
 
   const handleAuthenticate = async (token) => {
     try {
