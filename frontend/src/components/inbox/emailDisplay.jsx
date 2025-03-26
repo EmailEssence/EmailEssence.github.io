@@ -1,0 +1,78 @@
+import ReactDom from "react-dom";
+import ReaderViewIcon from "../../assets/ReaderView";
+import { Readability } from "@mozilla/readability";
+import { useEffect, useState } from "react";
+import "./emailDisplay.css";
+
+export default function EmailDisplay({ curEmail }) {
+  const date = getDate(curEmail.received_at);
+  return (
+    <div className="email-display">
+      <div className="header">
+        <div className="from">{curEmail.sender}</div>
+        <div className="title">{curEmail.subject}</div>
+        <div className="to">{`To: ${curEmail.recipients}`}</div>
+        <div className="date">{`Date: ${date}`}</div>
+        <div className="reader-view">
+          <ReaderView curEmail={curEmail} />
+        </div>
+      </div>
+      <div className="body">
+        <div className="content-container">
+          <div className="content">{curEmail.body}</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ReaderView({ curEmail }) {
+  const [text, setText] = useState("Loading ...");
+  const [displaying, setDisplaying] = useState(false);
+
+  function displayReaderView() {
+    if (!displaying) {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(curEmail.body, "text/html");
+      const article = new Readability(doc).parse();
+      setText(article.textContent);
+    }
+    setDisplaying(!displaying);
+  }
+
+  useEffect(() => {
+    setDisplaying(false);
+    setText("Loading...");
+  }, [curEmail]); // Inefficient way to clean state when email switches
+
+  return (
+    <div>
+      <div className="icon-container" onClick={displayReaderView}>
+        <ReaderViewIcon />
+      </div>
+      <PopUp isOpen={displaying} handleClose={displayReaderView}>
+        <div>{text}</div>
+      </PopUp>
+    </div>
+  );
+}
+
+function PopUp({ isOpen, handleClose, children }) {
+  if (!isOpen) return null;
+  return ReactDom.createPortal(
+    <>
+      <div className="overlay-background" />
+      <div className="pop-up-container">
+        {children}
+        <div className="button" onClick={handleClose}>
+          Click To Close
+        </div>
+      </div>
+    </>,
+    document.getElementById("portal")
+  );
+}
+
+const getDate = (date) => {
+  return `${date[1]}/${date[2]}/${date[0]}`;
+};
