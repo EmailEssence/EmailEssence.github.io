@@ -9,13 +9,14 @@ import { Login } from "./components/login/login";
 import { fetchUserPreferences } from "./components/settings/settings";
 import fetchEmails from "./emails/emailParse";
 
+const userAlreadyLoggedIn = () => !!localStorage.getItem("auth_token");
+
 export default function Page() {
   const [emailsByDate, setEmailsByDate] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(userAlreadyLoggedIn);
+  const [calledAuth, setCalledAuth] = useState(false);
 
-  const [loggedIn, setLoggedIn] = useState(
-    () => !!localStorage.getItem("auth_token")
-  );
+  const [loggedIn, setLoggedIn] = useState(userAlreadyLoggedIn);
   const [defaultUserPreferences, setDefaultUserPreferences] = useState({
     isChecked: true,
     emailFetchInterval: 120,
@@ -34,9 +35,14 @@ export default function Page() {
       }, 60000);
       return () => clearInterval(intervalId);
     } else {
-      const hash = window.location.hash;
-      if (hash && hash.startsWith("#auth=")) {
-        handleOAuthCallback(handleAuthenticate);
+      if (calledAuth) return;
+      if (userAlreadyLoggedIn) {
+        handleAuthenticate(localStorage.getItem("auth_token"));
+      } else {
+        const hash = window.location.hash;
+        if (hash && hash.startsWith("#auth=")) {
+          handleOAuthCallback(handleAuthenticate);
+        }
       }
       //  else if (parseURL(window.location.href) !== "") {
       //   handleOAuthCallback(handleAuthenticate);
@@ -47,6 +53,7 @@ export default function Page() {
 
   const handleAuthenticate = async (token) => {
     try {
+      setCalledAuth(true);
       setLoading(true);
       // Persist token
       localStorage.setItem("auth_token", token);
