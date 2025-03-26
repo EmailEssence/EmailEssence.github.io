@@ -7,14 +7,10 @@ import {
 import Client from "./client";
 import { Login } from "./components/login/login";
 import { fetchUserPreferences } from "./components/settings/settings";
-import fetchEmails, { fetchDev, isDevMode } from "./emails/emailParse";
-
-const devEmails = isDevMode ? fetchDev() : [];
+import fetchEmails from "./emails/emailParse";
 
 export default function Page() {
-  const [emailsByDate, setEmailsByDate] = useState(
-    isDevMode ? devEmails : null
-  );
+  const [emailsByDate, setEmailsByDate] = useState(null);
   const [loading, setLoading] = useState(false);
 
   const [loggedIn, setLoggedIn] = useState(
@@ -27,7 +23,7 @@ export default function Page() {
   });
 
   useEffect(() => {
-    if (loggedIn && loading === 0) {
+    if (loggedIn && loading === false) {
       const intervalId = setInterval(() => {
         try {
           checkAuthStatus(localStorage.getItem("auth_token"));
@@ -97,12 +93,7 @@ export default function Page() {
   };
 
   const display = () => {
-    return isDevMode ? (
-      <Client
-        emailsByDate={emailsByDate}
-        defaultUserPreferences={defaultUserPreferences}
-      />
-    ) : loading ? (
+    return loading ? (
       <div>Loading emails...</div>
     ) : !loggedIn ? (
       <Login handleGoogleClick={authenticate} />

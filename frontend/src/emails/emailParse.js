@@ -1,9 +1,4 @@
-import ems from "./retrieve_emails_response.json" with { type: 'json' };
-import sums from "./summarize_email_response.json" with { type: 'json' };
-export const isDevMode = false;
-export const baseUrl = isDevMode
-  ? "http://localhost:8000"
-  : "https://ee-backend-w86t.onrender.com";
+export const baseUrl = "https://ee-backend-w86t.onrender.com";
 
 async function getEmails(extension) {
   const option = {
@@ -14,7 +9,10 @@ async function getEmails(extension) {
     },
   };
   try {
-    const req = new Request(`${baseUrl}/emails/?skip=0&limit=${extension}&unread_only=false&sort_by=received_at&sort_order=desc&refresh=true`, option);
+    const req = new Request(
+      `${baseUrl}/emails/?skip=0&limit=${extension}&unread_only=false&sort_by=received_at&sort_order=desc&refresh=true`,
+      option
+    );
     const response = await fetch(req);
     if (!response.ok) {
       throw new Error(`Failed to retrieve emails: ${response.statusText}`);
@@ -36,8 +34,11 @@ async function getSummaries(emailIds) {
   };
   try {
     const queryParams = new URLSearchParams();
-    emailIds.forEach(id => queryParams.append('ids', id));
-    const req = new Request(`${baseUrl}/summaries/batch?${queryParams}`, option);
+    emailIds.forEach((id) => queryParams.append("ids", id));
+    const req = new Request(
+      `${baseUrl}/summaries/batch?${queryParams}`,
+      option
+    );
     const response = await fetch(req);
     if (!response.ok) {
       throw new Error(`Failed to retrieve summaries: ${response.statusText}`);
@@ -110,19 +111,3 @@ export function getTop5(emails) {
 // "is_read" has the email been read
 // "summary_text" summary of the email
 // "keywords": [] keywords used to describe email
-
-// Dev Function
-export function fetchDev() {
-  const [emails, summaries] = [ems, sums];
-  const processedEmails = emails.map((email, index) => {
-    const summary = summaries[index] || { summary_text: "", keywords: [] };
-
-    return {
-      ...email,
-      summary_text: summary.summary_text || "",
-      keywords: summary.keywords || [],
-      received_at: parseDate(email.received_at),
-    };
-  });
-  return processedEmails;
-}
