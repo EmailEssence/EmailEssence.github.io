@@ -3,7 +3,6 @@ import {
   authenticate,
   handleOAuthCallback,
   checkAuthStatus,
-  parseURL,
 } from "./authentication/authenticate";
 import Client from "./client";
 import { Login } from "./components/login/login";
@@ -42,9 +41,10 @@ export default function Page() {
       const hash = window.location.hash;
       if (hash && hash.startsWith("#auth=")) {
         handleOAuthCallback(handleAuthenticate);
-      } else if (parseURL(window.location.href) !== "") {
-        handleOAuthCallback(handleAuthenticate);
       }
+      //  else if (parseURL(window.location.href) !== "") {
+      //   handleOAuthCallback(handleAuthenticate);
+      // }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loggedIn, loading]);
