@@ -42,34 +42,7 @@ export const handleOAuthCallback = async (handleAuthenticate) => {
       console.error("Error parsing auth state:", error);
     }
   }
-  //  else if (parseURL(window.location.href) !== "") {
-  //   try {
-  //     const encodedState = parseURL(window.location.href);
-  //     if (!containsEncodedComponents(encodedState)) {
-  //       throw new Error("Wrong State");
-  //     }
-  //     const unencoded = decodeURIComponent(encodedState); //unrecognized: (%), (/)
-  //     const authState = JSON.parse(unencoded);
-  //     if (authState.authenticated && authState.token) {
-  //       const isAuthenticated = checkAuthStatus(authState.token);
-  //       if (isAuthenticated) {
-  //         handleAuthenticate(authState.token);
-  //       } else {
-  //         console.log("not authenticated");
-  //       }
-  //     }
-  //     window.location.hash = "";
-  //     return;
-  //   } catch (error) {
-  //     console.error("Error parsing auth state:", error);
-  //   }
-  // }
 };
-
-// function containsEncodedComponents(x) {
-//   // ie ?,=,&,/ etc
-//   return decodeURI(x) !== decodeURIComponent(x);
-// }
 
 export const checkAuthStatus = async (token) => {
   const option = {

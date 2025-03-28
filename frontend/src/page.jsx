@@ -12,11 +12,11 @@ import fetchEmails from "./emails/emailParse";
 const userAlreadyLoggedIn = () => !!localStorage.getItem("auth_token");
 
 export default function Page() {
-  const [emailsByDate, setEmailsByDate] = useState(null);
-  const [loading, setLoading] = useState(userAlreadyLoggedIn);
+  const [loading, setLoading] = useState(false);
   const [calledAuth, setCalledAuth] = useState(false);
-
   const [loggedIn, setLoggedIn] = useState(userAlreadyLoggedIn);
+
+  const [emailsByDate, setEmailsByDate] = useState(null);
   const [defaultUserPreferences, setDefaultUserPreferences] = useState({
     isChecked: true,
     emailFetchInterval: 120,
@@ -24,7 +24,7 @@ export default function Page() {
   });
 
   useEffect(() => {
-    if (loggedIn && loading === false) {
+    if (calledAuth && loggedIn) {
       const intervalId = setInterval(() => {
         try {
           checkAuthStatus(localStorage.getItem("auth_token"));
@@ -35,8 +35,7 @@ export default function Page() {
       }, 60000);
       return () => clearInterval(intervalId);
     } else {
-      if (calledAuth) return;
-      if (userAlreadyLoggedIn) {
+      if (loggedIn) {
         handleAuthenticate(localStorage.getItem("auth_token"));
       } else {
         const hash = window.location.hash;
@@ -44,9 +43,6 @@ export default function Page() {
           handleOAuthCallback(handleAuthenticate);
         }
       }
-      //  else if (parseURL(window.location.href) !== "") {
-      //   handleOAuthCallback(handleAuthenticate);
-      // }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loggedIn, loading]);
@@ -57,11 +53,12 @@ export default function Page() {
       setLoading(true);
       // Persist token
       localStorage.setItem("auth_token", token);
-      setLoggedIn(true);
       retrieveUserData();
+      setLoggedIn(true);
     } catch (error) {
       handleAuthError(error);
       setLoggedIn(false);
+      setCalledAuth(false); // Reattempt auth
     } finally {
       setLoading(false);
     }
