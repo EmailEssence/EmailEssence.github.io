@@ -14,4 +14,9 @@ describe("Page Component Logged In", () => {
     localStorage.clear();
     localStorage.setItem("auth_token", "mock_token");
   });
+
+  it("renders loading state", () => {
+    render(<Page />);
+    expect(screen.getByText("Initializing dashboard...")).toBeInTheDocument();
+  });
 });
