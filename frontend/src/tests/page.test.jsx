@@ -20,10 +20,15 @@ describe("Page Component Logged In", () => {
     expect(screen.getByText("Initializing dashboard...")).toBeInTheDocument();
   });
 
-  // Test Fails because top5 accesses chache emails and test stores emails in state only.
   it("renders emails when logged in", async () => {
     // Mock fetchEmails to return sample emails
     vi.mock("../emails/emailParse", () => ({
+      getTop5: vi.fn(() => [
+        {
+          email_id: 1,
+          summary_text: "Mock Summary 1",
+        },
+      ]),
       default: vi.fn(() =>
         Promise.resolve([
           {
