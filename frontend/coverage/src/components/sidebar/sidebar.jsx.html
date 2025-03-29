@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">8.69% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/53</span>
+                <span class='fraction'>4/46</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>1/1</span>
-            </div>
-        
-            
-            <div class='fl pad1y space-right2'>
-                <span class="strong">100% </span>
-                <span class="quiet">Functions</span>
-                <span class='fraction'>1/1</span>
+                <span class='fraction'>0/0</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
+                <span class="quiet">Functions</span>
+                <span class='fraction'>0/2</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">8.69% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/53</span>
+                <span class='fraction'>4/46</span>
             </div>
         
             
@@ -115,24 +115,11 @@
 <a name='L50'></a><a href='#L50'>50</a>
 <a name='L51'></a><a href='#L51'>51</a>
 <a name='L52'></a><a href='#L52'>52</a>
-<a name='L53'></a><a href='#L53'>53</a>
-<a name='L54'></a><a href='#L54'>54</a>
-<a name='L55'></a><a href='#L55'>55</a>
-<a name='L56'></a><a href='#L56'>56</a>
-<a name='L57'></a><a href='#L57'>57</a>
-<a name='L58'></a><a href='#L58'>58</a>
-<a name='L59'></a><a href='#L59'>59</a>
-<a name='L60'></a><a href='#L60'>60</a>
-<a name='L61'></a><a href='#L61'>61</a>
-<a name='L62'></a><a href='#L62'>62</a>
-<a name='L63'></a><a href='#L63'>63</a>
-<a name='L64'></a><a href='#L64'>64</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<a name='L53'></a><a href='#L53'>53</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -162,7 +149,6 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -178,70 +164,53 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">/* eslint-disable react/prop-types */
-<span class="cstat-no" title="statement not covered" >import InboxIcon from "../../assets/InboxIcon";</span>
-<span class="cstat-no" title="statement not covered" >import Logo from "../../assets/Logo";</span>
-<span class="cstat-no" title="statement not covered" >import SettingsIcon from "../../assets/SettingsIcon";</span>
-<span class="cstat-no" title="statement not covered" >import "./sidebar.css";</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import InboxIcon from "../../assets/InboxIcon";
+import Logo from "../../assets/Logo";
+import SettingsIcon from "../../assets/SettingsIcon";
+import "./sidebar.css";
 &nbsp;
-<span class="cstat-no" title="statement not covered" >export default function SideBar({</span>
+<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >export default function SideBar({</span></span>
 <span class="cstat-no" title="statement not covered" >  onLogoClick,</span>
 <span class="cstat-no" title="statement not covered" >  expanded,</span>
 <span class="cstat-no" title="statement not covered" >  handlePageChange,</span>
 <span class="cstat-no" title="statement not covered" >  selected,</span>
 <span class="cstat-no" title="statement not covered" >}) {</span>
 <span class="cstat-no" title="statement not covered" >  return (</span>
-<span class="cstat-no" title="statement not covered" >    &lt;div&gt;</span>
-<span class="cstat-no" title="statement not covered" >      &lt;div className="sidebar"&gt;</span>
-<span class="cstat-no" title="statement not covered" >        &lt;Button expanded={expanded} onClick={onLogoClick} name=""&gt;</span>
-<span class="cstat-no" title="statement not covered" >          &lt;Logo /&gt;</span>
-<span class="cstat-no" title="statement not covered" >        &lt;/Button&gt;</span>
-<span class="cstat-no" title="statement not covered" >        &lt;Button</span>
-<span class="cstat-no" title="statement not covered" >          expanded={expanded}</span>
-<span class="cstat-no" title="statement not covered" >          curState={selected}</span>
-<span class="cstat-no" title="statement not covered" >          onClick={() =&gt; handlePageChange("inbox")}</span>
-<span class="cstat-no" title="statement not covered" >          name="inbox"</span>
-        &gt;
-<span class="cstat-no" title="statement not covered" >          &lt;InboxIcon/&gt;</span>
-<span class="cstat-no" title="statement not covered" >        &lt;/Button&gt;</span>
-<span class="cstat-no" title="statement not covered" >        &lt;div&gt;&lt;/div&gt;</span>
-<span class="cstat-no" title="statement not covered" >        &lt;Button</span>
-<span class="cstat-no" title="statement not covered" >          expanded={expanded}</span>
-<span class="cstat-no" title="statement not covered" >          curState={selected}</span>
-<span class="cstat-no" title="statement not covered" >          onClick={() =&gt; handlePageChange("settings")}</span>
-<span class="cstat-no" title="statement not covered" >          name="settings"</span>
-        &gt;
-<span class="cstat-no" title="statement not covered" >          &lt;SettingsIcon/&gt;</span>
-<span class="cstat-no" title="statement not covered" >        &lt;/Button&gt;</span>
-<span class="cstat-no" title="statement not covered" >      &lt;/div&gt;</span>
+<span class="cstat-no" title="statement not covered" >    &lt;div className="sidebar"&gt;</span>
+<span class="cstat-no" title="statement not covered" >      &lt;Button expanded={expanded} onClick={onLogoClick} name=""&gt;</span>
+<span class="cstat-no" title="statement not covered" >        &lt;Logo /&gt;</span>
+<span class="cstat-no" title="statement not covered" >      &lt;/Button&gt;</span>
+<span class="cstat-no" title="statement not covered" >      &lt;Button</span>
+<span class="cstat-no" title="statement not covered" >        expanded={expanded}</span>
+<span class="cstat-no" title="statement not covered" >        curState={selected}</span>
+<span class="cstat-no" title="statement not covered" >        onClick={() =&gt; handlePageChange("inbox")}</span>
+<span class="cstat-no" title="statement not covered" >        name="inbox"</span>
+      &gt;
+<span class="cstat-no" title="statement not covered" >        &lt;InboxIcon /&gt;</span>
+<span class="cstat-no" title="statement not covered" >      &lt;/Button&gt;</span>
+<span class="cstat-no" title="statement not covered" >      &lt;div&gt;&lt;/div&gt;</span>
+<span class="cstat-no" title="statement not covered" >      &lt;Button</span>
+<span class="cstat-no" title="statement not covered" >        expanded={expanded}</span>
+<span class="cstat-no" title="statement not covered" >        curState={selected}</span>
+<span class="cstat-no" title="statement not covered" >        onClick={() =&gt; handlePageChange("settings")}</span>
+<span class="cstat-no" title="statement not covered" >        name="settings"</span>
+      &gt;
+<span class="cstat-no" title="statement not covered" >        &lt;SettingsIcon /&gt;</span>
+<span class="cstat-no" title="statement not covered" >      &lt;/Button&gt;</span>
 <span class="cstat-no" title="statement not covered" >    &lt;/div&gt;</span>
   );
 <span class="cstat-no" title="statement not covered" >}</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >function Button({ expanded, curState = "N", onClick, name, children }) {</span>
+<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >function Button({ expanded, curState = "N", onClick, name, children }) {</span></span>
 <span class="cstat-no" title="statement not covered" >  const text =</span>
 <span class="cstat-no" title="statement not covered" >    name.length &gt; 0 ? `${name[0].toUpperCase()}${name.slice(1)}` : "";</span>
-<span class="cstat-no" title="statement not covered" >  const selectedClass =</span>
-<span class="cstat-no" title="statement not covered" >    curState === name</span>
-<span class="cstat-no" title="statement not covered" >      ? " selected"</span>
-<span class="cstat-no" title="statement not covered" >      : "";</span>
+<span class="cstat-no" title="statement not covered" >  const selectedClass = curState === name ? " selected" : "";</span>
 <span class="cstat-no" title="statement not covered" >  return (</span>
 <span class="cstat-no" title="statement not covered" >    &lt;div&gt;</span>
-<span class="cstat-no" title="statement not covered" >      &lt;div</span>
-<span class="cstat-no" title="statement not covered" >        className={`container${selectedClass}`}</span>
-<span class="cstat-no" title="statement not covered" >        onClick={onClick}</span>
-      &gt;
+<span class="cstat-no" title="statement not covered" >      &lt;div className={`container${selectedClass}`} onClick={onClick}&gt;</span>
 <span class="cstat-no" title="statement not covered" >        &lt;div className="icon"&gt;</span>
 <span class="cstat-no" title="statement not covered" >          &lt;div className={text.length &lt; 1 ? "logo" : ""}&gt;{children}&lt;/div&gt;</span>
 <span class="cstat-no" title="statement not covered" >          {expanded &amp;&amp; &lt;p&gt;{text}&lt;/p&gt;}</span>
@@ -250,8 +219,6 @@
 <span class="cstat-no" title="statement not covered" >    &lt;/div&gt;</span>
   );
 <span class="cstat-no" title="statement not covered" >}</span>
-&nbsp;
-&nbsp;
 &nbsp;</pre></td></tr></table></pre>
 
                 <div class='push'></div><!-- for sticky footer -->
@@ -259,7 +226,7 @@
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-03-22T05:20:49.983Z
+                at 2025-03-29T06:39:47.362Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>
