@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import "./emailDisplay.css";
 
 export default function EmailDisplay({ curEmail }) {
-  const date = getDate(curEmail.received_at);
+  const date = formatDate(curEmail.received_at);
   return (
     <div className="email-display">
       <div className="header">
@@ -47,7 +47,11 @@ function ReaderView({ curEmail }) {
 
   return (
     <div>
-      <div className="icon-container" onClick={displayReaderView}>
+      <div
+        className="icon-container"
+        data-testid="reader-view-button"
+        onClick={displayReaderView}
+      >
         <ReaderViewIcon />
       </div>
       <PopUp isOpen={displaying} handleClose={displayReaderView}>
@@ -73,6 +77,6 @@ function PopUp({ isOpen, handleClose, children }) {
   );
 }
 
-const getDate = (date) => {
+const formatDate = (date) => {
   return `${date[1]}/${date[2]}/${date[0]}`;
 };

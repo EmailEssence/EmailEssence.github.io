@@ -1,6 +1,7 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
 import Inbox from "../components/inbox/inbox";
+import EmailDisplay from "../components/inbox/emailDisplay";
 
 const mockEmailList = [
   {
@@ -64,17 +65,6 @@ describe("Inbox Component", () => {
     expect(mockSetCurEmail).toHaveBeenCalledWith(mockEmailList[1]);
   });
 
-  it("renders EmailDisplay component", () => {
-    render(
-      <Inbox
-        emailList={mockEmailList}
-        setCurEmail={mockSetCurEmail}
-        curEmail={mockEmailList[0]}
-      />
-    );
-    expect(screen.getByText("Body 1")).toBeInTheDocument();
-  });
-
   it("renders ReaderView component", () => {
     render(
       <Inbox
@@ -84,5 +74,20 @@ describe("Inbox Component", () => {
       />
     );
     expect(screen.getByText("Body 1")).toBeInTheDocument();
+  });
+});
+
+describe("Email Display Component", () => {
+  it("renders EmailDisplay component", () => {
+    render(<EmailDisplay curEmail={mockEmailList[0]} />);
+    expect(screen.getByText("Body 1")).toBeInTheDocument();
+  });
+
+  it("renders ReaderView", () => {
+    render(<EmailDisplay curEmail={mockEmailList[0]} />);
+    const svgElement = screen.getByText(
+      (content, element) => element.tagName.toLowerCase() === "svg"
+    ); // Get Element Role Name "svg"
+    expect(svgElement).toBeInTheDocument();
   });
 });
