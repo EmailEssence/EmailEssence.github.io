@@ -7,6 +7,21 @@ describe("Page Component Not Logged In", () => {
     render(<Page />);
     expect(screen.getByText("Login with Google")).toBeInTheDocument();
   });
+
+  it("clicks button", async () => {
+    vi.mock("../authentication/authenticate", () => ({
+      authenticate: vi.fn(),
+    }));
+
+    const { authenticate } = await import("../authentication/authenticate");
+
+    render(<Page />);
+
+    const loginButton = screen.getByText("Login with Google");
+    loginButton.click();
+
+    expect(authenticate).toHaveBeenCalled();
+  });
 });
 
 describe("Page Component Logged In", () => {
@@ -15,7 +30,7 @@ describe("Page Component Logged In", () => {
     localStorage.setItem("auth_token", "mock_token");
   });
 
-  it("renders loading state", () => {
+  it("renders loading dashboard state", () => {
     render(<Page />);
     expect(screen.getByText("Initializing dashboard...")).toBeInTheDocument();
   });
@@ -25,8 +40,17 @@ describe("Page Component Logged In", () => {
     vi.mock("../emails/emailParse", () => ({
       getTop5: vi.fn(() => [
         {
+          user_id: 1,
           email_id: 1,
-          summary_text: "Mock Summary 1",
+          sender: "MockSender",
+          recipients: "You",
+          subject: "Test Email",
+          body: "Test Body",
+          received_at: ["2000", "01", "01", "00:00"],
+          category: "MockCategory",
+          is_read: false,
+          summary_text: "Test Summary",
+          keywords: ["Mock", "Test"],
         },
       ]),
       default: vi.fn(() =>
