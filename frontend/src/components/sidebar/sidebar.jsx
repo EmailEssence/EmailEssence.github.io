@@ -40,12 +40,15 @@ function Button({ expanded, curState = "N", onClick, name, children }) {
     name.length > 0 ? `${name[0].toUpperCase()}${name.slice(1)}` : "";
   const selectedClass = curState === name ? " selected" : "";
   return (
-    <div>
-      <div className={`container${selectedClass}`} onClick={onClick}>
-        <div className="icon">
-          <div className={text.length < 1 ? "logo" : ""}>{children}</div>
-          {expanded && <p>{text}</p>}
-        </div>
+    <div
+      className={`container${selectedClass}`}
+      onClick={onClick}
+      role="button"
+      aria-pressed="false"
+    >
+      <div className="icon">
+        <div className={text.length < 1 ? "logo" : ""}>{children}</div>
+        {expanded && <p>{text}</p>}
       </div>
     </div>
   );
