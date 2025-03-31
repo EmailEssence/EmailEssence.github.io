@@ -90,4 +90,21 @@ describe("Email Display Component", () => {
     ); // Get Element Role Name "svg"
     expect(svgElement).toBeInTheDocument();
   });
+
+  it("renders ReaderView PopUp", () => {
+    // Create a mock portal in the test DOM
+    const portal = document.createElement("div");
+    portal.setAttribute("id", "portal");
+    document.body.appendChild(portal);
+
+    render(<EmailDisplay curEmail={mockEmailList[0]} />);
+
+    const button = screen.getByTestId("reader-view-button");
+    button.click();
+
+    expect(screen.getByText("Click To Close")).toBeInTheDocument();
+
+    // Clean up the portal after the test
+    document.body.removeChild(portal);
+  });
 });

@@ -62,6 +62,7 @@ function ReaderView({ curEmail }) {
 }
 
 function PopUp({ isOpen, handleClose, children }) {
+  console.log("Portal element:", document.getElementById("portal"));
   if (!isOpen) return null;
   return ReactDom.createPortal(
     <>
