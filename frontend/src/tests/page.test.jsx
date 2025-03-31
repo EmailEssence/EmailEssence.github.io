@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import Page from "../page";
 
@@ -18,7 +18,7 @@ describe("Page Component Not Logged In", () => {
     render(<Page />);
 
     const loginButton = screen.getByText("Login with Google");
-    loginButton.click();
+    fireEvent.click(loginButton);
 
     expect(authenticate).toHaveBeenCalled();
   });

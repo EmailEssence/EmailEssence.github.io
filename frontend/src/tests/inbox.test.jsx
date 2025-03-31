@@ -100,7 +100,7 @@ describe("Email Display Component", () => {
     render(<EmailDisplay curEmail={mockEmailList[0]} />);
 
     const button = screen.getByTestId("reader-view-button");
-    button.click();
+    fireEvent.click(button);
 
     expect(screen.getByText("Click To Close")).toBeInTheDocument();
 
