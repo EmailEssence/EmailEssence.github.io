@@ -10,7 +10,7 @@ export default function SideBar({
   selected,
 }) {
   return (
-    <div className="sidebar">
+    <div className="sidebar" data-testid="sidebar">
       <Button expanded={expanded} onClick={onLogoClick} name="">
         <Logo />
       </Button>
