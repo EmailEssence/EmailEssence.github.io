@@ -31,9 +31,7 @@ export default function Client({
       try {
         const requestedEmails = await fetchEmails(100); // Limited to 100 new emails per interval cycle
         if (requestedEmails.length > 0) {
-          console.log(requestedEmails);
           const newEmails = getNewEmails(requestedEmails, emailsByDate); // O(n^2) operation
-          console.log(newEmails);
           if (newEmails.length > 0) {
             setEmailsByDate([...newEmails, ...emailsByDate]);
           }
