@@ -7,4 +7,6 @@ describe("Sidebar Component", () => {
     render(<Sidebar />);
     expect(screen.getByTestId("sidebar")).toBeInTheDocument();
   });
+
+  // Sidebar Expanding Test In Client
 });

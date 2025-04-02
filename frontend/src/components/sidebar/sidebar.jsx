@@ -45,6 +45,7 @@ function Button({ expanded, curState = "N", onClick, name, children }) {
       onClick={onClick}
       role="button"
       aria-pressed="false"
+      data-testid={name.length > 0 ? name : "logo"}
     >
       <div className="icon">
         <div className={text.length < 1 ? "logo" : ""}>{children}</div>
