@@ -1,5 +1,5 @@
 import { render, screen, fireEvent } from "@testing-library/react";
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import Client from "../client";
 const mockEmails = [
   {
@@ -16,10 +16,49 @@ const mockEmails = [
     keywords: ["Mock", "Test"],
   },
 ];
+
+beforeEach(() => {
+  vi.clearAllTimers();
+  vi.clearAllMocks();
+  vi.mock("../emails/emailParse", () => ({
+    getTop5: vi.fn(() => mockEmails),
+    default: vi.fn(() => mockEmails),
+  }));
+});
+
 describe("Client Component", () => {
   it("Renders Component", () => {
     render(<Client emailsByDate={mockEmails} />);
     expect(screen.getByText("Test Summary")).toBeInTheDocument();
+  });
+
+  it("Runs Effect", async () => {
+    const setEmailsByDate = vi.fn();
+
+    vi.useFakeTimers();
+
+    render(
+      <Client
+        emailsByDate={mockEmails}
+        setEmailsByDate={setEmailsByDate}
+        defaultUserPreferences={{
+          isChecked: true,
+          emailFetchInterval: 1,
+          theme: "light",
+        }}
+      />
+    );
+    const emailparseFuncs = await import("../emails/emailParse");
+
+    vi.advanceTimersByTime(900);
+
+    expect(emailparseFuncs.default).not.toHaveBeenCalled(); // to not be called
+
+    vi.advanceTimersByTime(200); // 100 ms for padding
+
+    expect(emailparseFuncs.default).toHaveBeenCalled();
+
+    vi.useRealTimers();
   });
 });
 
