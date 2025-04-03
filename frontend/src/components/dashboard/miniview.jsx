@@ -3,13 +3,10 @@ import { useEffect, useRef, useState } from "react";
 import FullScreenIcon from "../../assets/FullScreenIcon";
 import InboxIcon from "../../assets/InboxArrow";
 import { emailsPerPage } from "../../assets/constants";
+import PropTypes from "prop-types";
 import "./miniview.css";
 
-export default function MiniViewPanel({
-  emailList,
-  handlePageChange,
-  setCurEmail,
-}) {
+function MiniViewPanel({ emailList, handlePageChange, setCurEmail }) {
   return (
     <div className="mini-view">
       <MiniViewHead handlePageChange={handlePageChange} />
@@ -106,6 +103,32 @@ function MiniViewEmail({ email, setCurEmail, handlePageChange }) {
   );
 }
 
+const commonPropTypesDashboard = {
+  handlePageChange: PropTypes.func,
+  setCurEmail: PropTypes.func,
+};
+
+MiniViewPanel.propTypes = {
+  ...commonPropTypesDashboard,
+  emailList: PropTypes.array,
+};
+
+MiniViewHead.propTypes = {
+  handlePageChange: PropTypes.func,
+};
+
+MiniViewBody.propTypes = {
+  ...commonPropTypesDashboard,
+  emailList: PropTypes.array,
+};
+
+MiniViewEmail.propTypes = {
+  ...commonPropTypesDashboard,
+  email: PropTypes.object,
+};
+
 const getSenderName = (sender) => {
   return sender.slice(0, sender.indexOf("<"));
 };
+
+export default MiniViewPanel;

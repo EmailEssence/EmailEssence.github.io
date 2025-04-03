@@ -1,13 +1,10 @@
 import ViewIcon from "../../assets/ViewIcon";
 import { getTop5 } from "../../emails/emailParse";
 import MiniViewPanel from "./miniview";
+import PropTypes from "prop-types";
 import "./dashboard.css";
 
-export default function Dashboard({
-  emailList,
-  handlePageChange,
-  setCurEmail,
-}) {
+function Dashboard({ emailList, handlePageChange, setCurEmail }) {
   return (
     <div className="dashboard">
       <WeightedEmailList
@@ -59,3 +56,24 @@ function WEListEmail({ email, setCurEmail, handlePageChange }) {
     </div>
   );
 }
+
+const commonPropTypesDashboard = {
+  handlePageChange: PropTypes.func,
+  setCurEmail: PropTypes.func,
+};
+Dashboard.propTypes = {
+  ...commonPropTypesDashboard,
+  emailList: PropTypes.array,
+};
+
+WeightedEmailList.propTypes = {
+  ...commonPropTypesDashboard,
+  emailList: PropTypes.array,
+};
+
+WEListEmail.propTypes = {
+  ...commonPropTypesDashboard,
+  email: PropTypes.object,
+};
+
+export default Dashboard;
