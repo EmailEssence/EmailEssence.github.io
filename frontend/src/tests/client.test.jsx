@@ -79,6 +79,19 @@ describe("Client Component", () => {
 
     vi.useRealTimers();
   });
+
+  // Create Test for HandleToggleSummariesInInbox
+
+  // Create Test for HandleSetEmailFetchInterval
+
+  // Create Test for HandleSetTheme
+
+  it("Runs handleSetCurEmail & Switches To Inbox On MiniView Email Click", () => {
+    render(<Client emailsByDate={[...mockEmails, ...mockEmail2]} />);
+    const email2 = screen.getByText("Test Email2");
+    fireEvent.click(email2);
+    expect(screen.getByText("Test Body2")).toBeInTheDocument();
+  });
 });
 
 describe("SideBar Page Changes", () => {
