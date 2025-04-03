@@ -1,14 +1,10 @@
 import InboxIcon from "../../assets/InboxIcon";
 import Logo from "../../assets/Logo";
 import SettingsIcon from "../../assets/SettingsIcon";
+import PropTypes from "prop-types";
 import "./sidebar.css";
 
-export default function SideBar({
-  onLogoClick,
-  expanded,
-  handlePageChange,
-  selected,
-}) {
+function SideBar({ onLogoClick, expanded, handlePageChange, selected }) {
   return (
     <div className="sidebar" data-testid="sidebar">
       <Button expanded={expanded} onClick={onLogoClick} name="">
@@ -54,3 +50,19 @@ function Button({ expanded, curState = "N", onClick, name, children }) {
     </div>
   );
 }
+
+Button.propTypes = {
+  expanded: PropTypes.bool,
+  curState: PropTypes.string,
+  onClick: PropTypes.func,
+  name: PropTypes.string,
+  children: PropTypes.element,
+};
+SideBar.propTypes = {
+  onLogoClick: PropTypes.func,
+  expanded: PropTypes.bool,
+  handlePageChange: PropTypes.func,
+  selected: PropTypes.string,
+};
+
+export default SideBar;

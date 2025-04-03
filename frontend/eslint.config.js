@@ -35,10 +35,4 @@ export default [
       ],
     },
   },
-  {
-    files: ["src/**/*"],
-    rules: {
-      "react/prop-types": "off",
-    },
-  },
 ];
