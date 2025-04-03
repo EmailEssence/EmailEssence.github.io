@@ -1,7 +1,7 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import Client from "../client";
-const mockEmails = [
+const mockEmail1 = [
   {
     user_id: 1,
     email_id: 1,
@@ -37,14 +37,14 @@ beforeEach(() => {
   vi.clearAllTimers();
   vi.clearAllMocks();
   vi.mock("../emails/emailParse", () => ({
-    getTop5: vi.fn(() => mockEmails),
+    getTop5: vi.fn(() => mockEmail1),
     default: vi.fn(() => Promise.resolve(mockEmail2)),
   }));
 });
 
 describe("Client Component", () => {
   it("Renders Component", () => {
-    render(<Client emailsByDate={mockEmails} />);
+    render(<Client emailsByDate={mockEmail1} />);
     expect(screen.getByText("Test Summary")).toBeInTheDocument();
   });
 
@@ -56,7 +56,7 @@ describe("Client Component", () => {
 
     render(
       <Client
-        emailsByDate={mockEmails}
+        emailsByDate={mockEmail1}
         setEmailsByDate={setEmailsByDate}
         defaultUserPreferences={{
           isChecked: true,
@@ -87,7 +87,7 @@ describe("Client Component", () => {
   // Create Test for HandleSetTheme
 
   it("Runs handleSetCurEmail & Switches To Inbox On MiniView Email Click", () => {
-    render(<Client emailsByDate={[...mockEmails, ...mockEmail2]} />);
+    render(<Client emailsByDate={[...mockEmail1, ...mockEmail2]} />);
     const email2 = screen.getByText("Test Email2");
     fireEvent.click(email2);
     expect(screen.getByText("Test Body2")).toBeInTheDocument();
@@ -96,7 +96,7 @@ describe("Client Component", () => {
 
 describe("SideBar Page Changes", () => {
   it("Expands SideBar", () => {
-    render(<Client emailsByDate={mockEmails} />);
+    render(<Client emailsByDate={mockEmail1} />);
     const button = screen.getByTestId("logo");
     fireEvent.click(button);
     expect(screen.getByText("Settings")).toBeInTheDocument();
@@ -104,21 +104,21 @@ describe("SideBar Page Changes", () => {
 
   // Test Fails Due To Error In Settings Page
   it.skip("Goes To Settings Page", () => {
-    render(<Client emailsByDate={mockEmails} />);
+    render(<Client emailsByDate={mockEmail1} />);
     const settingsButton = screen.getByTestId("settings");
     fireEvent.click(settingsButton);
     expect(screen.getByText("Settings")).toBeInTheDocument();
   });
 
   it("Goes To Inobx Page", () => {
-    render(<Client emailsByDate={mockEmails} />);
+    render(<Client emailsByDate={mockEmail1} />);
     const inboxButton = screen.getByTestId("inbox");
     fireEvent.click(inboxButton);
     expect(screen.getByText("Test Body")).toBeInTheDocument();
   });
 
   it("Returns To Dashboard", () => {
-    render(<Client emailsByDate={mockEmails} />);
+    render(<Client emailsByDate={mockEmail1} />);
     const inboxButton = screen.getByTestId("inbox");
     fireEvent.click(inboxButton);
     fireEvent.click(inboxButton);
