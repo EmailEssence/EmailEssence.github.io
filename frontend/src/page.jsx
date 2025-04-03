@@ -5,7 +5,7 @@ import {
   checkAuthStatus,
 } from "./authentication/authenticate";
 import Client from "./client";
-import { Login } from "./components/login/login";
+import Login from "./components/login/login";
 import { fetchUserPreferences } from "./components/settings/settings";
 import fetchEmails from "./emails/emailParse";
 

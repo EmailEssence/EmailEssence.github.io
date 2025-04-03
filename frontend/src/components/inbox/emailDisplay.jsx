@@ -2,9 +2,10 @@ import ReactDom from "react-dom";
 import ReaderViewIcon from "../../assets/ReaderView";
 import { Readability } from "@mozilla/readability";
 import { useEffect, useState } from "react";
+import PropTypes from "prop-types";
 import "./emailDisplay.css";
 
-export default function EmailDisplay({ curEmail }) {
+function EmailDisplay({ curEmail }) {
   const date = formatDate(curEmail.received_at);
   return (
     <div className="email-display">
@@ -80,3 +81,19 @@ function PopUp({ isOpen, handleClose, children }) {
 const formatDate = (date) => {
   return `${date[1]}/${date[2]}/${date[0]}`;
 };
+
+EmailDisplay.propTypes = {
+  curEmail: PropTypes.object,
+};
+
+ReaderView.propTypes = {
+  curEmail: PropTypes.object,
+};
+
+PopUp.propTypes = {
+  isOpen: PropTypes.bool,
+  handleClose: PropTypes.func,
+  children: PropTypes.element,
+};
+
+export default EmailDisplay;

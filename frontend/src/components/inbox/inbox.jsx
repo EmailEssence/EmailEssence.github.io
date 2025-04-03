@@ -2,15 +2,11 @@ import EmailDisplay from "./emailDisplay";
 import { useEffect, useRef, useState } from "react";
 import ArrowIcon from "../../assets/InboxArrow";
 import { emailsPerPage } from "../../assets/constants";
+import PropTypes from "prop-types";
 import "./emailEntry.css";
 import "./emailList.css";
 
-export default function Inbox({
-  displaySummaries,
-  emailList,
-  setCurEmail,
-  curEmail,
-}) {
+function Inbox({ displaySummaries, emailList, setCurEmail, curEmail }) {
   return (
     <div className="inbox-display">
       <InboxEmailList
@@ -108,6 +104,27 @@ function InboxEmailList({ displaySummaries, emailList, curEmail, onClick }) {
   );
 }
 
+Inbox.propTypes = {
+  displaySummaries: PropTypes.bool,
+  emailList: PropTypes.array,
+  setCurEmail: PropTypes.func,
+  curEmail: PropTypes.object,
+};
+
+EmailEntry.propTypes = {
+  displaySummary: PropTypes.bool,
+  email: PropTypes.object,
+  onClick: PropTypes.func,
+  selected: PropTypes.bool,
+};
+
+InboxEmailList.propTypes = {
+  displaySummaries: PropTypes.bool,
+  emailList: PropTypes.array,
+  curEmail: PropTypes.object,
+  onClick: PropTypes.func,
+};
+
 const getDate = (date) => {
   return `${date[1]}/${date[2]}/${date[0]}`;
 };
@@ -115,3 +132,5 @@ const getDate = (date) => {
 const getSenderName = (sender) => {
   return sender.slice(0, sender.indexOf("<"));
 };
+
+export default Inbox;
