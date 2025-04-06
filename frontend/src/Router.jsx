@@ -1,5 +1,11 @@
 import { BrowserRouter, Routes, Route } from "react-router";
 import Page from "./page";
+import Auth from "./Auth";
+import Login from "./components/login/login";
+import Loading from "./Loading";
+import Dashboard from "./components/dashboard/dashboard";
+import Inbox from "./components/inbox/inbox";
+import { Settings } from "./components/settings/settings";
 
 function Router() {
   return (
