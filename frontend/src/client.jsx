@@ -5,9 +5,10 @@ import Inbox from "./components/inbox/inbox";
 import { Settings } from "./components/settings/settings";
 import SideBar from "./components/sidebar/sidebar";
 import fetchEmails from "./emails/emailParse";
+import PropTypes from "prop-types";
 import { clientReducer, userPreferencesReducer } from "./reducers";
 
-export default function Client({
+function Client({
   emailsByDate,
   setEmailsByDate,
   defaultUserPreferences = {
@@ -151,3 +152,11 @@ function getNewEmails(requestedEmails, allEmails) {
     return !exists;
   });
 }
+
+Client.propTypes = {
+  emailsByDate: PropTypes.array,
+  setEmailsByDate: PropTypes.func,
+  defaultUserPreferences: PropTypes.object,
+};
+
+export default Client;
