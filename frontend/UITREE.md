@@ -1,12 +1,16 @@
 <!-- Markmap https://marketplace.visualstudio.com/items?itemName=gera2ld.markmap-vscode -->
 
-# page
+# Router
 
-## Login
+## Auth
 
-## Client
+### Login (/login)
 
-### Dashboard
+### Loading (/loading)
+
+## Client (/client)
+
+### Dashboard (/client/)
 
 #### WeightedEmailList
 
@@ -23,7 +27,7 @@
 
 - MiniViewEmail
 
-### Inbox
+### Inbox (/client/inbox)
 
 #### InboxEmailList
 
@@ -34,7 +38,7 @@
 
 - ReaderView
 
-### Settings
+### Settings (/client/settings)
 
 - SummariesInInbox
 - EmailFetchInterval
