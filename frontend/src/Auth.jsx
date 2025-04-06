@@ -1,5 +1,11 @@
+import { Outlet } from "react-router";
+
 function Auth() {
-  return <></>;
+  return (
+    <>
+      <Outlet />
+    </>
+  );
 }
 
 export default Auth;
