@@ -1,5 +1,4 @@
-import { baseUrl } from "../emails/emailParse";
-
+import { baseUrl, retrieveUserData } from "../emails/emailParse";
 export const authenticate = async () => {
   // Check for auth hash and render OAuthCallback if present
   try {
@@ -10,8 +9,8 @@ export const authenticate = async () => {
   }
 };
 
-export const handleOAuthCallback = async (handleAuthenticate) => {
-  console.log(window.location.hash);
+// When Reach /loading call this function
+export const handleOAuthCallback = async () => {
   const hash = window.location.hash;
   if (hash && hash.startsWith("#auth=")) {
     try {
@@ -23,15 +22,31 @@ export const handleOAuthCallback = async (handleAuthenticate) => {
         if (isAuthenticated) {
           handleAuthenticate(authState.token);
         } else {
-          console.log("not authenticated");
+          handleAuthError("Unable to authenticate");
         }
       }
       window.location.hash = "";
       return;
     } catch (error) {
       console.error("Error parsing auth state:", error);
+      handleAuthError(error);
     }
   }
+};
+
+export const handleAuthenticate = async (token) => {
+  try {
+    localStorage.setItem("auth_token", token);
+    retrieveUserData();
+  } catch (error) {
+    handleAuthError(error);
+  }
+};
+
+const handleAuthError = async (error) => {
+  console.error("Auth flow error:", error);
+  localStorage.removeItem("auth_token");
+  // Send user to Error Page
 };
 
 export const checkAuthStatus = async (token) => {

@@ -1,5 +1,10 @@
 export const baseUrl = "https://ee-backend-w86t.onrender.com";
 
+export const retrieveUserData = async () => {
+  // errors are handled
+  // Todo: Implement
+};
+
 async function getEmails(extension) {
   const option = {
     method: "GET",
