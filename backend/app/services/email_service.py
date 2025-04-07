@@ -16,6 +16,7 @@ from bson.objectid import ObjectId
 
 from starlette.concurrency import run_in_threadpool
 
+from app.services.database_service import DatabaseService
 from app.models import EmailSchema, ReaderViewResponse
 
 logging.basicConfig(
@@ -39,6 +40,11 @@ class EmailService:
         """Initialize the email service with required configuration"""
         self.imap_host = 'imap.gmail.com'
         self.default_email_account = os.environ.get("EMAIL_ACCOUNT")
+        
+        # Instantiate DatabaseService for required collections
+        self.email_db = DatabaseService(db.emails)
+        self.user_db = DatabaseService(db.users)
+        self.token_db = DatabaseService(db.tokens)
         
     # -------------------------------------------------------------------------
     # Authentication Methods
@@ -275,20 +281,19 @@ class EmailService:
     
     async def save_email_to_db(self, email_data: dict, uid: str) -> None:
         """Store email in database if not exists"""
-        # TODO: Move print to logging for consistent log management
         try:
-            print(f"🔍 Checking if email {uid} already exists in MongoDB...")
-            existing_email = await db.emails.find_one({"email_id": str(uid), "user_id": email_data["user_id"]})
-
-            if existing_email:
-                print(f"⚠️ Email {uid} already exists, skipping insert.")
+            logger.debug(f"[DB CHECK] Verifying if email with UID {uid} exists for user_id={email_data['user_id']}")
+            existing_email = await self.email_db.find_one({
+                "email_id": str(uid),
+                "user_id": email_data["user_id"]
+            })
+            if not existing_email:
+                logger.info(f"[DB INSERT] Inserting new email UID={uid} for user_id={email_data['user_id']}")
+                await self.email_db.insert_one(email_data)
             else:
-                print(f"📌 Inserting email {uid} into MongoDB...")
-                result = await db.emails.insert_one(email_data)
-                print(f"✅ Email {uid} inserted successfully with ID: {result.inserted_id}")
-
+                logger.info(f"[DB SKIP] Email UID={uid} already exists in DB for user_id={email_data['user_id']}")
         except Exception as e:
-            print(f"❌ Error inserting email {uid} into MongoDB: {e}")
+            logger.error(f"[DB ERROR] Failed to insert email UID={uid} for user_id={email_data['user_id']}: {e}")
 
     async def get_emails_from_db(self, user_id: str, query: Dict = None, 
                                 skip: int = 0, limit: int = 100,
@@ -315,13 +320,15 @@ class EmailService:
             # Use provided query or empty dict and ensure user_id is included
             filter_query = query or {}
             filter_query["user_id"] = user_id
+            logger.debug(f"[DB QUERY] user_id={user_id} query={filter_query}, skip={skip}, limit={limit}, sort_by={sort_by} ({sort_order})")
             
             # Fetch emails with pagination and sorting
-            stored_emails = await db.emails.find(filter_query) \
+            stored_emails = await self.email_db.collection.find(filter_query) \
                 .sort([(sort_by, sort_direction)]) \
                 .skip(skip) \
                 .limit(limit) \
                 .to_list(length=limit)
+            logger.info(f"[DB RESULT] Retrieved {len(stored_emails)} emails for user_id={user_id}")
             
             if stored_emails:
                 logger.info(f"Retrieved {len(stored_emails)} emails from database for user {user_id}")
@@ -348,15 +355,13 @@ class EmailService:
         # TODO: Implement conflict resolution for emails modified in both places
         
         try:
-            email = await db.emails.find_one({"email_id": email_id, "user_id": user_id})
-            
-            if not email:
-                logger.warning(f"Email {email_id} not found for user {user_id}")
-                return None
-                
-            return email
+            logger.debug(f"[DB FETCH] Fetching email by email_id={email_id}, user_id={user_id}")
+            return await self.email_db.find_one({
+                "email_id": email_id,
+                "user_id": user_id
+            })
         except Exception as e:
-            logger.exception(f"Failed to fetch email {email_id} for user {user_id}")
+            logger.exception(f"[DB ERROR] Failed to retrieve email_id={email_id} for user_id={user_id}")
             raise HTTPException(status_code=500, detail=str(e))
             
     async def mark_email_as_read(self, email_id: str, user_id: str) -> Optional[dict]:
@@ -403,14 +408,18 @@ class EmailService:
             HTTPException: If delete operation fails
         """
         try:
-            result = await db.emails.delete_one({"email_id": email_id, "user_id": user_id})
-            
-            if result.deleted_count == 0:
-                logger.warning(f"Email {email_id} not found for user {user_id} during delete")
-                
+            logger.info(f"[DB DELETE] Attempting to delete email_id={email_id} for user_id={user_id}")
+            result = await self.email_db.delete_one({
+                "email_id": email_id,
+                "user_id": user_id
+            })
+            if result.deleted_count > 0:
+                logger.info(f"[DB DELETE] Successfully deleted email_id={email_id} for user_id={user_id}")
+            else:
+                logger.warning(f"[DB DELETE] No email found to delete with email_id={email_id}, user_id={user_id}")
             return result.deleted_count > 0
         except Exception as e:
-            logger.exception(f"Failed to delete email {email_id} for user {user_id}")
+            logger.exception(f"[DB ERROR] Failed to delete email_id={email_id} for user_id={user_id}")
             raise HTTPException(status_code=500, detail=str(e))
     
     # -------------------------------------------------------------------------
