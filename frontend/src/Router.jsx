@@ -6,13 +6,17 @@ import Dashboard from "./components/dashboard/dashboard";
 import Inbox from "./components/inbox/inbox";
 import Client from "./client";
 import { Settings } from "./components/settings/settings";
+import { authenticate } from "./authentication/authenticate";
 
 function Router() {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Auth />}>
-          <Route path="login" element={<Login />} />
+          <Route
+            path="login"
+            element={<Login handleGoogleClick={authenticate} />}
+          />
           <Route path="loading" element={<Loading />} />
         </Route>
         <Route path="client" element={<Client />}>

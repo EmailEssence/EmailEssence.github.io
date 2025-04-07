@@ -1,19 +1,9 @@
 import { baseUrl } from "../emails/emailParse";
 
-export const parseURL = (url) => {
-  const code = "code=";
-  const i1 = url.indexOf(code);
-  const i2 = url.indexOf("scope=");
-  if (i1 === -1 || i2 === -1) {
-    return null;
-  }
-  return url.substring(i1 + code.length, i2 - 1);
-};
-
 export const authenticate = async () => {
   // Check for auth hash and render OAuthCallback if present
   try {
-    const redirect_uri = window.location.origin;
+    const redirect_uri = `${window.location.origin}/loading`;
     window.location.href = `${baseUrl}/auth/login?redirect_uri=${redirect_uri}`;
   } catch (error) {
     console.error("Login Error", error);
