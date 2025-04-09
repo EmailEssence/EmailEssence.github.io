@@ -4,13 +4,12 @@ import Dashboard from "./components/dashboard/dashboard";
 import Inbox from "./components/inbox/inbox";
 import { Settings } from "./components/settings/settings";
 import SideBar from "./components/sidebar/sidebar";
-import fetchEmails from "./emails/emailParse";
+import { fetchNewEmails } from "./emails/emailParse";
 import PropTypes from "prop-types";
 import { clientReducer, userPreferencesReducer } from "./reducers";
 
 function Client({
   emailsByDate,
-  setEmailsByDate,
   defaultUserPreferences = {
     isChecked: true,
     emailFetchInterval: 120,
@@ -30,19 +29,12 @@ function Client({
   useEffect(() => {
     const clock = setInterval(async () => {
       try {
-        const requestedEmails = await fetchEmails(100); // Limited to 100 new emails per interval cycle
-        if (requestedEmails.length > 0) {
-          const newEmails = getNewEmails(requestedEmails, emailsByDate); // O(n^2) operation
-          if (newEmails.length > 0) {
-            setEmailsByDate([...newEmails, ...emailsByDate]);
-          }
-        }
+        await fetchNewEmails();
       } catch (error) {
         console.error(`Loading Emails Error: ${error}`);
       }
     }, userPreferences.emailFetchInterval * 1000);
     return () => clearInterval(clock);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userPreferences.emailFetchInterval]);
 
   const root = document.querySelector(":root");
@@ -141,16 +133,6 @@ function Client({
   };
 
   return <>{emailClient()}</>;
-}
-
-function getNewEmails(requestedEmails, allEmails) {
-  return requestedEmails.filter((reqEmail) => {
-    let exists = false;
-    for (const email of allEmails) {
-      if (email.email_id === reqEmail.email_id) exists = true;
-    }
-    return !exists;
-  });
 }
 
 Client.propTypes = {

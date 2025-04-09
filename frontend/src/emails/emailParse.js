@@ -8,11 +8,38 @@ export let userPreferences = {
   theme: "light",
 };
 
+export const fetchNewEmails = async () => {
+  try {
+    const requestedEmails = await fetchEmails(100);
+    if (requestedEmails.length > 0) {
+      const newEmails = getNewEmails(requestedEmails, emails); // O(n^2) operation
+      if (newEmails.length > 0) {
+        emails = [...emails, ...newEmails];
+      }
+    }
+  } catch (error) {
+    console.error(`Error fetching new emails: ${error}`);
+  }
+};
+
+function getNewEmails(requestedEmails, allEmails) {
+  return requestedEmails.filter((reqEmail) => {
+    let exists = false;
+    for (const email of allEmails) {
+      if (email.email_id === reqEmail.email_id) exists = true;
+    }
+    return !exists;
+  });
+}
+
 export const retrieveUserData = async () => {
-  // errors are handled
-  emails = await fetchEmails(100);
-  const user_id = null; // Get user ID
-  if (user_id) getUserPreferences(user_id);
+  try {
+    emails = await fetchEmails(100);
+    const user_id = null; // Get user ID
+    if (user_id) getUserPreferences(user_id);
+  } catch (error) {
+    console.error(error);
+  }
 };
 
 const getUserPreferences = async (user_id) => {

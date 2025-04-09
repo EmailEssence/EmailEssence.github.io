@@ -7,6 +7,7 @@ import Inbox from "./components/inbox/inbox";
 import Client from "./client";
 import { Settings } from "./components/settings/settings";
 import { authenticate } from "./authentication/authenticate";
+import { emails, userPreferences } from "./emails/emailParse";
 
 function Router() {
   return (
@@ -19,7 +20,15 @@ function Router() {
           />
           <Route path="loading" element={<Loading />} />
         </Route>
-        <Route path="client" element={<Client />}>
+        <Route
+          path="client"
+          element={
+            <Client
+              emailsByDate={emails}
+              defaultUserPreferences={userPreferences}
+            />
+          }
+        >
           <Route index element={<Dashboard />} />
           <Route path="inbox" element={<Inbox />} />
           <Route path="settings" element={<Settings />} />
