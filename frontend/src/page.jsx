@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import {
   authenticate,
-  handleOAuthCallback,
   checkAuthStatus,
+  handleOAuthCallback,
 } from "./authentication/authenticate";
 import Client from "./client";
+import Loading from "./components/loading/loading";
 import Login from "./components/login/login";
 import { fetchUserPreferences } from "./components/settings/settings";
 import fetchEmails from "./emails/emailParse";
@@ -35,9 +36,9 @@ export default function Page() {
       }, 60000);
       return () => clearInterval(intervalId);
     } else {
-      if (loggedIn) {
+      if (loggedIn && !calledAuth) {
         handleAuthenticate(localStorage.getItem("auth_token"));
-      } else {
+      } else if (!loggedIn){
         const hash = window.location.hash;
         if (hash && hash.startsWith("#auth=")) {
           handleOAuthCallback(handleAuthenticate);
@@ -45,7 +46,7 @@ export default function Page() {
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loggedIn, loading]);
+  }, [loggedIn]);
 
   const handleAuthenticate = async (token) => {
     try {
@@ -98,11 +99,11 @@ export default function Page() {
 
   const display = () => {
     return loading ? (
-      <div>Loading emails...</div>
+      <Loading handleOAuthCallback={handleOAuthCallback} /> // redirecting to the Loading page
     ) : !loggedIn ? (
       <Login handleGoogleClick={authenticate} />
     ) : emailsByDate === null ? (
-      <div>Initializing dashboard...</div>
+      <Loading handleOAuthCallBack={handleOAuthCallback}/>
     ) : (
       <Client
         emailsByDate={emailsByDate}
