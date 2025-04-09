@@ -2,11 +2,8 @@ import { BrowserRouter, Routes, Route } from "react-router";
 import Auth from "./Auth";
 import Login from "./components/login/login";
 import Loading from "./Loading";
-import Dashboard from "./components/dashboard/dashboard";
-import Inbox from "./components/inbox/inbox";
 import Client from "./client";
 import Error from "./Error";
-import { Settings } from "./components/settings/settings";
 import { authenticate } from "./authentication/authenticate";
 import { emails, userPreferences } from "./emails/emailParse";
 
@@ -22,18 +19,14 @@ function Router() {
           <Route path="loading" element={<Loading />} />
         </Route>
         <Route
-          path="client"
+          path="client/*"
           element={
             <Client
               emailsByDate={emails}
               defaultUserPreferences={userPreferences}
             />
           }
-        >
-          <Route index element={<Dashboard />} />
-          <Route path="inbox" element={<Inbox />} />
-          <Route path="settings" element={<Settings />} />
-        </Route>
+        />
         <Route path="error" element={<Error />} />
       </Routes>
     </BrowserRouter>

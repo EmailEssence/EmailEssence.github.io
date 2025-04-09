@@ -1,4 +1,5 @@
 import { useEffect, useReducer } from "react";
+import { Routes, Route, Outlet } from "react-router";
 import "./client.css";
 import Dashboard from "./components/dashboard/dashboard";
 import Inbox from "./components/inbox/inbox";
@@ -85,59 +86,57 @@ function Client({
     });
   };
 
-  const getPage = () => {
-    switch (client.curPage) {
-      case "inbox":
-        return (
-          <Inbox
-            displaySummaries={userPreferences.isChecked}
-            emailList={emailsByDate}
-            setCurEmail={handleSetCurEmail}
-            curEmail={client.curEmail}
-          />
-        );
-      case "settings":
-        return (
-          <Settings
-            isChecked={userPreferences.isChecked}
-            handleToggleSummariesInInbox={handleToggleSummariesInInbox}
-            emailFetchInterval={userPreferences.emailFetchInterval}
-            handleSetEmailFetchInterval={handleSetEmailFetchInterval}
-            theme={userPreferences.theme}
-            handleSetTheme={handleSetTheme}
-          />
-        );
-      default:
-        return (
-          <Dashboard
-            emailList={emailsByDate}
-            handlePageChange={handlePageChange}
-            setCurEmail={handleSetCurEmail}
-          />
-        );
-    }
-  };
-
-  const emailClient = () => {
-    return (
-      <div className="client">
-        <SideBar
-          onLogoClick={handleLogoClick}
-          expanded={client.expandedSideBar}
-          handlePageChange={handlePageChange}
-          selected={client.curPage}
+  return (
+    <div className="client">
+      <SideBar
+        onLogoClick={handleLogoClick}
+        expanded={client.expandedSideBar}
+        handlePageChange={handlePageChange}
+        selected={client.curPage}
+      />
+      <Routes>
+        <Route
+          index
+          element={
+            <Dashboard
+              emailList={emailsByDate}
+              handlePageChange={handlePageChange}
+              setCurEmail={handleSetCurEmail}
+            />
+          }
         />
-        {getPage()}
-      </div>
-    );
-  };
-
-  return <>{emailClient()}</>;
+        <Route
+          path="inbox"
+          element={
+            <Inbox
+              displaySummaries={userPreferences.isChecked}
+              emailList={emailsByDate}
+              setCurEmail={handleSetCurEmail}
+              curEmail={client.curEmail}
+            />
+          }
+        />
+        <Route
+          path="settings"
+          element={
+            <Settings
+              isChecked={userPreferences.isChecked}
+              handleToggleSummariesInInbox={handleToggleSummariesInInbox}
+              emailFetchInterval={userPreferences.emailFetchInterval}
+              handleSetEmailFetchInterval={handleSetEmailFetchInterval}
+              theme={userPreferences.theme}
+              handleSetTheme={handleSetTheme}
+            />
+          }
+        />
+      </Routes>
+      <Outlet />
+    </div>
+  );
 }
 
 Client.propTypes = {
   emailsByDate: PropTypes.array,
-  setEmailsByDate: PropTypes.func,
   defaultUserPreferences: PropTypes.object,
 };
 
