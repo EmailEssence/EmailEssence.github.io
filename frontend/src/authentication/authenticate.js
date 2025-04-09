@@ -9,7 +9,7 @@ export const authenticate = async () => {
   }
 };
 
-// When Reach /loading call this function
+// When Reach loading component call this function
 export const handleOAuthCallback = async () => {
   const hash = window.location.hash;
   if (hash && hash.startsWith("#auth=")) {
@@ -37,7 +37,8 @@ export const handleOAuthCallback = async () => {
 export const handleAuthenticate = async (token) => {
   try {
     localStorage.setItem("auth_token", token);
-    retrieveUserData();
+    await retrieveUserData();
+    window.location.href = "/client/dashboard"; // Go To dashboard page
   } catch (error) {
     handleAuthError(error);
   }
@@ -46,7 +47,7 @@ export const handleAuthenticate = async (token) => {
 const handleAuthError = async (error) => {
   console.error("Auth flow error:", error);
   localStorage.removeItem("auth_token");
-  // Send user to Error Page
+  window.location.href = "/error"; // go to error page
 };
 
 export const checkAuthStatus = async (token) => {
