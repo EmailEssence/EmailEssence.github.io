@@ -20,7 +20,7 @@ export const handleOAuthCallback = async () => {
       if (authState.authenticated && authState.token) {
         const isAuthenticated = checkAuthStatus(authState.token);
         if (isAuthenticated) {
-          handleAuthenticate(authState.token);
+          await handleAuthenticate(authState.token);
         } else {
           handleAuthError("Unable to authenticate");
         }
@@ -38,7 +38,6 @@ export const handleAuthenticate = async (token) => {
   try {
     localStorage.setItem("auth_token", token);
     await retrieveUserData();
-    window.location.href = "/client/dashboard"; // Go To dashboard page
   } catch (error) {
     handleAuthError(error);
   }

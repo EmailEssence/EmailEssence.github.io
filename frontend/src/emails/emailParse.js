@@ -35,6 +35,7 @@ function getNewEmails(requestedEmails, allEmails) {
 export const retrieveUserData = async () => {
   try {
     emails = await fetchEmails(100);
+    console.log(emails);
     const user_id = null; // Get user ID
     if (user_id) getUserPreferences(user_id);
   } catch (error) {
