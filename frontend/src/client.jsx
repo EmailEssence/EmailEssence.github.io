@@ -1,5 +1,5 @@
 import { useEffect, useReducer } from "react";
-import { Routes, Route, Outlet } from "react-router";
+import { Routes, Route, Outlet, useNavigate } from "react-router";
 import "./client.css";
 import Dashboard from "./components/dashboard/dashboard";
 import Inbox from "./components/inbox/inbox";
@@ -17,8 +17,8 @@ function Client({
     theme: "light",
   },
 }) {
+  const navigate = useNavigate();
   const [client, dispatchClient] = useReducer(clientReducer, {
-    curPage: "dashboard",
     expandedSideBar: false,
     curEmail: emailsByDate[0],
   });
@@ -52,10 +52,7 @@ function Client({
   };
 
   const handlePageChange = (pageName) => {
-    dispatchClient({
-      type: "pageChange",
-      page: client.curPage === pageName ? "dashboard" : pageName,
-    });
+    navigate(pageName);
   };
 
   const handleToggleSummariesInInbox = () => {

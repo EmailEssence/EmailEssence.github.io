@@ -2,7 +2,7 @@ import InboxIcon from "../../assets/InboxIcon";
 import Logo from "../../assets/Logo";
 import SettingsIcon from "../../assets/SettingsIcon";
 import PropTypes from "prop-types";
-import DashboardIcon from "../../assets/DashboardIcon";
+// import DashboardIcon from "../../assets/DashboardIcon";
 import "./sidebar.css";
 
 function SideBar({ onLogoClick, expanded, handlePageChange, selected }) {
@@ -15,8 +15,10 @@ function SideBar({ onLogoClick, expanded, handlePageChange, selected }) {
         expanded={expanded}
         curState={selected}
         onClick={() => handlePageChange("/client/dashboard")}
+        name="dashboard"
       >
-        <DashboardIcon />
+        {/* change to Dashboard when initialized */}
+        <InboxIcon />
       </Button>
       <Button
         expanded={expanded}
