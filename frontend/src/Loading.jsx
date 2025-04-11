@@ -11,7 +11,7 @@ export default function Loading() {
         //calls Oauth and updates the loading state
         await handleOAuthCallback();
 
-        navigate("/client/");
+        navigate("/client/dashboard");
         // Link to /client/
       } catch (error) {
         console.error("OAuth callback failed:", error);
