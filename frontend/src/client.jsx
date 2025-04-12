@@ -89,7 +89,6 @@ function Client({
         onLogoClick={handleLogoClick}
         expanded={client.expandedSideBar}
         handlePageChange={handlePageChange}
-        selected={client.curPage}
       />
       <Routes>
         <Route
