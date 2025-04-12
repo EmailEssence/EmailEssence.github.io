@@ -11,7 +11,7 @@ function SideBar({ onLogoClick, expanded, handlePageChange }) {
   const route = location.pathname;
   return (
     <div className="sidebar" data-testid="sidebar">
-      <Button expanded={expanded} onClick={onLogoClick} name="">
+      <Button expanded={expanded} onClick={onLogoClick} name="logo">
         <Logo />
       </Button>
       <Button
@@ -45,7 +45,7 @@ function SideBar({ onLogoClick, expanded, handlePageChange }) {
 
 function Button({ expanded, curState = "None", onClick, name, children }) {
   const text =
-    name.length > 0 ? `${name[0].toUpperCase()}${name.slice(1)}` : "";
+    name === "logo" ? "" : `${name[0].toUpperCase()}${name.slice(1)}`;
   const selectedClass = curState.includes(name) ? " selected" : "";
   return (
     <div
@@ -53,10 +53,10 @@ function Button({ expanded, curState = "None", onClick, name, children }) {
       onClick={onClick}
       role="button"
       aria-pressed="false"
-      data-testid={name.length > 0 ? name : "logo"}
+      data-testid={name}
     >
       <div className="icon">
-        <div className={text.length < 1 ? "logo" : ""}>{children}</div>
+        <div className={name === "logo" && "logo"}>{children}</div>
         {expanded && <p>{text}</p>}
       </div>
     </div>
