@@ -5,7 +5,18 @@ import { useEffect, useState } from "react";
 import PropTypes from "prop-types";
 import "./emailDisplay.css";
 
-function EmailDisplay({ curEmail }) {
+function EmailDisplay({
+  curEmail = {
+    user_id: 1,
+    email_id: 1,
+    sender: "",
+    recipients: "",
+    subject: "",
+    body: "",
+    received_at: [0, 0, 0],
+    summary_text: "",
+  },
+}) {
   const date = formatDate(curEmail.received_at);
   return (
     <div className="email-display">

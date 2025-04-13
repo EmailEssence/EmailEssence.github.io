@@ -20,7 +20,6 @@ function AppRouter() {
   const [userEmails, setUserEmails] = useState(emails);
   const location = useLocation();
   useEffect(() => {
-    console.log("ran");
     if (location.hash.includes("#newEmails")) {
       if (userEmails.length < emails.length) setUserEmails(emails);
       window.history.replaceState(
@@ -43,11 +42,14 @@ function AppRouter() {
       </Route>
       <Route
         path="client/*"
+        // userEmails.length being more than 0 ensures that curEmail is not undefined when client is rendered
         element={
-          <Client
-            emailsByDate={userEmails}
-            defaultUserPreferences={userPreferences}
-          />
+          userEmails.length > 0 && (
+            <Client
+              emailsByDate={userEmails}
+              defaultUserPreferences={userPreferences}
+            />
+          )
         }
       />
       <Route path="error" element={<Error />} />

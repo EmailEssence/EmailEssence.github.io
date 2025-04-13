@@ -56,7 +56,7 @@ function Button({ expanded, curState = "None", onClick, name, children }) {
       data-testid={name}
     >
       <div className="icon">
-        <div className={name === "logo" && "logo"}>{children}</div>
+        <div className={name === "logo" ? "logo" : ""}>{children}</div>
         {expanded && <p>{text}</p>}
       </div>
     </div>
