@@ -46,6 +46,7 @@ export const handleAuthenticate = async (token) => {
 const handleAuthError = async (error) => {
   console.error("Auth flow error:", error);
   localStorage.removeItem("auth_token");
+  localStorage.setItem("error_message", error.message); // Store error message in local storage
   window.location.href = "/error"; // go to error page
 };
 
