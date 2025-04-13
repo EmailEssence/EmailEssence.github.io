@@ -15,6 +15,7 @@ export const fetchNewEmails = async () => {
       const newEmails = getNewEmails(requestedEmails, emails); // O(n^2) operation
       if (newEmails.length > 0) {
         emails = [...emails, ...newEmails];
+        window.location.hash = "#newEmails";
       }
     }
   } catch (error) {
@@ -35,7 +36,6 @@ function getNewEmails(requestedEmails, allEmails) {
 export const retrieveUserData = async () => {
   try {
     emails = await fetchEmails(100);
-    console.log(emails);
     const user_id = null; // Get user ID
     if (user_id) getUserPreferences(user_id);
   } catch (error) {

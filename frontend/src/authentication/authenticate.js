@@ -25,9 +25,9 @@ export const handleOAuthCallback = async () => {
           handleAuthError("Unable to authenticate");
         }
       }
-      window.location.hash = "";
       return;
     } catch (error) {
+      window.location.hash = "";
       console.error("Error parsing auth state:", error);
       handleAuthError(error);
     }
