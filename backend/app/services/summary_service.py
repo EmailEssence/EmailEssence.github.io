@@ -5,6 +5,7 @@ from datetime import datetime, timezone, timedelta
 
 from app.models import EmailSchema, SummarySchema
 from database import db
+from app.services.database_service import DatabaseService
 from app.services.summarization.base import AdaptiveSummarizer
 from app.services.summarization import (
   ProcessingStrategy, 
@@ -14,6 +15,8 @@ from app.services.summarization import (
 
 # Create module-specific logger
 logger = logging.getLogger(__name__)
+
+summary_db = DatabaseService(db.summaries)
 
 class SummaryService:
     """
@@ -30,10 +33,10 @@ class SummaryService:
         Creates necessary indexes for efficient querying of summaries.
         """
         # Create indexes for efficient querying
-        await db.summaries.create_index("email_id", unique=True)
-        await db.summaries.create_index("keywords")  # For keyword searching
-        await db.summaries.create_index("generated_at")  # For time-based queries
-        await db.summaries.create_index("user_id")  # For user-specific summaries
+        await summary_db.create_index("email_id", unique=True)
+        await summary_db.create_index("keywords")  # For keyword searching
+        await summary_db.create_index("generated_at")  # For time-based queries
+        await summary_db.create_index("user_id")  # For user-specific summaries
         
         logger.info("Summary collection indexes initialized")
     
@@ -59,7 +62,7 @@ class SummaryService:
             summary_dict["user_id"] = user_id
             
             # Use upsert to either update existing or insert new
-            result = await db.summaries.update_one(
+            result = await summary_db.update_one(
                 {"email_id": summary.email_id, "user_id": user_id},
                 {"$set": summary_dict},
                 upsert=True
@@ -87,7 +90,7 @@ class SummaryService:
             Exception: If database operation fails
         """
         try:
-            result = await db.summaries.find_one({"email_id": email_id, "user_id": user_id})
+            result = await summary_db.find_one({"email_id": email_id, "user_id": user_id})
             if not result:
                 return None
             return SummarySchema.from_dict(result)
@@ -127,7 +130,7 @@ class SummaryService:
             query = {"user_id": user_id} if user_id else {}
             
             # Fetch summaries with pagination and sorting
-            results = await db.summaries.find(query) \
+            results = await summary_db.find(query) \
                 .sort([(sort_by, sort_direction)]) \
                 .skip(skip) \
                 .limit(limit) \
@@ -164,7 +167,7 @@ class SummaryService:
             if user_id:
                 query["user_id"] = user_id
                 
-            results = await db.summaries.find(query).limit(limit).to_list(length=limit)
+            results = await summary_db.find(query).limit(limit).to_list(length=limit)
             return [SummarySchema.from_dict(result) for result in results]
         except Exception as e:
             logger.error(f"Failed to search summaries by keywords: {e}")
@@ -196,7 +199,7 @@ class SummaryService:
             if user_id:
                 query["user_id"] = user_id
             
-            results = await db.summaries.find(query) \
+            results = await summary_db.find(query) \
                 .sort([("generated_at", -1)]) \
                 .limit(limit) \
                 .to_list(length=limit)
@@ -221,7 +224,7 @@ class SummaryService:
             Exception: If database operation fails
         """
         try:
-            result = await db.summaries.delete_one({"email_id": email_id, "user_id": user_id})
+            result = await summary_db.delete_one({"email_id": email_id, "user_id": user_id})
             deleted = result.deleted_count > 0
             
             if deleted:
@@ -267,7 +270,7 @@ class SummaryService:
             
             # Execute bulk operation
             if operations:
-                result = await db.summaries.bulk_write(operations)
+                result = await summary_db.bulk_write(operations)
                 stats = {
                     "inserted": result.upserted_count,
                     "modified": result.modified_count
@@ -299,7 +302,7 @@ class SummaryService:
             query = query or {}
             if user_id:
                 query["user_id"] = user_id
-            return await db.summaries.count_documents(query)
+            return await summary_db.count_documents(query)
         except Exception as e:
             logger.error(f"Failed to count summaries: {e}")
             raise
@@ -324,7 +327,7 @@ class SummaryService:
         try:
             # Query for all summaries matching the provided email IDs
             query = {"email_id": {"$in": email_ids}, "user_id": user_id}
-            results = await db.summaries.find(query).to_list(length=len(email_ids))
+            results = await summary_db.find(query).to_list(length=len(email_ids))
             
             # Convert to SummarySchema objects
             summaries = [SummarySchema.from_dict(doc) for doc in results]
