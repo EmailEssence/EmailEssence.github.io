@@ -125,6 +125,7 @@ export default async function fetchEmails(numRequested) {
       return email.email_id;
     });
     const summaries = await getSummaries(ids);
+    summaries.reverse(); // link summaries to respected email
     // Validate array responses
     if (!Array.isArray(newEmails.emails)) {
       console.error("Invalid emails response:", newEmails);
