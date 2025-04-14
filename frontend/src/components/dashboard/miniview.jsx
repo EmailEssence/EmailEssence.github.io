@@ -31,7 +31,7 @@ function MiniViewHead({ handlePageChange }) {
       <div
         className="expand-button"
         role="button"
-        onClick={() => handlePageChange("inbox")}
+        onClick={() => handlePageChange("/client/inbox")}
       >
         <FullScreenIcon />
       </div>
@@ -91,7 +91,7 @@ function MiniViewEmail({ email, setCurEmail, handlePageChange }) {
       className="miniview-email-container"
       onClick={() => {
         setCurEmail(email);
-        handlePageChange("inbox");
+        handlePageChange("/client/inbox");
       }}
     >
       <div className="from">{getSenderName(email.sender)}</div>
