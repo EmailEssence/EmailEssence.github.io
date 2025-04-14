@@ -20,10 +20,11 @@ from app.services.database_service import DatabaseService
 from app.models import EmailSchema, ReaderViewResponse
 
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=logging.info, # DEBUG, INFO, WARNING, ERROR, CRITICAL
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S'
 )
+
 
 # Create module-specific logger
 logger = logging.getLogger(__name__)
