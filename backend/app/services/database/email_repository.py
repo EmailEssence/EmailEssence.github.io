@@ -53,7 +53,13 @@ class EmailRepository(BaseRepository[EmailSchema], IEmailRepository):
             Optional[EmailSchema]: Email if found, None otherwise
         """
         doc = await self.find_one({"email_id": email_id, "user_id": user_id})
-        return self._model_class(**doc) if doc else None
+        if doc:
+            # If doc is already an EmailSchema instance, return it directly
+            if isinstance(doc, EmailSchema):
+                return doc
+            # Otherwise convert dict to EmailSchema
+            return self._model_class(**doc)
+        return None
     
     async def update_by_id(self, email_id: str, user_id: str, update_data: Dict[str, Any]) -> bool:
         """
@@ -110,4 +116,45 @@ class EmailRepository(BaseRepository[EmailSchema], IEmailRepository):
         Returns:
             str: ID of the inserted email
         """
-        return await super().insert_one(email.model_dump()) 
+        return await super().insert_one(email.model_dump())
+
+    async def find_by_email_id(self, email_id: str) -> Optional[EmailSchema]:
+        """
+        Find an email by email ID.
+        
+        Args:
+            email_id: Email ID to search for
+            
+        Returns:
+            Optional[EmailSchema]: Email if found, None otherwise
+        """
+        doc = await self.find_one({"email_id": email_id})
+        return self._model_class(**doc) if doc else None
+
+    async def find_unread(self) -> List[EmailSchema]:
+        """
+        Find all unread emails.
+        
+        Returns:
+            List[EmailSchema]: List of unread emails
+        """
+        docs = await self.find_many({"is_read": False})
+        return [self._model_class(**doc) for doc in docs]
+
+    async def mark_as_read(self, email_id: str) -> Optional[EmailSchema]:
+        """
+        Mark an email as read.
+        
+        Args:
+            email_id: ID of the email to mark as read
+            
+        Returns:
+            Optional[EmailSchema]: Updated email if found, None otherwise
+        """
+        result = await self._collection.update_one(
+            {"email_id": email_id},
+            {"$set": {"is_read": True}}
+        )
+        if result.modified_count > 0:
+            return await self.find_by_email_id(email_id)
+        return None 

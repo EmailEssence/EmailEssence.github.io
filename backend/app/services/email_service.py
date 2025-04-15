@@ -232,7 +232,13 @@ class EmailService:
             email_id = str(email_data["email_id"])
             existing_email = await self.email_repository.find_by_id(email_id, email_data["user_id"])
             if not existing_email:
-                await self.email_repository.insert_one(email_data)
+                # If email_data is already an EmailSchema instance, use it directly
+                if isinstance(email_data, EmailSchema):
+                    await self.email_repository.insert_one(email_data)
+                else:
+                    # Otherwise create a new EmailSchema instance
+                    email = EmailSchema(**email_data)
+                    await self.email_repository.insert_one(email)
                 logger.info(f"Email {email_id} inserted successfully")
         except Exception as e:
             logger.error(f"Error saving email {email_data['email_id']}: {e}")
@@ -248,12 +254,13 @@ class EmailService:
             filter_query = query or {}
             filter_query["user_id"] = user_id
             
-            return await self.email_repository.find_many(
+            results = await self.email_repository.find_many(
                 filter_query,
                 limit=limit,
                 sort=[(sort_by, sort_direction)],
                 skip=skip
             )
+            return [result if isinstance(result, EmailSchema) else EmailSchema(**result) for result in results]
         except Exception as e:
             logger.exception(f"Failed to retrieve emails from database for user {user_id}")
             raise HTTPException(status_code=500, detail=str(e))
@@ -273,6 +280,10 @@ class EmailService:
             email_data = await self.email_repository.find_by_id(str(email_id), user_id)
             if not email_data:
                 return None
+            # If email_data is already an EmailSchema instance, return it directly
+            if isinstance(email_data, EmailSchema):
+                return email_data
+            # Otherwise create a new EmailSchema instance
             return EmailSchema(**email_data)
         except Exception as e:
             logger.error(f"Failed to get email: {e}")
@@ -292,6 +303,10 @@ class EmailService:
                 
             email_data["is_read"] = True
             await self.email_repository.update_by_id(email_id, user_id, email_data)
+            # If email_data is already an EmailSchema instance, return it directly
+            if isinstance(email_data, EmailSchema):
+                return email_data
+            # Otherwise create a new EmailSchema instance
             return EmailSchema(**email_data)
         except Exception as e:
             logger.exception(f"Failed to mark email {email_id} as read for user {user_id}")

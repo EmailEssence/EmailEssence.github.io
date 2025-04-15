@@ -45,8 +45,7 @@ class UserRepository(BaseRepository[UserSchema], IUserRepository):
         Returns:
             Optional[UserSchema]: User if found, None otherwise
         """
-        doc = await self.find_one({"email": email})
-        return self._model_class(**doc) if doc else None
+        return await self.find_one({"email": email})
     
     async def find_by_username(self, username: str) -> Optional[UserSchema]:
         """
@@ -58,8 +57,7 @@ class UserRepository(BaseRepository[UserSchema], IUserRepository):
         Returns:
             Optional[UserSchema]: User if found, None otherwise
         """
-        doc = await self.find_one({"username": username})
-        return self._model_class(**doc) if doc else None
+        return await self.find_one({"username": username})
 
     async def find_by_google_id(self, google_id: str) -> Optional[UserSchema]:
         """
@@ -71,8 +69,7 @@ class UserRepository(BaseRepository[UserSchema], IUserRepository):
         Returns:
             Optional[UserSchema]: User if found, None otherwise
         """
-        doc = await self.find_one({"google_id": google_id})
-        return self._model_class(**doc) if doc else None
+        return await self.find_one({"google_id": google_id})
 
     async def update_preferences(self, user_id: str, preferences: Dict[str, Any]) -> bool:
         """
@@ -101,7 +98,7 @@ class UserRepository(BaseRepository[UserSchema], IUserRepository):
         Returns:
             str: ID of the inserted user
         """
-        return await super().insert_one(user.model_dump())
+        return await super().insert_one(user)
 
     async def update_by_email(self, email: str, user_data: Dict[str, Any]) -> bool:
         """
@@ -133,7 +130,7 @@ class UserRepository(BaseRepository[UserSchema], IUserRepository):
         result = await self._collection.delete_one({"email": email})
         return result.deleted_count > 0
 
-    async def find_by_id(self, id: str) -> Optional[Dict[str, Any]]:
+    async def find_by_id(self, id: str) -> Optional[UserSchema]:
         """
         Find a user by ID (either MongoDB ObjectId or Google ID).
         
@@ -141,7 +138,7 @@ class UserRepository(BaseRepository[UserSchema], IUserRepository):
             id: User ID (MongoDB ObjectId or Google ID)
             
         Returns:
-            Optional[Dict[str, Any]]: User data if found, None otherwise
+            Optional[UserSchema]: User if found, None otherwise
         """
         # Try MongoDB ObjectId first
         if ObjectId.is_valid(id):

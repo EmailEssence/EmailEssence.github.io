@@ -44,6 +44,10 @@ class TokenRepository(BaseRepository[TokenData], ITokenRepository):
         doc = await self.find_one({"email": email})
         if doc:
             logger.info(f"Found tokens for email: {email}")
+            # If doc is already a TokenData instance, return it directly
+            if isinstance(doc, TokenData):
+                return doc
+            # Otherwise convert dict to TokenData
             return self._model_class(**doc)
         else:
             logger.warning(f"No tokens found for email: {email}")

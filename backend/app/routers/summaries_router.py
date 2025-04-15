@@ -27,6 +27,19 @@ from app.services.database.factories import (
     get_email_service
 )
 
+# Configure logging with format and level
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
+
+# Add specific configuration for pymongo's logger
+logging.getLogger('pymongo').setLevel(logging.WARNING)
+
+# Create module-specific logger
+logger = logging.getLogger(__name__)
+
 router = APIRouter()
 
 @router.get("/{email_id}", response_model=SummarySchema)
@@ -63,7 +76,7 @@ async def get_summary_by_id(
         return SummarySchema(**summary)
         
     except Exception as e:
-        logging.error(f"Error retrieving/generating summary: {e}")
+        logger.error(f"Error retrieving/generating summary: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e)
@@ -391,40 +404,52 @@ async def search_by_keyword(
             detail="Failed to search summaries"
         )
 
-@router.get(
-    "/recent/{days}", 
-    response_model=List[SummarySchema],
-    summary="Get recent summaries",
-    description="Retrieves summaries from the specified number of recent days"
-)
+@router.get("/recent/{days}", response_model=List[SummarySchema])
 async def get_recent_summaries(
-    days: int = Path(...),
-    limit: int = Query(20, ge=1, le=100, description="Maximum number of results"),
+    days: int = Path(..., description="Number of days to look back"),
+    limit: int = Query(20, description="Maximum number of summaries to return"),
     summary_service: SummaryService = Depends(get_summary_service),
-    user: dict = Depends(get_current_user)
-):
+    current_user: UserSchema = Depends(get_current_user)
+) -> List[SummarySchema]:
     """
-    Get summaries from the specified number of recent days.
+    Get summaries generated within recent days.
     
     Args:
         days: Number of days to look back
-        limit: Maximum number of results to return
-        summary_service: The summary service for data operations
-        user: Current authenticated user
+        limit: Maximum number of summaries to return
+        current_user: Currently authenticated user
         
     Returns:
-        List[SummarySchema]: List of recent summaries
-        
-    Raises:
-        HTTPException: If the retrieval fails
+        List[SummarySchema]: Recent summaries
     """
     try:
-        user_id = str(user.get("_id", user.get("google_id")))
-        results = await summary_service.get_recent_summaries(days=days, limit=limit, user_id=user_id)
-        return results
+        # Log request parameters
+        logger.debug(f"Getting recent summaries for user {current_user.email} - days: {days}, limit: {limit}")
+        
+        # Get user ID from the UserSchema instance
+        user_id = str(current_user.google_id)
+        logger.debug(f"Using user ID: {user_id}")
+        
+        # Get summaries from service
+        summaries = await summary_service.get_recent_summaries(
+            days=days,
+            limit=limit,
+            user_id=user_id
+        )
+        
+        logger.debug(f"Retrieved {len(summaries)} summaries for user {current_user.email}")
+        return summaries
     except Exception as e:
-        logging.error(f"Error retrieving recent summaries: {str(e)}", exc_info=True)
+        logger.error(
+            f"Error retrieving recent summaries for user {current_user.email}: {str(e)}",
+            exc_info=True,
+            extra={
+                "user_email": current_user.email,
+                "days": days,
+                "limit": limit
+            }
+        )
         raise HTTPException(
-            status_code=500,
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to retrieve recent summaries"
         )

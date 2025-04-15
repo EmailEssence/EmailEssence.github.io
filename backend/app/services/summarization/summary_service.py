@@ -1,3 +1,7 @@
+"""
+Service for handling email summarization operations.
+"""
+
 import logging
 from typing import List, Optional, Dict, Any
 from datetime import datetime, timezone, timedelta
@@ -13,6 +17,13 @@ from app.services.summarization import (
     ProcessingStrategy, 
     OpenAIEmailSummarizer,
     GeminiEmailSummarizer
+)
+
+# Configure logging with format and level
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
 )
 
 # Create module-specific logger
@@ -70,8 +81,12 @@ class SummaryService:
             Exception: If database operation fails
         """
         try:
-            # Convert to dict using the to_dict method
-            summary_dict = summary.to_dict()
+            # If summary is already a SummarySchema instance, use it directly
+            if isinstance(summary, SummarySchema):
+                summary_dict = summary.model_dump()
+            else:
+                # Otherwise create a new SummarySchema instance
+                summary_dict = SummarySchema(**summary).model_dump()
             
             # Add user_id to the summary
             summary_dict["user_id"] = user_id
@@ -108,7 +123,11 @@ class SummaryService:
             result = await self.summary_repository.find_one({"email_id": email_id, "user_id": user_id})
             if not result:
                 return None
-            return SummarySchema.from_dict(result)
+            # If result is already a SummarySchema instance, return it directly
+            if isinstance(result, SummarySchema):
+                return result
+            # Otherwise create a new SummarySchema instance
+            return SummarySchema(**result)
         except Exception as e:
             logger.error(f"Failed to retrieve summary for email {email_id}: {e}")
             raise HTTPException(status_code=500, detail=str(e))
@@ -152,8 +171,8 @@ class SummaryService:
                 sort=[(sort_by, sort_direction)]
             )
             
-            # Convert results to SummarySchema objects
-            return [SummarySchema.from_dict(doc) for doc in results]
+            # Convert results to SummarySchema objects if needed
+            return [result if isinstance(result, SummarySchema) else SummarySchema(**result) for result in results]
         except Exception as e:
             logger.error(f"Failed to retrieve summaries: {e}")
             raise HTTPException(status_code=500, detail=str(e))
@@ -184,7 +203,7 @@ class SummaryService:
                 query["user_id"] = user_id
                 
             results = await self.summary_repository.find_many(query, limit=limit)
-            return [SummarySchema.from_dict(result) for result in results]
+            return [result if isinstance(result, SummarySchema) else SummarySchema(**result) for result in results]
         except Exception as e:
             logger.error(f"Failed to search summaries by keywords: {e}")
             raise HTTPException(status_code=500, detail=str(e))
@@ -210,20 +229,32 @@ class SummaryService:
             Exception: If database operation fails
         """
         try:
-            cutoff_date = datetime.now(timezone.utc) - timedelta(days=days)
-            query = {"generated_at": {"$gte": cutoff_date}}
+            # Create timezone-aware cutoff date
+            now = datetime.now(timezone.utc)
+            cutoff_date = now - timedelta(days=days)
+            
+            # Build query with proper datetime comparison for MongoDB
+            query = {
+                "generated_at": {
+                    "$gte": cutoff_date,
+                    "$lte": now
+                }
+            }
             if user_id:
                 query["user_id"] = user_id
+                
+            logger.debug(f"Querying summaries between {cutoff_date.isoformat()} and {now.isoformat()}")
             
             results = await self.summary_repository.find_many(
                 query,
                 limit=limit,
                 sort=[("generated_at", -1)]
             )
-                
-            return [SummarySchema.from_dict(doc) for doc in results]
+            
+            logger.debug(f"Found {len(results)} summaries matching query")
+            return [result if isinstance(result, SummarySchema) else SummarySchema(**result) for result in results]
         except Exception as e:
-            logger.error(f"Failed to retrieve recent summaries: {e}")
+            logger.error(f"Failed to retrieve recent summaries: {e}", exc_info=True)
             raise HTTPException(status_code=500, detail=str(e))
     
     async def delete_summary(self, email_id: str, user_id: str) -> bool:
@@ -376,9 +407,13 @@ class SummaryService:
         """
         try:
             # Try to get existing summary
-            summary = await self.summary_repository.find_by_email_id(email_id, user_id)
+            summary = await self.summary_repository.find_by_email_id(email_id)
             if summary:
-                return summary
+                # If summary is already a SummarySchema instance, use it directly
+                if isinstance(summary, SummarySchema):
+                    return summary.model_dump()
+                # Otherwise create a new SummarySchema instance
+                return SummarySchema(**summary).model_dump()
                 
             # Get email data
             email = await self.email_service.get_email(email_id, user_id)
@@ -398,15 +433,15 @@ class SummaryService:
                 
             # Create a new SummarySchema with the user_id
             summary = SummarySchema(
-                **summaries[0].dict(),
+                **summaries[0].model_dump(),
                 user_id=user_id
             )
             
             # Store summary
-            await self.summary_repository.insert_one(summary.dict())
+            await self.summary_repository.insert_one(summary)
             logger.info(f"Created new summary for email {email_id}")
             
-            return summary.dict()
+            return summary.model_dump()
             
         except Exception as e:
             logger.error(f"Failed to get or create summary for email {email_id}: {e}")

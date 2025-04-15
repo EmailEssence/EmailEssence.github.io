@@ -167,52 +167,39 @@ class AuthService:
         
         Args:
             code: Authorization code
-            email: User's email address
+            email: User's email
             
         Returns:
             TokenData: Token data
         """
         try:
-            logger.info(f"Starting token exchange for user: {email}")
-            
             # Exchange code for tokens
-            flow = Flow.from_client_config(
-                {
-                    "web": {
-                        "client_id": settings.google_client_id,
-                        "client_secret": settings.google_client_secret,
-                        "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-                        "token_uri": "https://oauth2.googleapis.com/token",
-                        "redirect_uris": [self.get_redirect_uri()]
-                    }
-                },
-                SCOPES
-            )
-            flow.redirect_uri = self.get_redirect_uri()
+            credentials = Credentials.from_authorized_user_info({
+                "code": code,
+                "client_id": "your-client-id",
+                "client_secret": "your-client-secret",
+                "redirect_uri": "your-redirect-uri"
+            })
             
-            # Exchange code for tokens
-            logger.debug(f"Exchanging code for tokens for user: {email}")
-            token_response = await run_in_threadpool(
-                lambda: flow.fetch_token(code=code)
-            )
-            logger.info(f"Successfully exchanged code for tokens for user: {email}")
-            
-            # Store tokens in MongoDB
+            # Create token data
             token_data = {
-                "email": email,
-                "token": token_response["access_token"],
-                "refresh_token": token_response.get("refresh_token"),
-                "token_uri": "https://oauth2.googleapis.com/token",
-                "client_id": settings.google_client_id,
-                "client_secret": settings.google_client_secret,
-                "scopes": SCOPES
+                "token": credentials.token,
+                "refresh_token": credentials.refresh_token,
+                "token_uri": credentials.token_uri,
+                "client_id": credentials.client_id,
+                "client_secret": credentials.client_secret,
+                "scopes": credentials.scopes
             }
             
-            logger.debug(f"Storing tokens in database for user: {email}")
-            await self.token_repository.update_by_email(email, token_data)
-            logger.info(f"Successfully stored tokens for user: {email}")
+            # Create TokenData instance
+            token = TokenData(**token_data)
             
-            return TokenData(**token_data)
+            # Store in database
+            await self.token_repository.insert_one(token)
+            
+            logger.info(f"Successfully stored tokens for user: {email}")
+            return token
+            
         except Exception as e:
             logger.error(f"Failed to get tokens for user {email}: {e}")
             raise HTTPException(
@@ -231,16 +218,16 @@ class AuthService:
             Optional[Dict[str, Any]]: User data if found, None otherwise
         """
         try:
-            user = await self.user_service.get_user_by_email(email)
+            user = await self.user_repository.find_by_email(email)
             if not user:
                 # Create new user if not found
-                user = await self.user_service.create_user({
-                    "email": email,
-                    "name": "",
-                    "picture": "",
-                    "google_id": ""
-                })
-            return user.dict()
+                user = await self.user_repository.insert_one(UserSchema(
+                    email=email,
+                    name="",
+                    picture="",
+                    google_id=""
+                ))
+            return user.model_dump()
         except Exception as e:
             logger.error(f"Failed to get current user: {e}")
             raise HTTPException(
@@ -250,7 +237,7 @@ class AuthService:
 
     async def get_token_data(self, email: str) -> Optional[TokenData]:
         """
-        Get token data by email.
+        Get token data for a user.
         
         Args:
             email: User's email address
@@ -259,19 +246,12 @@ class AuthService:
             Optional[TokenData]: Token data if found, None otherwise
         """
         try:
-            token_data = await self.token_repository.find_by_email(email)
-            if not token_data:
-                return None
-            # If token_data is already a TokenData instance, return it directly
-            if isinstance(token_data, TokenData):
-                return token_data
-            # Otherwise convert dict to TokenData
-            return TokenData(**token_data)
+            return await self.token_repository.find_by_email(email)
         except Exception as e:
-            logger.error(f"Failed to get token data: {e}")
+            logger.error(f"Failed to get token record for email {email}: {e}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to get token data"
+                detail="Failed to get token record"
             )
 
     def get_redirect_uri(self):
@@ -350,6 +330,9 @@ class AuthService:
                 logger.warning(f"No token record found for email: {email}")
                 return None
             logger.info(f"Found token record for email: {email}")
+            # Convert TokenData to dict if it's a model instance
+            if hasattr(token_data, 'model_dump'):
+                return token_data.model_dump()
             return token_data
         except Exception as e:
             logger.error(f"Failed to get token record for email {email}: {e}")

@@ -5,12 +5,9 @@ Base repository class for common database operations.
 from typing import Dict, Any, Optional, List, Generic, TypeVar, Type
 from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorCollection
-import logging
 from pydantic import BaseModel
 
 from app.services.database.connection import instance
-
-logger = logging.getLogger(__name__)
 
 T = TypeVar('T', bound=BaseModel)
 
@@ -44,6 +41,46 @@ class BaseRepository(Generic[T]):
             self._collection = instance.db[self.collection_name]
         return self._collection
 
+    def _to_model(self, doc: Optional[Dict[str, Any]]) -> Optional[T]:
+        """
+        Convert a MongoDB document to a model instance.
+        
+        Args:
+            doc: MongoDB document
+            
+        Returns:
+            Optional[T]: Model instance if document exists, None otherwise
+        """
+        if doc is None:
+            return None
+        try:
+            # If doc is already a model instance, return it directly
+            if isinstance(doc, self._model_class):
+                return doc
+            # Otherwise convert dict to model
+            return self._model_class(**doc)
+        except Exception as e:
+            raise
+
+    def _to_document(self, model: T) -> Dict[str, Any]:
+        """
+        Convert a model instance to a MongoDB document.
+        
+        Args:
+            model: Model instance
+            
+        Returns:
+            Dict[str, Any]: MongoDB document
+        """
+        try:
+            # If model is already a dict, return it directly
+            if isinstance(model, dict):
+                return model
+            # Otherwise convert model to dict
+            return model.model_dump()
+        except Exception as e:
+            raise
+
     async def create_index(self, field: str, unique: bool = False, **kwargs) -> None:
         """
         Create an index on the specified field.
@@ -55,9 +92,7 @@ class BaseRepository(Generic[T]):
         """
         try:
             await self._collection.create_index(field, unique=unique, **kwargs)
-            logger.info(f"Created index on {field} (unique={unique})")
         except Exception as e:
-            logger.error(f"Failed to create index on {field}: {e}")
             raise
 
     async def find_one(self, query: Dict[str, Any]) -> Optional[T]:
@@ -70,11 +105,14 @@ class BaseRepository(Generic[T]):
         Returns:
             Optional[T]: Document if found, None otherwise
         """
-        collection = self._get_collection()
-        doc = await collection.find_one(query)
-        return self._model_class(**doc) if doc else None
+        try:
+            collection = self._get_collection()
+            doc = await collection.find_one(query)
+            return self._to_model(doc)
+        except Exception as e:
+            raise
 
-    async def find_by_id(self, id: str) -> Optional[Dict[str, Any]]:
+    async def find_by_id(self, id: str) -> Optional[T]:
         """
         Find a document by its ID.
         
@@ -82,13 +120,19 @@ class BaseRepository(Generic[T]):
             id: Document ID
             
         Returns:
-            Optional[Dict[str, Any]]: Document if found, None otherwise
+            Optional[T]: Document if found, None otherwise
         """
         if not ObjectId.is_valid(id):
             return None
         return await self.find_one({"_id": ObjectId(id)})
 
-    async def find_many(self, query: Dict[str, Any], limit: int = 100, skip: int = 0, sort: List[tuple] = None) -> List[Dict[str, Any]]:
+    async def find_many(
+        self, 
+        query: Dict[str, Any], 
+        limit: int = 100, 
+        skip: int = 0, 
+        sort: List[tuple] = None
+    ) -> List[T]:
         """
         Find multiple documents matching the query with pagination support.
         
@@ -99,30 +143,38 @@ class BaseRepository(Generic[T]):
             sort: List of (field, direction) tuples for sorting
             
         Returns:
-            List[Dict[str, Any]]: List of matching documents
+            List[T]: List of matching documents
         """
-        collection = self._get_collection()
-        cursor = collection.find(query)
-        
-        if sort:
-            cursor = cursor.sort(sort)
+        try:
+            collection = self._get_collection()
+            cursor = collection.find(query)
             
-        cursor = cursor.skip(skip).limit(limit)
-        return await cursor.to_list(length=limit)
+            if sort:
+                cursor = cursor.sort(sort)
+                
+            cursor = cursor.skip(skip).limit(limit)
+            docs = await cursor.to_list(length=limit)
+            return [self._to_model(doc) for doc in docs]
+        except Exception as e:
+            raise
 
-    async def insert_one(self, document: Dict[str, Any]) -> str:
+    async def insert_one(self, model: T) -> str:
         """
         Insert a single document.
         
         Args:
-            document: Document to insert
+            model: Model instance to insert
             
         Returns:
             str: ID of the inserted document
         """
-        collection = self._get_collection()
-        result = await collection.insert_one(document)
-        return str(result.inserted_id)
+        try:
+            collection = self._get_collection()
+            document = self._to_document(model)
+            result = await collection.insert_one(document)
+            return str(result.inserted_id)
+        except Exception as e:
+            raise
 
     async def update_one(self, document_id: str, update_data: Dict[str, Any]) -> bool:
         """
@@ -137,12 +189,15 @@ class BaseRepository(Generic[T]):
         """
         if not ObjectId.is_valid(document_id):
             return False
-        collection = self._get_collection()
-        result = await collection.update_one(
-            {"_id": ObjectId(document_id)},
-            {"$set": update_data}
-        )
-        return result.modified_count > 0
+        try:
+            collection = self._get_collection()
+            result = await collection.update_one(
+                {"_id": ObjectId(document_id)},
+                {"$set": update_data}
+            )
+            return result.modified_count > 0
+        except Exception as e:
+            raise
 
     async def delete_one(self, document_id: str) -> bool:
         """
@@ -156,9 +211,12 @@ class BaseRepository(Generic[T]):
         """
         if not ObjectId.is_valid(document_id):
             return False
-        collection = self._get_collection()
-        result = await collection.delete_one({"_id": ObjectId(document_id)})
-        return result.deleted_count > 0
+        try:
+            collection = self._get_collection()
+            result = await collection.delete_one({"_id": ObjectId(document_id)})
+            return result.deleted_count > 0
+        except Exception as e:
+            raise
 
     async def count_documents(self, query: Dict[str, Any]) -> int:
         """
@@ -170,5 +228,8 @@ class BaseRepository(Generic[T]):
         Returns:
             int: Number of matching documents
         """
-        collection = self._get_collection()
-        return await collection.count_documents(query) 
+        try:
+            collection = self._get_collection()
+            return await collection.count_documents(query)
+        except Exception as e:
+            raise 

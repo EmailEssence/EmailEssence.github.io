@@ -42,10 +42,7 @@ class UserService:
             User if found, None otherwise
         """
         try:
-            user_data = await self.user_repository.find_by_id(user_id)
-            if not user_data:
-                return None
-            return UserSchema(**user_data)
+            return await self.user_repository.find_by_id(user_id)
         except Exception as e:
             logger.error(f"Failed to get user: {e}")
             raise HTTPException(
@@ -64,10 +61,7 @@ class UserService:
             User if found, None otherwise
         """
         try:
-            user_data = await self.user_repository.find_by_email(email)
-            if not user_data:
-                return None
-            return UserSchema(**user_data)
+            return await self.user_repository.find_by_email(email)
         except Exception as e:
             logger.error(f"Failed to get user by email: {e}")
             raise HTTPException(
@@ -102,18 +96,20 @@ class UserService:
                     "client_secret": "",
                     "scopes": []
                 },
-                "preferences": PreferencesSchema().dict()
+                "preferences": PreferencesSchema().model_dump()
             }
             
             # Update with any provided values
             complete_user_data.update(user_data)
             
-            # Insert into database
-            user_id = await self.user_repository.insert_one(complete_user_data)
-            complete_user_data["_id"] = user_id
+            # Create UserSchema instance
+            user = UserSchema(**complete_user_data)
             
-            # Return as UserSchema
-            return UserSchema(**complete_user_data)
+            # Insert into database
+            user_id = await self.user_repository.insert_one(user)
+            user._id = user_id
+            
+            return user
         except Exception as e:
             logger.error(f"Failed to create user: {e}")
             raise HTTPException(
