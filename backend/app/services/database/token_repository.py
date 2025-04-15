@@ -2,16 +2,18 @@
 Repository for managing OAuth tokens in MongoDB.
 """
 
-from typing import Optional, Dict, Any
+from typing import List, Optional, Dict, Any
 from motor.motor_asyncio import AsyncIOMotorCollection
+from bson import ObjectId
 import logging
 
-from app.models import TokenData
+from app.models.auth_models import TokenData
 from app.services.database.base_repository import BaseRepository
+from app.services.database.interfaces import ITokenRepository
 
 logger = logging.getLogger(__name__)
 
-class TokenRepository(BaseRepository):
+class TokenRepository(BaseRepository[TokenData], ITokenRepository):
     """
     Repository for managing OAuth tokens in MongoDB.
     
@@ -26,59 +28,81 @@ class TokenRepository(BaseRepository):
         Args:
             collection: MongoDB collection instance
         """
-        super().__init__(collection)
+        super().__init__(collection, TokenData)
     
     async def find_by_email(self, email: str) -> Optional[TokenData]:
         """
-        Find tokens by email.
+        Find a token by email.
         
         Args:
-            email: Email address to find tokens for
+            email: Email address to search for
             
         Returns:
-            Optional[TokenData]: Token data if found, None otherwise
+            Optional[TokenData]: Token if found, None otherwise
         """
         logger.debug(f"Looking up tokens for email: {email}")
-        token_data = await self.find_one({"email": email})
-        if token_data:
+        doc = await self.find_one({"email": email})
+        if doc:
             logger.info(f"Found tokens for email: {email}")
-            return TokenData(**token_data)
+            return self._model_class(**doc)
         else:
             logger.warning(f"No tokens found for email: {email}")
             return None
     
-    async def update_by_email(self, email: str, token_data: Dict[str, Any]) -> bool:
+    async def find_by_token(self, token: str) -> Optional[TokenData]:
         """
-        Update tokens by email. Creates the document if it doesn't exist.
+        Find a token by token string.
         
         Args:
-            email: Email address to update tokens for
-            token_data: New token data
+            token: Token string to search for
             
         Returns:
-            bool: True if update/insert successful
+            Optional[TokenData]: Token if found, None otherwise
+        """
+        doc = await self.find_one({"token": token})
+        return self._model_class(**doc) if doc else None
+
+    async def insert_one(self, token: TokenData) -> str:
+        """
+        Insert a single token.
+        
+        Args:
+            token: Token to insert
+            
+        Returns:
+            str: ID of the inserted token
+        """
+        return await super().insert_one(token.model_dump())
+
+    async def update_by_email(self, email: str, update_data: Dict[str, Any]) -> bool:
+        """
+        Update a token by email.
+        
+        Args:
+            email: Email address
+            update_data: Data to update
+            
+        Returns:
+            bool: True if update successful
         """
         logger.debug(f"Updating tokens for email: {email}")
-        # Validate token data against TokenData model
-        token_data_model = TokenData(**token_data)
         result = await self._collection.update_one(
             {"email": email},
-            {"$set": token_data_model.dict()},
-            upsert=True  # Create document if it doesn't exist
+            {"$set": update_data}
         )
-        success = result.modified_count > 0 or result.upserted_id is not None
+        success = result.modified_count > 0
         if success:
-            logger.info(f"Successfully {'created' if result.upserted_id else 'updated'} tokens for email: {email}")
+            logger.info(f"Successfully updated tokens for email: {email}")
         else:
             logger.warning(f"No tokens updated for email: {email}")
         return success
-    
+
     async def delete_by_email(self, email: str) -> bool:
         """
-        Delete tokens by email.
+        Delete a token by email.
         
         Args:
-            email: Email address to delete tokens for
+            email: Email address
             
         Returns:
             bool: True if deletion successful

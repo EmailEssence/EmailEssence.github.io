@@ -2,14 +2,15 @@
 Repository for managing users in MongoDB.
 """
 
-from typing import Optional, Dict, Any
+from typing import List, Optional, Dict, Any
 from motor.motor_asyncio import AsyncIOMotorCollection
-from bson.objectid import ObjectId
+from bson import ObjectId
 
-from app.models import UserSchema
+from app.models.user_models import UserSchema
 from app.services.database.base_repository import BaseRepository
+from app.services.database.interfaces import IUserRepository
 
-class UserRepository(BaseRepository):
+class UserRepository(BaseRepository[UserSchema], IUserRepository):
     """
     Repository for managing users in MongoDB.
     
@@ -24,7 +25,7 @@ class UserRepository(BaseRepository):
         Args:
             collection: MongoDB collection instance
         """
-        super().__init__(collection)
+        super().__init__(collection, UserSchema)
     
     async def ensure_indexes(self):
         """
@@ -34,18 +35,74 @@ class UserRepository(BaseRepository):
         await self._collection.create_index("email", unique=True)
         await self._collection.create_index("google_id", unique=True)
     
-    async def find_by_email(self, email: str) -> Optional[Dict[str, Any]]:
+    async def find_by_email(self, email: str) -> Optional[UserSchema]:
         """
         Find a user by email.
         
         Args:
-            email: Email address to find user for
+            email: Email address to search for
             
         Returns:
-            Optional[Dict[str, Any]]: User data if found, None otherwise
+            Optional[UserSchema]: User if found, None otherwise
         """
-        return await self.find_one({"email": email})
+        doc = await self.find_one({"email": email})
+        return self._model_class(**doc) if doc else None
     
+    async def find_by_username(self, username: str) -> Optional[UserSchema]:
+        """
+        Find a user by username.
+        
+        Args:
+            username: Username to search for
+            
+        Returns:
+            Optional[UserSchema]: User if found, None otherwise
+        """
+        doc = await self.find_one({"username": username})
+        return self._model_class(**doc) if doc else None
+
+    async def find_by_google_id(self, google_id: str) -> Optional[UserSchema]:
+        """
+        Find a user by Google ID.
+        
+        Args:
+            google_id: Google ID to search for
+            
+        Returns:
+            Optional[UserSchema]: User if found, None otherwise
+        """
+        doc = await self.find_one({"google_id": google_id})
+        return self._model_class(**doc) if doc else None
+
+    async def update_preferences(self, user_id: str, preferences: Dict[str, Any]) -> bool:
+        """
+        Update user preferences.
+        
+        Args:
+            user_id: ID of the user
+            preferences: New preferences to set
+            
+        Returns:
+            bool: True if update successful
+        """
+        result = await self._collection.update_one(
+            {"_id": ObjectId(user_id)},
+            {"$set": {"preferences": preferences}}
+        )
+        return result.modified_count > 0
+
+    async def insert_one(self, user: UserSchema) -> str:
+        """
+        Insert a single user.
+        
+        Args:
+            user: User to insert
+            
+        Returns:
+            str: ID of the inserted user
+        """
+        return await super().insert_one(user.model_dump())
+
     async def update_by_email(self, email: str, user_data: Dict[str, Any]) -> bool:
         """
         Update a user by email.
@@ -75,18 +132,6 @@ class UserRepository(BaseRepository):
         """
         result = await self._collection.delete_one({"email": email})
         return result.deleted_count > 0
-
-    async def find_by_google_id(self, google_id: str) -> Optional[Dict[str, Any]]:
-        """
-        Find a user by Google ID.
-        
-        Args:
-            google_id: User's Google ID
-            
-        Returns:
-            Optional[Dict[str, Any]]: User data if found, None otherwise
-        """
-        return await self.find_one({"google_id": google_id})
 
     async def find_by_id(self, id: str) -> Optional[Dict[str, Any]]:
         """

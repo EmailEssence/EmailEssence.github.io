@@ -2,16 +2,19 @@
 Base repository class for common database operations.
 """
 
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional, List, Generic, TypeVar, Type
 from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorCollection
 import logging
+from pydantic import BaseModel
 
 from app.services.database.connection import instance
 
 logger = logging.getLogger(__name__)
 
-class BaseRepository:
+T = TypeVar('T', bound=BaseModel)
+
+class BaseRepository(Generic[T]):
     """
     Base repository class for MongoDB operations.
     
@@ -19,14 +22,16 @@ class BaseRepository:
     by specific repository implementations.
     """
     
-    def __init__(self, collection: AsyncIOMotorCollection):
+    def __init__(self, collection: AsyncIOMotorCollection, model_class: Type[T]):
         """
         Initialize the repository with a MongoDB collection.
         
         Args:
             collection: MongoDB collection instance
+            model_class: Pydantic model class for type safety
         """
         self._collection = collection
+        self._model_class = model_class
 
     def _get_collection(self) -> AsyncIOMotorCollection:
         """
@@ -55,7 +60,7 @@ class BaseRepository:
             logger.error(f"Failed to create index on {field}: {e}")
             raise
 
-    async def find_one(self, query: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    async def find_one(self, query: Dict[str, Any]) -> Optional[T]:
         """
         Find a single document matching the query.
         
@@ -63,10 +68,11 @@ class BaseRepository:
             query: MongoDB query filter
             
         Returns:
-            Optional[Dict[str, Any]]: Document if found, None otherwise
+            Optional[T]: Document if found, None otherwise
         """
         collection = self._get_collection()
-        return await collection.find_one(query)
+        doc = await collection.find_one(query)
+        return self._model_class(**doc) if doc else None
 
     async def find_by_id(self, id: str) -> Optional[Dict[str, Any]]:
         """

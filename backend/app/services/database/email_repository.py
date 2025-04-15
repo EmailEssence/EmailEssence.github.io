@@ -4,11 +4,13 @@ Repository for managing emails in MongoDB.
 
 from typing import List, Optional, Dict, Any
 from motor.motor_asyncio import AsyncIOMotorCollection
+from bson import ObjectId
 
-from app.models import EmailSchema
+from app.models.email_models import EmailSchema
 from app.services.database.base_repository import BaseRepository
+from app.services.database.interfaces import IEmailRepository
 
-class EmailRepository(BaseRepository):
+class EmailRepository(BaseRepository[EmailSchema], IEmailRepository):
     """
     Repository for managing emails in MongoDB.
     
@@ -23,9 +25,9 @@ class EmailRepository(BaseRepository):
         Args:
             collection: MongoDB collection instance
         """
-        super().__init__(collection)
+        super().__init__(collection, EmailSchema)
     
-    async def find_by_user_id(self, user_id: str, limit: int = 100) -> List[Dict[str, Any]]:
+    async def find_by_user_id(self, user_id: str, limit: int = 100) -> List[EmailSchema]:
         """
         Find emails by user ID.
         
@@ -34,11 +36,12 @@ class EmailRepository(BaseRepository):
             limit: Maximum number of emails to return
             
         Returns:
-            List[Dict[str, Any]]: List of emails
+            List[EmailSchema]: List of emails
         """
-        return await self.find_many({"user_id": user_id}, limit=limit)
+        docs = await self.find_many({"user_id": user_id}, limit=limit)
+        return [self._model_class(**doc) for doc in docs]
     
-    async def find_by_id(self, email_id: str, user_id: str) -> Optional[Dict[str, Any]]:
+    async def find_by_id(self, email_id: str, user_id: str) -> Optional[EmailSchema]:
         """
         Find an email by IMAP UID and user ID.
         
@@ -47,9 +50,10 @@ class EmailRepository(BaseRepository):
             user_id: ID of the user
             
         Returns:
-            Optional[Dict[str, Any]]: Email if found, None otherwise
+            Optional[EmailSchema]: Email if found, None otherwise
         """
-        return await self.find_one({"email_id": email_id, "user_id": user_id})
+        doc = await self.find_one({"email_id": email_id, "user_id": user_id})
+        return self._model_class(**doc) if doc else None
     
     async def update_by_id(self, email_id: str, user_id: str, update_data: Dict[str, Any]) -> bool:
         """
@@ -83,7 +87,7 @@ class EmailRepository(BaseRepository):
         result = await self._collection.delete_one({"email_id": email_id, "user_id": user_id})
         return result.deleted_count > 0
 
-    async def find_by_thread_id(self, thread_id: str) -> List[Dict[str, Any]]:
+    async def find_by_thread_id(self, thread_id: str) -> List[EmailSchema]:
         """
         Find emails by thread ID.
         
@@ -91,6 +95,19 @@ class EmailRepository(BaseRepository):
             thread_id: Thread ID to find emails for
             
         Returns:
-            List[Dict[str, Any]]: List of matching emails
+            List[EmailSchema]: List of matching emails
         """
-        return await self.find_many({"thread_id": thread_id}) 
+        docs = await self.find_many({"thread_id": thread_id})
+        return [self._model_class(**doc) for doc in docs]
+
+    async def insert_one(self, email: EmailSchema) -> str:
+        """
+        Insert a single email.
+        
+        Args:
+            email: Email to insert
+            
+        Returns:
+            str: ID of the inserted email
+        """
+        return await super().insert_one(email.model_dump()) 

@@ -3,13 +3,14 @@ Repository for managing email summaries in MongoDB.
 """
 
 from typing import List, Optional, Dict, Any
-from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorCollection
+from bson import ObjectId
 
-from app.models import SummarySchema
+from app.models.summary_models import SummarySchema
 from app.services.database.base_repository import BaseRepository
+from app.services.database.interfaces import ISummaryRepository
 
-class SummaryRepository(BaseRepository):
+class SummaryRepository(BaseRepository[SummarySchema], ISummaryRepository):
     """
     Repository for managing email summaries in MongoDB.
     
@@ -24,52 +25,63 @@ class SummaryRepository(BaseRepository):
         Args:
             collection: MongoDB collection instance
         """
-        super().__init__(collection)
+        super().__init__(collection, SummarySchema)
     
-    async def find_by_email_id(self, email_id: str, user_id: str) -> Optional[Dict[str, Any]]:
+    async def find_by_email_id(self, email_id: str) -> Optional[SummarySchema]:
         """
-        Find a summary by email ID and user ID.
+        Find a summary by email ID.
         
         Args:
             email_id: ID of the email
-            user_id: ID of the user
             
         Returns:
-            Optional[Dict[str, Any]]: Summary if found, None otherwise
+            Optional[SummarySchema]: Summary if found, None otherwise
         """
-        return await self.find_one({"email_id": email_id, "user_id": user_id})
+        doc = await self.find_one({"email_id": email_id})
+        return self._model_class(**doc) if doc else None
     
-    async def find_by_user_id(self, user_id: str, limit: int = 100) -> List[Dict[str, Any]]:
+    async def find_by_user_id(self, user_id: str) -> List[SummarySchema]:
         """
         Find summaries by user ID.
         
         Args:
             user_id: ID of the user
-            limit: Maximum number of summaries to return
             
         Returns:
-            List[Dict[str, Any]]: List of summaries
+            List[SummarySchema]: List of summaries
         """
-        return await self.find_many({"user_id": user_id}, limit=limit)
-    
-    async def update_by_email_id(self, email_id: str, user_id: str, update_data: Dict[str, Any]) -> bool:
+        docs = await self.find_many({"user_id": user_id})
+        return [self._model_class(**doc) for doc in docs]
+
+    async def insert_one(self, summary: SummarySchema) -> str:
         """
-        Update a summary by email ID and user ID.
+        Insert a single summary.
+        
+        Args:
+            summary: Summary to insert
+            
+        Returns:
+            str: ID of the inserted summary
+        """
+        return await super().insert_one(summary.model_dump())
+
+    async def update_by_email_id(self, email_id: str, update_data: Dict[str, Any]) -> bool:
+        """
+        Update a summary by email ID.
         
         Args:
             email_id: ID of the email
-            user_id: ID of the user
             update_data: Data to update
             
         Returns:
             bool: True if update successful
         """
         result = await self._collection.update_one(
-            {"email_id": email_id, "user_id": user_id},
+            {"email_id": email_id},
             {"$set": update_data}
         )
         return result.modified_count > 0
-    
+
     async def delete_by_email_id(self, email_id: str, user_id: str) -> bool:
         """
         Delete a summary by email ID and user ID.
