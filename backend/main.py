@@ -2,13 +2,13 @@
 import os
 from fastapi import FastAPI, HTTPException, Depends, status
 from fastapi.responses import FileResponse
-from starlette.concurrency import run_in_threadpool
 from fastapi.middleware.cors import CORSMiddleware
-
+from starlette.concurrency import run_in_threadpool
+import logging
 
 from app.routers import emails_router, summaries_router, auth_router, user_router
+from app.services.database import DatabaseConnection
 from app.models import EmailSchema, SummarySchema, UserSchema
-from database import db  
 
 
 # from app.models.user_model import User
@@ -40,19 +40,34 @@ app.add_middleware(
     allow_headers=["*"],  # Allows all headers
 )
 
+logger = logging.getLogger(__name__)
 
 async def startup_db_client():
     """
     Initializes MongoDB connection on startup.
+    
+    This function:
+    1. Creates a new database connection
+    2. Verifies the connection is alive
+    3. Logs available collections
+    4. Handles any connection errors gracefully
     """
-    print("🔄 Connecting to MongoDB...")
     try:
-        await db.command("ping")  
-        collections = await db.list_collection_names()
-        print(f"✅ Collections in DB: {collections}")
-        print("✅ MongoDB connection successful!")
+        # Initialize database connection
+        db = DatabaseConnection()
+        await db.connect()
+        
+        # Verify connection
+        await db.client.admin.command('ping')
+        logger.info("✅ MongoDB connection established successfully")
+        
+        # Log available collections
+        collections = await db.client.list_collection_names()
+        logger.info(f"✅ Available collections: {collections}")
+        
     except Exception as e:
-        print(f"❌ Failed to connect to MongoDB: {str(e)}")
+        logger.error(f"❌ Failed to connect to MongoDB: {str(e)}")
+        raise RuntimeError("Failed to initialize database connection") from e
 
 
 # Register routers
