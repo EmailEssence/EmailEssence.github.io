@@ -1,3 +1,10 @@
+"""
+Service for handling authentication and authorization.
+
+This module provides services for OAuth2 authentication, token management,
+and user authentication with Google.
+"""
+
 import os
 import logging  
 from google_auth_oauthlib.flow import Flow
@@ -5,14 +12,16 @@ from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
 from dotenv import load_dotenv
 from fastapi import HTTPException, status, Depends
-from pydantic import BaseModel
-from typing import Optional, Dict
+from typing import Optional, Dict, Any
 from app.models import UserSchema
-from app.models.auth_models import TokenSchema, OAuthSchema
+from app.models.auth_models import TokenData, TokenResponse
 from google.oauth2.credentials import Credentials
 from starlette.concurrency import run_in_threadpool
 from app.utils.config import get_settings
-from app.services.database import TokenRepository, get_token_repository
+from app.services.database.token_repository import TokenRepository
+from app.services.database.user_repository import UserRepository
+from app.services.database.factories import get_token_repository, get_user_repository
+from app.services.user_service import UserService
 
 settings = get_settings()
 
@@ -33,9 +42,83 @@ class AuthService:
     and user authentication.
     """
     
-    def __init__(self, token_repo: TokenRepository = Depends(get_token_repository)):
-        """Initialize the auth service with required configuration"""
-        self.token_repo = token_repo
+    def __init__(
+        self,
+        token_repository: TokenRepository = None,
+        user_repository: UserRepository = None,
+        user_service: UserService = None
+    ):
+        """
+        Initialize the auth service.
+        
+        Args:
+            token_repository: Token repository instance
+            user_repository: User repository instance
+            user_service: User service instance
+        """
+        self.token_repository = token_repository or get_token_repository()
+        self.user_repository = user_repository or get_user_repository()
+        self.user_service = user_service or UserService(self.user_repository)
+
+    async def verify_user_access(
+        self,
+        user_id: str,
+        current_user_data: dict,
+        user_service: UserService
+    ) -> bool:
+        """
+        Verifies if the current user has access to the requested user's data.
+        
+        Args:
+            user_id: ID of the user being accessed
+            current_user_data: Data of the currently authenticated user
+            user_service: User service instance
+            
+        Returns:
+            bool: True if access is granted
+            
+        Raises:
+            HTTPException: 403 if access is denied
+        """
+        logger.debug(f"Verifying user access for user ID: {user_id}")
+        
+        try:
+            # Get the current user's email from the token data
+            token_record = await self.get_token_record(current_user_data['email'])
+            if not token_record:
+                logger.warning(f"No token record found for user: {current_user_data['email']}")
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="No valid token record found"
+                )
+            
+            current_user = await user_service.get_user(current_user_data['user_info']['id'])
+            if not current_user:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Current user not found"
+                )
+                
+            # Allow access if:
+            # 1. User is accessing their own data
+            # 2. User has admin privileges
+            if current_user['id'] == user_id or current_user.get('is_admin', False):
+                logger.debug(f"Access granted for user ID: {user_id}")
+                return True
+                
+            logger.debug(f"Access denied for user ID: {user_id}")
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You do not have permission to access this resource"
+            )
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f"Access verification failed: {str(e)}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Failed to verify access: {str(e)}"
+            )
 
     def create_authorization_url(self, custom_state=None) -> Dict[str, str]:
         """Generates Google OAuth2 authorization URL."""
@@ -78,98 +161,118 @@ class AuthService:
 
         return {"authorization_url": authorization_url, "state": custom_state}
 
-    async def get_tokens_from_code(self, code: str, user_email: str) -> Dict[str, str]:
-        """Exchanges auth code for tokens and stores them in the DB."""
-        logger.info(f"Exchanging authorization code for tokens... User: {user_email}")
-
-        try:
-            client_id = settings.google_client_id
-            client_secret = settings.google_client_secret
+    async def get_tokens_from_code(self, code: str, email: str) -> TokenData:
+        """
+        Get tokens from authorization code.
+        
+        Args:
+            code: Authorization code
+            email: User's email address
             
-            client_config = {
-                "web": {
-                    "client_id": client_id,
-                    "client_secret": client_secret,
-                    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-                    "token_uri": "https://oauth2.googleapis.com/token",
-                    "redirect_uris": [self.get_redirect_uri()]
-                }
-            }
-
-            flow = Flow.from_client_config(client_config, SCOPES)
-            flow.redirect_uri = self.get_redirect_uri()
-            flow.fetch_token(code=code)
-            credentials = flow.credentials
-
-            logger.info("Token successfully fetched from Google.")
-
-            token_data = {
-                'token': credentials.token,
-                'refresh_token': credentials.refresh_token,
-                'token_uri': credentials.token_uri,
-                'client_id': credentials.client_id,
-                'client_secret': credentials.client_secret,
-                'scopes': credentials.scopes
-            }
- 
-            if user_email:
-                logger.debug(f"Storing tokens in DB for {user_email}...")
-                await self.token_repo.update_one(
-                    {"user_email": user_email},
-                    token_data,
-                    upsert=True
-                )
-                logger.info("Tokens successfully stored.")
-
-            return token_data
-
-        except Exception as e:
-            logger.exception("Auth code exchange failed.")
-            raise HTTPException(status_code=400, detail=f"Auth code exchange failed: {str(e)}")
-
-    async def get_credentials(self, user_email: str) -> Optional[TokenSchema]:
-        """Retrieves credentials from DB, refreshing if needed."""
-        logger.debug(f"Retrieving credentials for user: {user_email}")
-
-        token_record = await self.token_repo.find_one({"user_email": user_email})
-
-        if not token_record:
-            logger.warning("No credentials found in database.")
-            raise HTTPException(status_code=401, detail="No credentials found. Please authenticate.")
-
-        credentials = TokenSchema(**token_record)
-        logger.info(f"Token found for user: {user_email}")
-
-        if not credentials.token:
-            logger.warning("Stored token is invalid. Re-authentication required")
-            raise HTTPException(status_code=401, detail="Invalid token stored.")
-
-        if credentials.refresh_token:
-            try:
-                logger.debug("Refreshing expired token...")
-                flow = Flow.from_client_config({
+        Returns:
+            TokenData: Token data
+        """
+        try:
+            logger.info(f"Starting token exchange for user: {email}")
+            
+            # Exchange code for tokens
+            flow = Flow.from_client_config(
+                {
                     "web": {
-                        "client_id": credentials.client_id,
-                        "client_secret": credentials.client_secret,
+                        "client_id": settings.google_client_id,
+                        "client_secret": settings.google_client_secret,
                         "auth_uri": "https://accounts.google.com/o/oauth2/auth",
                         "token_uri": "https://oauth2.googleapis.com/token",
                         "redirect_uris": [self.get_redirect_uri()]
                     }
-                }, SCOPES)
-                flow.credentials.refresh(Request())
+                },
+                SCOPES
+            )
+            flow.redirect_uri = self.get_redirect_uri()
+            
+            # Exchange code for tokens
+            logger.debug(f"Exchanging code for tokens for user: {email}")
+            token_response = await run_in_threadpool(
+                lambda: flow.fetch_token(code=code)
+            )
+            logger.info(f"Successfully exchanged code for tokens for user: {email}")
+            
+            # Store tokens in MongoDB
+            token_data = {
+                "email": email,
+                "token": token_response["access_token"],
+                "refresh_token": token_response.get("refresh_token"),
+                "token_uri": "https://oauth2.googleapis.com/token",
+                "client_id": settings.google_client_id,
+                "client_secret": settings.google_client_secret,
+                "scopes": SCOPES
+            }
+            
+            logger.debug(f"Storing tokens in database for user: {email}")
+            await self.token_repository.update_by_email(email, token_data)
+            logger.info(f"Successfully stored tokens for user: {email}")
+            
+            return TokenData(**token_data)
+        except Exception as e:
+            logger.error(f"Failed to get tokens for user {email}: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to get tokens"
+            )
 
-                await self.token_repo.update_one(
-                    {"user_email": user_email},
-                    {"token": flow.credentials.token}
-                )
-                logger.info("Token refreshed and updated in DB.")
-                return flow.credentials.token
+    async def get_current_user(self, email: str) -> Optional[Dict[str, Any]]:
+        """
+        Get current user by email.
+        
+        Args:
+            email: User's email address
+            
+        Returns:
+            Optional[Dict[str, Any]]: User data if found, None otherwise
+        """
+        try:
+            user = await self.user_service.get_user_by_email(email)
+            if not user:
+                # Create new user if not found
+                user = await self.user_service.create_user({
+                    "email": email,
+                    "name": "",
+                    "picture": "",
+                    "google_id": ""
+                })
+            return user.dict()
+        except Exception as e:
+            logger.error(f"Failed to get current user: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to get current user"
+            )
 
-            except Exception as e:
-                logger.exception("Token refresh failed.")
-                raise HTTPException(status_code=401, detail=f"Token refresh failed: {str(e)}")
-
-        return credentials.token
+    async def get_token_data(self, email: str) -> Optional[TokenData]:
+        """
+        Get token data by email.
+        
+        Args:
+            email: User's email address
+            
+        Returns:
+            Optional[TokenData]: Token data if found, None otherwise
+        """
+        try:
+            token_data = await self.token_repository.find_by_email(email)
+            if not token_data:
+                return None
+            # If token_data is already a TokenData instance, return it directly
+            if isinstance(token_data, TokenData):
+                return token_data
+            # Otherwise convert dict to TokenData
+            return TokenData(**token_data)
+        except Exception as e:
+            logger.error(f"Failed to get token data: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to get token data"
+            )
 
     def get_redirect_uri(self):
         """Returns the OAuth redirect URI."""
@@ -215,6 +318,9 @@ class AuthService:
                 logger.error("Unable to retrieve user email from token.")
                 raise ValueError("Unable to retrieve user email from token")
 
+            # Add google_id to user_info
+            user_info['google_id'] = user_info.get('id')
+            
             logger.info(f"User info retrieved for: {user_info.get('email')}")
 
             return {
@@ -226,3 +332,25 @@ class AuthService:
         except Exception as e:
             logger.exception("Token validation failed.")
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=f"Invalid token: {str(e)}")
+
+    async def get_token_record(self, email: str) -> Optional[Dict[str, Any]]:
+        """
+        Get the complete token record from the database.
+        
+        Args:
+            email: User's email address
+            
+        Returns:
+            Optional[Dict[str, Any]]: Complete token record if found, None otherwise
+        """
+        try:
+            logger.debug(f"Getting token record for email: {email}")
+            token_data = await self.token_repository.find_by_email(email)
+            if not token_data:
+                logger.warning(f"No token record found for email: {email}")
+                return None
+            logger.info(f"Found token record for email: {email}")
+            return token_data
+        except Exception as e:
+            logger.error(f"Failed to get token record for email {email}: {e}")
+            return None
