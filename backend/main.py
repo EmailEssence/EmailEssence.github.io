@@ -7,7 +7,7 @@ from starlette.concurrency import run_in_threadpool
 import logging
 
 from app.routers import emails_router, summaries_router, auth_router, user_router
-from app.services.database import DatabaseConnection
+from app.services.database.connection import DatabaseConnection
 from app.models import EmailSchema, SummarySchema, UserSchema
 
 
@@ -47,28 +47,23 @@ async def startup_db_client():
     Initializes MongoDB connection on startup.
     
     This function:
-    1. Creates a new database connection
-    2. Verifies the connection is alive
-    3. Logs available collections
-    4. Handles any connection errors gracefully
+    1. Gets the singleton database connection instance
+    2. Initializes the connection asynchronously
+    3. Handles any connection errors gracefully
     """
     try:
-        # Initialize database connection
+        # Get the singleton instance and initialize it
         db = DatabaseConnection()
-        await db.connect()
-        
-        # Verify connection
-        await db.client.admin.command('ping')
-        logger.info("✅ MongoDB connection established successfully")
-        
-        # Log available collections
-        collections = await db.client.list_collection_names()
-        logger.info(f"✅ Available collections: {collections}")
+        await db.initialize()
         
     except Exception as e:
         logger.error(f"❌ Failed to connect to MongoDB: {str(e)}")
         raise RuntimeError("Failed to initialize database connection") from e
 
+# Register startup event handler
+@app.on_event("startup")
+async def startup_event():
+    await startup_db_client()
 
 # Register routers
 app.include_router(auth_router, prefix="/auth", tags=["Auth"])

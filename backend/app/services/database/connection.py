@@ -24,17 +24,40 @@ class DatabaseConnection:
             cls._instance = super(DatabaseConnection, cls).__new__(cls)
         return cls._instance
 
-    def __init__(self):
-        """Initialize the database connection."""
+    async def initialize(self):
+        """
+        Initialize the database connection asynchronously.
+        Verifies the connection is alive and logs available collections.
+        """
         if self._client is None:
             try:
                 settings = get_settings()
                 self._client = AsyncIOMotorClient(settings.mongo_uri)
                 self._db = self._client.email_essence
-                logger.info("Successfully connected to MongoDB")
+                
+                # Verify connection
+                await self._client.admin.command('ping')
+                logger.info("✅ MongoDB connection established successfully")
+                
+                # Log available collections
+                collections = await self._db.list_collection_names()
+                logger.info(f"✅ Available collections: {collections}")
+                
             except Exception as e:
-                logger.error(f"Failed to connect to MongoDB: {e}")
+                logger.error(f"❌ Failed to connect to MongoDB: {e}")
                 raise
+
+    @property
+    def client(self):
+        """
+        Get the MongoDB client instance.
+        
+        Returns:
+            AsyncIOMotorClient: MongoDB client instance
+        """
+        if self._client is None:
+            raise RuntimeError("Database not connected")
+        return self._client
 
     @property
     def db(self):
