@@ -8,12 +8,13 @@ strategies to provide concise representations of emails.
 
 import logging
 from typing import List, Optional, Annotated
-from fastapi import APIRouter, HTTPException, Depends, Query, Path
+from fastapi import APIRouter, HTTPException, Depends, Query, Path, status
 from contextlib import asynccontextmanager
 
 from app.utils.config import Settings, get_settings, SummarizerProvider
-from app.models import EmailSchema, SummarySchema
+from app.models import EmailSchema, SummarySchema, UserSchema
 from app.services import EmailService, SummaryService
+from app.services.summarization import get_summarizer
 from app.services.summarization.base import AdaptiveSummarizer
 from app.services.summarization import (
   ProcessingStrategy, 
@@ -21,84 +22,52 @@ from app.services.summarization import (
   GeminiEmailSummarizer
 )
 from app.routers.user_router import get_current_user
+from app.services.database.factories import (
+    get_summary_service,
+    get_email_service
+)
 
 router = APIRouter()
 
-# Create a global summary service instance
-summary_service = SummaryService()
-# Create a global email service instance
-email_service = EmailService()
-
-# Initialize the service before handling requests via dependency
-async def initialize_summary_service():
+@router.get("/{email_id}", response_model=SummarySchema)
+async def get_summary_by_id(
+    email_id: str,
+    current_user: UserSchema = Depends(get_current_user),
+    summary_service: SummaryService = Depends(get_summary_service),
+    summarizer: AdaptiveSummarizer[EmailSchema] = Depends(get_summarizer)
+):
     """
-    Ensure summary service is initialized.
-    
-    Returns:
-        SummaryService: Initialized summary service instance
-    """
-    initialized = getattr(summary_service, "_initialized", False)
-    if not initialized:
-        await summary_service.initialize()
-        setattr(summary_service, "_initialized", True)
-    return summary_service
-
-# Dependency to get initialized summary service
-async def get_summary_service():
-    """
-    Dependency that returns an initialized summary service.
-    
-    Returns:
-        SummaryService: Initialized summary service instance
-    """
-    return await initialize_summary_service()
-
-async def get_summarizer(
-    settings: Settings = Depends(get_settings)
-) -> AdaptiveSummarizer[EmailSchema]:
-    """
-    Factory function for creating the appropriate summarizer based on settings.
+    Get a summary by email ID.
     
     Args:
-        settings: Application settings containing summarizer configuration
+        email_id: ID of the email to get summary for
+        current_user: Current authenticated user
+        summary_service: The summary service instance
+        summarizer: The summarizer implementation to use
         
     Returns:
-        AdaptiveSummarizer: Configured email summarizer implementation
-        
-    Raises:
-        ValueError: If the configured summarizer provider is not supported
+        SummarySchema: Summary for the specified email
     """
-    match settings.summarizer_provider:
-        case SummarizerProvider.OPENAI:
-            if not settings.openai_api_key:
-                raise HTTPException(
-                    status_code=500,
-                    detail="OpenAI API key not configured"
-                )
-            return OpenAIEmailSummarizer(
-                api_key=settings.openai_api_key,
-                prompt_version=settings.summarizer_prompt_version,
-                model=settings.summarizer_model,
-                batch_threshold=settings.summarizer_batch_threshold
-            )
-        case SummarizerProvider.GOOGLE:
-            if not settings.google_api_key:
-                raise HTTPException(
-                    status_code=500,
-                    detail="Google API key not configured"
-                )
-            return GeminiEmailSummarizer(
-                api_key=settings.google_api_key,
-                prompt_version=settings.summarizer_prompt_version,
-                model=settings.summarizer_model,
-                batch_threshold=settings.summarizer_batch_threshold
-            )
-        # TODO Add support for other providers : Deepseek, Local
-        case _:
+    try:
+        # Get user ID from the UserSchema model
+        user_id = str(current_user.google_id)
+        
+        # Get summary from repository
+        summary = await summary_service.get_or_create_summary(email_id, summarizer, user_id)
+        if not summary:
             raise HTTPException(
-                status_code=500,
-                detail=f"Unsupported summarizer provider: {settings.summarizer_provider}"
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Summary not found for email {email_id}"
             )
+            
+        return SummarySchema(**summary)
+        
+    except Exception as e:
+        logging.error(f"Error retrieving/generating summary: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e)
+        )
 
 @router.get(
     "/", 
@@ -349,42 +318,6 @@ async def get_summaries_by_ids(
             status_code=500,
             detail="Failed to retrieve email summaries"
         )
-
-@router.get(
-    "/{email_id}", 
-    response_model=SummarySchema,
-    summary="Get summary by email ID",
-    description="Retrieves or generates a summary for a specific email"
-)
-async def get_summary_by_id(
-    email_id: str,
-    summarizer: AdaptiveSummarizer[EmailSchema] = Depends(get_summarizer),
-    summary_service: SummaryService = Depends(get_summary_service),
-    user: dict = Depends(get_current_user)
-):
-    """
-    Get summary for a specific email ID.
-    
-    Args:
-        email_id: ID of the email to get summary for
-        summarizer: The summarizer implementation to use
-        summary_service: The summary service for data operations
-        user: Current authenticated user
-        
-    Returns:
-        SummarySchema: The summary for the specified email
-        
-    Raises:
-        HTTPException: If the summary cannot be retrieved or generated
-    """
-    try:
-        user_id = str(user.get("_id", user.get("google_id")))
-        return await summary_service.get_or_create_summary(email_id, summarizer, user_id)
-    except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
-    except Exception as e:
-        logging.error(f"Error retrieving/generating summary: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to retrieve summary for email {email_id}")
 
 @router.delete(
     "/{email_id}",

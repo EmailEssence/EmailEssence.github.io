@@ -111,7 +111,7 @@ async def retrieve_emails(
         logger.debug(f"Email retrieval request with refresh={refresh}", extra={"params": debug_info["request_params"]})
         
         # Get the user ID from the authenticated user
-        user_id = str(user.get("_id", user.get("google_id")))
+        user_id = str(user.google_id)
         logger.debug(f"User ID for email retrieval: {user_id}")
         
         emails, total, service_debug_info = await email_service.fetch_emails(
