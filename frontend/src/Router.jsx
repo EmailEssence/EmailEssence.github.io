@@ -1,12 +1,11 @@
-import { BrowserRouter, Routes, Route, useLocation } from "react-router";
-import Auth from "./Auth";
-import Login from "./components/login/login";
-import Loading from "./Loading";
-import Client from "./client";
-import Error from "./Error";
+import { useEffect, useState } from "react";
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router";
 import { authenticate } from "./authentication/authenticate";
+import Client from "./client";
+import Login from "./components/login/login";
 import { emails, userPreferences } from "./emails/emailParse";
-import { useState, useEffect } from "react";
+import Error from "./Error";
+import Loading from "./Loading";
 
 function Router() {
   return (
@@ -33,13 +32,9 @@ function AppRouter() {
 
   return (
     <Routes>
-      <Route path="/" element={<Auth />}>
-        <Route
-          path="login"
-          element={<Login handleGoogleClick={authenticate} />}
-        />
-        <Route path="loading" element={<Loading />} />
-      </Route>
+      <Route path ="/" element = {<Navigate to="/login" replace/>} />
+      <Route path="/login" element={<Login handleGoogleClick={authenticate} />} />
+      <Route path="/loading" element={<Loading />} />
       <Route
         path="client/*"
         // userEmails.length being more than 0 ensures that curEmail is not undefined when client is rendered
@@ -52,7 +47,7 @@ function AppRouter() {
           )
         }
       />
-      <Route path="error" element={<Error />} />
+      <Route path="/error" element={<Error />} />
     </Routes>
   );
 }
