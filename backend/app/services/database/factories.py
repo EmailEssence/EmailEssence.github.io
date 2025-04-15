@@ -1,53 +1,103 @@
 """
-Factory functions for creating repository instances with caching.
+Factory functions for creating repository and service instances.
 """
 
 from functools import lru_cache
-from motor.motor_asyncio import AsyncIOMotorCollection
+from typing import Optional
 
-from app.services.database.connection import get_database_connection
+from app.services.database.connection import instance
 from app.services.database.email_repository import EmailRepository
 from app.services.database.user_repository import UserRepository
-from app.services.database.summary_repository import SummaryRepository
 from app.services.database.token_repository import TokenRepository
-from app.services.database.interfaces import IEmailRepository, IUserRepository, ISummaryRepository, ITokenRepository
+from app.services.database.summary_repository import SummaryRepository
 
 @lru_cache()
-def get_email_repository() -> IEmailRepository:
+def get_email_repository() -> EmailRepository:
     """
-    Factory function that returns an EmailRepository instance.
-    Using lru_cache for efficiency so we don't create a new instance for every request.
+    Get a cached instance of EmailRepository.
+    
+    Returns:
+        EmailRepository: Cached repository instance
     """
-    db = get_database_connection()
-    collection = db.get_collection("emails")
-    return EmailRepository(collection)
+    repo = EmailRepository(instance.db.emails)
+    return repo
 
 @lru_cache()
-def get_user_repository() -> IUserRepository:
+def get_user_repository() -> UserRepository:
     """
-    Factory function that returns a UserRepository instance.
-    Using lru_cache for efficiency so we don't create a new instance for every request.
+    Get a cached instance of UserRepository.
+    
+    Returns:
+        UserRepository: Cached repository instance
     """
-    db = get_database_connection()
-    collection = db.get_collection("users")
-    return UserRepository(collection)
+    repo = UserRepository(instance.db.users)
+    return repo
 
 @lru_cache()
-def get_summary_repository() -> ISummaryRepository:
+def get_token_repository() -> TokenRepository:
     """
-    Factory function that returns a SummaryRepository instance.
-    Using lru_cache for efficiency so we don't create a new instance for every request.
+    Get a cached instance of TokenRepository.
+    
+    Returns:
+        TokenRepository: Cached repository instance
     """
-    db = get_database_connection()
-    collection = db.get_collection("summaries")
-    return SummaryRepository(collection)
+    repo = TokenRepository(instance.db.tokens)
+    return repo
 
 @lru_cache()
-def get_token_repository() -> ITokenRepository:
+def get_summary_repository() -> SummaryRepository:
     """
-    Factory function that returns a TokenRepository instance.
-    Using lru_cache for efficiency so we don't create a new instance for every request.
+    Get a cached instance of SummaryRepository.
+    
+    Returns:
+        SummaryRepository: Cached repository instance
     """
-    db = get_database_connection()
-    collection = db.get_collection("tokens")
-    return TokenRepository(collection) 
+    repo = SummaryRepository(instance.db.summaries)
+    return repo
+
+@lru_cache()
+def get_auth_service() -> 'AuthService':
+    """
+    Get a cached instance of AuthService.
+    
+    Returns:
+        AuthService: Cached service instance
+    """
+    from app.services.auth_service import AuthService
+    return AuthService(
+        token_repository=get_token_repository(),
+        user_repository=get_user_repository()
+    )
+
+@lru_cache()
+def get_user_service() -> 'UserService':
+    """
+    Get a cached instance of UserService.
+    
+    Returns:
+        UserService: Cached service instance
+    """
+    from app.services.user_service import UserService
+    return UserService(user_repository=get_user_repository())
+
+@lru_cache()
+def get_email_service() -> 'EmailService':
+    """
+    Get a cached instance of EmailService.
+    
+    Returns:
+        EmailService: Cached service instance
+    """
+    from app.services.email_service import EmailService
+    return EmailService(email_repository=get_email_repository())
+
+@lru_cache()
+def get_summary_service() -> 'SummaryService':
+    """
+    Get a cached instance of SummaryService.
+    
+    Returns:
+        SummaryService: Cached service instance
+    """
+    from app.services.summarization.summary_service import SummaryService
+    return SummaryService(summary_repository=get_summary_repository()) 

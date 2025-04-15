@@ -5,7 +5,7 @@ Database services module initialization.
 from functools import lru_cache
 from motor.motor_asyncio import AsyncIOMotorCollection
 
-from .connection import DatabaseConnection, get_database_connection
+from .connection import DatabaseConnection
 from .base_repository import BaseRepository
 from .email_repository import EmailRepository
 from .user_repository import UserRepository

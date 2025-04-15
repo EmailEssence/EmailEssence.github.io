@@ -1,42 +1,96 @@
-from typing import Optional, List, Dict, Any
+"""
+Repository for managing emails in MongoDB.
+"""
+
+from typing import List, Optional, Dict, Any
 from motor.motor_asyncio import AsyncIOMotorCollection
+
 from app.models import EmailSchema
 from app.services.database.base_repository import BaseRepository
-from app.services.database.interfaces import IEmailRepository
 
-class EmailRepository(BaseRepository[EmailSchema], IEmailRepository):
+class EmailRepository(BaseRepository):
     """
-    Email repository implementation for handling email-related database operations.
+    Repository for managing emails in MongoDB.
     
-    Args:
-        collection: MongoDB collection instance (defaults to db.emails)
+    This class provides methods for storing, retrieving, and managing
+    emails in the database.
     """
-    def __init__(self, collection: AsyncIOMotorCollection = None):
-        from database import db
-        collection = collection or db.emails
-        super().__init__(collection, EmailSchema)
     
-    async def find_by_email_id(self, email_id: str) -> Optional[EmailSchema]:
-        """Find an email by its email_id"""
-        data = await self.db_service.find_one({"email_id": email_id})
-        if data and "from" in data:
-            data["from_"] = data.pop("from")
-        return self._to_model(data)
+    def __init__(self, collection: AsyncIOMotorCollection):
+        """
+        Initialize the email repository.
+        
+        Args:
+            collection: MongoDB collection instance
+        """
+        super().__init__(collection)
     
-    async def find_unread(self) -> List[EmailSchema]:
-        """Find all unread emails"""
-        data_list = await self.db_service.find_many({"is_read": False})
-        result = []
-        for data in data_list:
-            if "from" in data:
-                data["from_"] = data.pop("from")
-            result.append(self._to_model(data))
-        return result
+    async def find_by_user_id(self, user_id: str, limit: int = 100) -> List[Dict[str, Any]]:
+        """
+        Find emails by user ID.
+        
+        Args:
+            user_id: ID of the user
+            limit: Maximum number of emails to return
+            
+        Returns:
+            List[Dict[str, Any]]: List of emails
+        """
+        return await self.find_many({"user_id": user_id}, limit=limit)
     
-    async def mark_as_read(self, email_id: str) -> Optional[EmailSchema]:
-        """Mark an email as read and return the updated email"""
-        email = await self.find_by_email_id(email_id)
-        if email:
-            email.is_read = True
-            await self.update_one({"email_id": email_id}, email)
-        return email 
+    async def find_by_id(self, email_id: str, user_id: str) -> Optional[Dict[str, Any]]:
+        """
+        Find an email by IMAP UID and user ID.
+        
+        Args:
+            email_id: IMAP UID of the email
+            user_id: ID of the user
+            
+        Returns:
+            Optional[Dict[str, Any]]: Email if found, None otherwise
+        """
+        return await self.find_one({"email_id": email_id, "user_id": user_id})
+    
+    async def update_by_id(self, email_id: str, user_id: str, update_data: Dict[str, Any]) -> bool:
+        """
+        Update an email by IMAP UID and user ID.
+        
+        Args:
+            email_id: IMAP UID of the email
+            user_id: ID of the user
+            update_data: Data to update
+            
+        Returns:
+            bool: True if update successful
+        """
+        result = await self._collection.update_one(
+            {"email_id": email_id, "user_id": user_id},
+            {"$set": update_data}
+        )
+        return result.modified_count > 0
+    
+    async def delete_by_id(self, email_id: str, user_id: str) -> bool:
+        """
+        Delete an email by IMAP UID and user ID.
+        
+        Args:
+            email_id: IMAP UID of the email
+            user_id: ID of the user
+            
+        Returns:
+            bool: True if deletion successful
+        """
+        result = await self._collection.delete_one({"email_id": email_id, "user_id": user_id})
+        return result.deleted_count > 0
+
+    async def find_by_thread_id(self, thread_id: str) -> List[Dict[str, Any]]:
+        """
+        Find emails by thread ID.
+        
+        Args:
+            thread_id: Thread ID to find emails for
+            
+        Returns:
+            List[Dict[str, Any]]: List of matching emails
+        """
+        return await self.find_many({"thread_id": thread_id}) 
