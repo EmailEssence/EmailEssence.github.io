@@ -1,8 +1,8 @@
 from typing import Optional, List, Dict, Any
 from motor.motor_asyncio import AsyncIOMotorCollection
-from app.models.email_model import EmailSchema
-from app.repositories.base_repository import BaseRepository
-from app.repositories.interfaces import IEmailRepository
+from app.models import EmailSchema
+from app.services.database.base_repository import BaseRepository
+from app.services.database.interfaces import IEmailRepository
 
 class EmailRepository(BaseRepository[EmailSchema], IEmailRepository):
     """

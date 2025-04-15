@@ -3,7 +3,7 @@ from typing import Optional, Dict, Any
 from fastapi import HTTPException, Depends
 from bson import ObjectId
 
-from app.models.user_model import UserSchema, OAuthSchema
+from app.models import UserSchema, OAuthSchema
 from app.services.database import UserRepository, get_user_repository
 
 logger = logging.getLogger(__name__)

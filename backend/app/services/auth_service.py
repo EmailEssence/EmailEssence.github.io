@@ -8,6 +8,7 @@ from fastapi import HTTPException, status, Depends
 from pydantic import BaseModel
 from typing import Optional, Dict
 from app.models import UserSchema
+from app.models.auth_models import TokenSchema, OAuthSchema
 from google.oauth2.credentials import Credentials
 from starlette.concurrency import run_in_threadpool
 from app.utils.config import get_settings
@@ -23,14 +24,6 @@ SCOPES = [
 ]
 
 logger = logging.getLogger(__name__)
-
-class TokenData(BaseModel):
-    token: str
-    refresh_token: Optional[str] = None
-    token_uri: str
-    client_id: str
-    client_secret: str
-    scopes: list
 
 class AuthService:
     """
@@ -134,7 +127,7 @@ class AuthService:
             logger.exception("Auth code exchange failed.")
             raise HTTPException(status_code=400, detail=f"Auth code exchange failed: {str(e)}")
 
-    async def get_credentials(self, user_email: str) -> Optional[TokenData]:
+    async def get_credentials(self, user_email: str) -> Optional[TokenSchema]:
         """Retrieves credentials from DB, refreshing if needed."""
         logger.debug(f"Retrieving credentials for user: {user_email}")
 
@@ -144,7 +137,7 @@ class AuthService:
             logger.warning("No credentials found in database.")
             raise HTTPException(status_code=401, detail="No credentials found. Please authenticate.")
 
-        credentials = TokenData(**token_record)
+        credentials = TokenSchema(**token_record)
         logger.info(f"Token found for user: {user_email}")
 
         if not credentials.token:

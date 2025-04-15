@@ -1,8 +1,8 @@
 from typing import Optional, Dict, Any
 from motor.motor_asyncio import AsyncIOMotorCollection
-from app.models.user_model import UserSchema
-from app.repositories.base_repository import BaseRepository
-from app.repositories.interfaces import IUserRepository
+from app.models import UserSchema
+from app.services.database.base_repository import BaseRepository
+from app.services.database.interfaces import IUserRepository
 
 class UserRepository(BaseRepository[UserSchema], IUserRepository):
     """

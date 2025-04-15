@@ -13,14 +13,13 @@ from contextlib import asynccontextmanager
 
 from app.utils.config import Settings, get_settings, SummarizerProvider
 from app.models import EmailSchema, SummarySchema
-from app.services.email_service import EmailService
+from app.services import EmailService, SummaryService
 from app.services.summarization.base import AdaptiveSummarizer
 from app.services.summarization import (
   ProcessingStrategy, 
   OpenAIEmailSummarizer,
   GeminiEmailSummarizer
 )
-from app.services.summary_service import SummaryService
 from app.routers.user_router import get_current_user
 
 router = APIRouter()

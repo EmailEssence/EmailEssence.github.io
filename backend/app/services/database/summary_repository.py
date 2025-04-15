@@ -1,8 +1,8 @@
 from typing import Optional, List, Dict, Any
 from motor.motor_asyncio import AsyncIOMotorCollection
-from app.models.summary_model import SummarySchema
-from app.repositories.base_repository import BaseRepository
-from app.repositories.interfaces import ISummaryRepository
+from app.models import SummarySchema
+from app.services.database.base_repository import BaseRepository
+from app.services.database.interfaces import ISummaryRepository
 
 class SummaryRepository(BaseRepository[SummarySchema], ISummaryRepository):
     """

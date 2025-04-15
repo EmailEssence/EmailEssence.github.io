@@ -11,6 +11,7 @@ import urllib.parse
 import base64
 import uuid
 from typing import Dict, Optional
+from functools import lru_cache
 
 from fastapi import APIRouter, HTTPException, status, Depends, Request, Query, Form
 from fastapi.security import OAuth2AuthorizationCodeBearer, OAuth2PasswordBearer
@@ -21,14 +22,31 @@ from starlette.concurrency import run_in_threadpool
 from pydantic import BaseModel, EmailStr
 from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
-from database import db
 
-from app.services.auth_service import create_authorization_url, get_tokens_from_code, get_credentials, get_credentials_from_token, SCOPES, get_redirect_uri
-from app.services.user_service import get_or_create_user
+from app.services.auth_service import AuthService, SCOPES
+from app.services.user_service import UserService
 from app.utils.config import get_settings
 
 router = APIRouter()
 settings = get_settings()
+
+# -- Service Dependencies --
+
+@lru_cache()
+def get_auth_service() -> AuthService:
+    """
+    Factory function that returns an AuthService instance.
+    Using lru_cache for efficiency so we don't create a new instance for every request.
+    """
+    return AuthService()
+
+@lru_cache()
+def get_user_service() -> UserService:
+    """
+    Factory function that returns a UserService instance.
+    Using lru_cache for efficiency so we don't create a new instance for every request.
+    """
+    return UserService()
 
 # -- Authentication Schemes --
 
@@ -67,13 +85,17 @@ class AuthStatusResponse(BaseModel):
 
 # -- Authentication Utility --
 
-async def get_current_user_email(token: str = Depends(oauth2_scheme)):
+async def get_current_user_email(
+    token: str = Depends(oauth2_scheme),
+    auth_service: AuthService = Depends(get_auth_service)
+):
     """
     Dependency to extract user email from valid token.
     Will raise 401 automatically if token is invalid.
     
     Args:
         token: JWT token from OAuth2 authentication
+        auth_service: Auth service instance
         
     Returns:
         str: User's email address
@@ -83,7 +105,7 @@ async def get_current_user_email(token: str = Depends(oauth2_scheme)):
     """
     try:
         # Get user info from token
-        user_data = await get_credentials_from_token(token)
+        user_data = await auth_service.get_credentials_from_token(token)
         return user_data['email']
     except Exception as e:
         raise HTTPException(
@@ -104,16 +126,20 @@ def debug(message: str):
     description="Initiates the OAuth2 authentication process with Google. Redirects to Google's consent screen.",
     response_class=RedirectResponse
 )
-async def login(redirect_uri: str = Query(
-    ..., 
-    description="Frontend URI to redirect back to after authentication. Use http://localhost:8000/docs for Swagger testing."
-)):
+async def login(
+    redirect_uri: str = Query(
+        ..., 
+        description="Frontend URI to redirect back to after authentication. Use http://localhost:8000/docs for Swagger testing."
+    ),
+    auth_service: AuthService = Depends(get_auth_service)
+):
     """
     Initiates the OAuth flow with Google, storing the frontend's redirect URI in the state parameter.
     For testing in Swagger UI, use 'http://localhost:8000/docs' as the redirect_uri.
     
     Args:
         redirect_uri: Frontend URI to redirect back to after successful authentication
+        auth_service: Auth service instance
         
     Returns:
         RedirectResponse: Redirects to Google's authentication page
@@ -131,7 +157,7 @@ async def login(redirect_uri: str = Query(
         encoded_custom_state = base64.urlsafe_b64encode(json.dumps(custom_state).encode()).decode()
 
         # Get the authorization URL from auth_service.py - PASS OUR STATE
-        result = create_authorization_url(encoded_custom_state)
+        result = auth_service.create_authorization_url(encoded_custom_state)
         authorization_url = result["authorization_url"]
 
         debug(f"Generated Google OAuth URL: {authorization_url}")
@@ -177,7 +203,7 @@ async def callback(code: str, state: str = Query(None)):
                 "client_secret": client_secret,
                 "auth_uri": "https://accounts.google.com/o/oauth2/auth",
                 "token_uri": "https://oauth2.googleapis.com/token",
-                "redirect_uris": [get_redirect_uri()]
+                "redirect_uris": [auth_service.get_redirect_uri()]
             }
         }
 
@@ -186,7 +212,7 @@ async def callback(code: str, state: str = Query(None)):
             client_config=client_config,
             scopes=SCOPES
         )
-        flow.redirect_uri = get_redirect_uri()
+        flow.redirect_uri = auth_service.get_redirect_uri()
         
         # Get tokens from the authorization code
         debug("Fetching OAuth token from Google...")
@@ -222,15 +248,11 @@ async def callback(code: str, state: str = Query(None)):
         
         # Store in MongoDB
         debug(f"Storing tokens in database for {user_email}...")
-        await db.tokens.update_one(
-            {"user_email": user_email},
-            {"$set": token_data},
-            upsert=True
-        )
+        await auth_service.store_tokens(user_email, token_data)
         debug("Tokens successfully stored in database")
         
         # Store user in database if not found
-        user = await get_or_create_user(user_info, credentials)  # Create user if not found
+        user = await get_user_service().get_or_create_user(user_info, credentials)  # Create user if not found
         debug(f"User ensured in database: {user.get('email', 'Unknown')}")
 
         # Prepare auth response for frontend
@@ -284,7 +306,7 @@ async def exchange_code(request: ExchangeCodeRequest):
             )
         
         # Exchange auth code for tokens and store them in MongoDB
-        tokens = await run_in_threadpool(lambda: get_tokens_from_code(request.code, request.user_email))
+        tokens = await run_in_threadpool(lambda: get_auth_service().get_tokens_from_code(request.code, request.user_email))
         
         debug(f"Token exchange successful for {request.user_email}")
         return TokenResponse(
@@ -310,7 +332,7 @@ async def get_token(user_email: str = Query(...)):
     
     try:
         # Fetch stored token from MongoDB
-        token = await run_in_threadpool(lambda: get_credentials(user_email))
+        token = await run_in_threadpool(lambda: get_auth_service().get_credentials(user_email))
         return TokenResponse(
             access_token=token,
             token_type="bearer"
@@ -339,7 +361,7 @@ async def refresh_token(
             )
 
         # Refresh token using stored credentials in MongoDB
-        token = await run_in_threadpool(lambda: get_credentials(request.user_email))
+        token = await run_in_threadpool(lambda: get_auth_service().get_credentials(request.user_email))
         return TokenResponse(
             access_token=token,
             token_type="bearer"
@@ -359,7 +381,7 @@ async def auth_status(token: str = Depends(oauth2_scheme)):
     
     try:
         # Extract user info from the token
-        user_data = await get_credentials_from_token(token)
+        user_data = await get_auth_service().get_credentials_from_token(token)
         user_email = user_data['email']
         
         debug(f"User email extracted from token: {user_email}")
@@ -367,7 +389,7 @@ async def auth_status(token: str = Depends(oauth2_scheme)):
         # Get detailed credentials from the database using that email
         try:
             # Get the token record directly from the database instead of using get_credentials
-            token_record = await db.tokens.find_one({"user_email": user_email})
+            token_record = await get_auth_service().get_token_record(user_email)
             
             if not token_record:
                 return AuthStatusResponse(
@@ -588,7 +610,7 @@ async def token_endpoint(
         token = password
         
         # Validate the token to ensure it works
-        await get_credentials_from_token(token)
+        await get_auth_service().get_credentials_from_token(token)
         
         # Return a standard OAuth2 token response
         return {
