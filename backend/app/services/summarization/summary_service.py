@@ -1,22 +1,20 @@
 import logging
 from typing import List, Optional, Dict, Any
-import pymongo
 from datetime import datetime, timezone, timedelta
+from fastapi import HTTPException
+from fastapi import Depends
 
 from app.models import EmailSchema, SummarySchema
-from database import db
-from app.services.database_service import DatabaseService
+from app.services.database import SummaryRepository, get_summary_repository
 from app.services.summarization.base import AdaptiveSummarizer
 from app.services.summarization import (
-  ProcessingStrategy, 
-  OpenAIEmailSummarizer,
-  GeminiEmailSummarizer
+    ProcessingStrategy, 
+    OpenAIEmailSummarizer,
+    GeminiEmailSummarizer
 )
 
 # Create module-specific logger
 logger = logging.getLogger(__name__)
-
-summary_db = DatabaseService(db.summaries)
 
 class SummaryService:
     """
@@ -26,19 +24,26 @@ class SummaryService:
     and managing email summaries in MongoDB.
     """
     
+    def __init__(self, summary_repo: SummaryRepository = Depends(get_summary_repository)):
+        """Initialize the summary service with required configuration"""
+        self.summary_repo = summary_repo
+    
     async def initialize(self):
         """
         Initialize database indexes for summaries.
         
         Creates necessary indexes for efficient querying of summaries.
         """
-        # Create indexes for efficient querying
-        await summary_db.create_index("email_id", unique=True)
-        await summary_db.create_index("keywords")  # For keyword searching
-        await summary_db.create_index("generated_at")  # For time-based queries
-        await summary_db.create_index("user_id")  # For user-specific summaries
-        
-        logger.info("Summary collection indexes initialized")
+        try:
+            await self.summary_repo.create_index("email_id", unique=True)
+            await self.summary_repo.create_index("keywords")  # For keyword searching
+            await self.summary_repo.create_index("generated_at")  # For time-based queries
+            await self.summary_repo.create_index("user_id")  # For user-specific summaries
+            
+            logger.info("Summary collection indexes initialized")
+        except Exception as e:
+            logger.error(f"Failed to initialize summary indexes: {e}")
+            raise
     
     async def save_summary(self, summary: SummarySchema, user_id: str) -> str:
         """
@@ -62,9 +67,9 @@ class SummaryService:
             summary_dict["user_id"] = user_id
             
             # Use upsert to either update existing or insert new
-            result = await summary_db.update_one(
+            await self.summary_repo.update_one(
                 {"email_id": summary.email_id, "user_id": user_id},
-                {"$set": summary_dict},
+                summary_dict,
                 upsert=True
             )
             
@@ -73,7 +78,7 @@ class SummaryService:
             
         except Exception as e:
             logger.error(f"Failed to save summary: {e}")
-            raise
+            raise HTTPException(status_code=500, detail=str(e))
     
     async def get_summary(self, email_id: str, user_id: str) -> Optional[SummarySchema]:
         """
@@ -90,13 +95,13 @@ class SummaryService:
             Exception: If database operation fails
         """
         try:
-            result = await summary_db.find_one({"email_id": email_id, "user_id": user_id})
+            result = await self.summary_repo.find_one({"email_id": email_id, "user_id": user_id})
             if not result:
                 return None
             return SummarySchema.from_dict(result)
         except Exception as e:
             logger.error(f"Failed to retrieve summary for email {email_id}: {e}")
-            raise
+            raise HTTPException(status_code=500, detail=str(e))
     
     async def get_summaries(
         self, 
@@ -130,17 +135,18 @@ class SummaryService:
             query = {"user_id": user_id} if user_id else {}
             
             # Fetch summaries with pagination and sorting
-            results = await summary_db.find(query) \
-                .sort([(sort_by, sort_direction)]) \
-                .skip(skip) \
-                .limit(limit) \
-                .to_list(length=limit)
+            results = await self.summary_repo.find_many(
+                query,
+                limit=limit,
+                skip=skip,
+                sort=[(sort_by, sort_direction)]
+            )
             
             # Convert results to SummarySchema objects
             return [SummarySchema.from_dict(doc) for doc in results]
         except Exception as e:
             logger.error(f"Failed to retrieve summaries: {e}")
-            raise
+            raise HTTPException(status_code=500, detail=str(e))
     
     async def search_by_keywords(
         self, 
@@ -167,11 +173,11 @@ class SummaryService:
             if user_id:
                 query["user_id"] = user_id
                 
-            results = await summary_db.find(query).limit(limit).to_list(length=limit)
+            results = await self.summary_repo.find_many(query, limit=limit)
             return [SummarySchema.from_dict(result) for result in results]
         except Exception as e:
             logger.error(f"Failed to search summaries by keywords: {e}")
-            raise
+            raise HTTPException(status_code=500, detail=str(e))
     
     async def get_recent_summaries(
         self, 
@@ -199,15 +205,16 @@ class SummaryService:
             if user_id:
                 query["user_id"] = user_id
             
-            results = await summary_db.find(query) \
-                .sort([("generated_at", -1)]) \
-                .limit(limit) \
-                .to_list(length=limit)
+            results = await self.summary_repo.find_many(
+                query,
+                limit=limit,
+                sort=[("generated_at", -1)]
+            )
                 
             return [SummarySchema.from_dict(doc) for doc in results]
         except Exception as e:
             logger.error(f"Failed to retrieve recent summaries: {e}")
-            raise
+            raise HTTPException(status_code=500, detail=str(e))
     
     async def delete_summary(self, email_id: str, user_id: str) -> bool:
         """
@@ -224,7 +231,7 @@ class SummaryService:
             Exception: If database operation fails
         """
         try:
-            result = await summary_db.delete_one({"email_id": email_id, "user_id": user_id})
+            result = await self.summary_repo.delete_one({"email_id": email_id, "user_id": user_id})
             deleted = result.deleted_count > 0
             
             if deleted:
@@ -235,7 +242,7 @@ class SummaryService:
             return deleted
         except Exception as e:
             logger.error(f"Failed to delete summary for email {email_id}: {e}")
-            raise
+            raise HTTPException(status_code=500, detail=str(e))
     
     async def save_summaries_batch(self, summaries: List[SummarySchema], user_id: str) -> Dict[str, int]:
         """
@@ -261,16 +268,16 @@ class SummaryService:
                 summary_dict = summary.to_dict()
                 summary_dict["user_id"] = user_id
                 operations.append(
-                    pymongo.UpdateOne(
-                        {"email_id": summary.email_id, "user_id": user_id},
-                        {"$set": summary_dict},
-                        upsert=True
-                    )
+                    {
+                        "filter": {"email_id": summary.email_id, "user_id": user_id},
+                        "update": {"$set": summary_dict},
+                        "upsert": True
+                    }
                 )
             
             # Execute bulk operation
             if operations:
-                result = await summary_db.bulk_write(operations)
+                result = await self.summary_repo.bulk_write(operations)
                 stats = {
                     "inserted": result.upserted_count,
                     "modified": result.modified_count
@@ -282,7 +289,7 @@ class SummaryService:
             
         except Exception as e:
             logger.error(f"Error in batch saving summaries: {e}")
-            raise
+            raise HTTPException(status_code=500, detail=str(e))
     
     async def count_summaries(self, query: Dict = None, user_id: str = None) -> int:
         """
@@ -302,10 +309,10 @@ class SummaryService:
             query = query or {}
             if user_id:
                 query["user_id"] = user_id
-            return await summary_db.count_documents(query)
+            return await self.summary_repo.count(query)
         except Exception as e:
             logger.error(f"Failed to count summaries: {e}")
-            raise
+            raise HTTPException(status_code=500, detail=str(e))
     
     async def get_summaries_by_ids(self, email_ids: List[str], user_id: str) -> List[SummarySchema]:
         """
@@ -327,7 +334,7 @@ class SummaryService:
         try:
             # Query for all summaries matching the provided email IDs
             query = {"email_id": {"$in": email_ids}, "user_id": user_id}
-            results = await summary_db.find(query).to_list(length=len(email_ids))
+            results = await self.summary_repo.find_many(query, limit=len(email_ids))
             
             # Convert to SummarySchema objects
             summaries = [SummarySchema.from_dict(doc) for doc in results]
@@ -338,7 +345,7 @@ class SummaryService:
             return summaries
         except Exception as e:
             logger.error(f"Failed to retrieve summaries by IDs: {e}")
-            raise
+            raise HTTPException(status_code=500, detail=str(e))
     
     async def get_or_create_summary(
         self, 
@@ -360,34 +367,38 @@ class SummaryService:
         Raises:
             Exception: If email not found or summarization fails
         """
-        # Try to get existing summary
-        summary = await self.get_summary(email_id, user_id)
-        if summary:
+        try:
+            # Try to get existing summary
+            summary = await self.get_summary(email_id, user_id)
+            if summary:
+                return summary
+            
+            # If not found, fetch email and generate summary
+            from app.services.email_service import EmailService
+            from app.models import EmailSchema
+            
+            # Create an instance of EmailService
+            email_service = EmailService()
+            
+            email_dict = await email_service.get_email(email_id, user_id)
+            if not email_dict:
+                raise ValueError(f"Email {email_id} not found for user {user_id}")
+            
+            email = EmailSchema(**email_dict)
+            
+            # Generate summary
+            summaries = await summarizer.summarize(
+                [email],
+                strategy=ProcessingStrategy.SINGLE
+            )
+            
+            summary = summaries[0]
+            
+            # Store the summary
+            await self.save_summary(summary, user_id)
+            
+            logger.info(f"Auto-generated summary for email {email_id} for user {user_id}")
             return summary
-        
-        # If not found, fetch email and generate summary
-        from app.services.email_service import EmailService
-        from app.models import EmailSchema
-        
-        # Create an instance of EmailService
-        email_service = EmailService()
-        
-        email_dict = await email_service.get_email(email_id, user_id)
-        if not email_dict:
-            raise ValueError(f"Email {email_id} not found for user {user_id}")
-        
-        email = EmailSchema(**email_dict)
-        
-        # Generate summary
-        summaries = await summarizer.summarize(
-            [email],
-            strategy=ProcessingStrategy.SINGLE
-        )
-        
-        summary = summaries[0]
-        
-        # Store the summary
-        await self.save_summary(summary, user_id)
-        
-        logger.info(f"Auto-generated summary for email {email_id} for user {user_id}")
-        return summary 
+        except Exception as e:
+            logger.error(f"Failed to get or create summary for email {email_id}: {e}")
+            raise HTTPException(status_code=500, detail=str(e)) 
