@@ -1,14 +1,14 @@
-from .auth_service import create_authorization_url, get_tokens_from_code
+from .auth_service import AuthService
 from .email_service import EmailService
-from .summarization import OpenAIEmailSummarizer, ProcessingStrategy
-from .summary_service import SummaryService
+from .user_service import UserService
+from .summarization import SummaryService, OpenAIEmailSummarizer, ProcessingStrategy
 
 # Export key types and implementations
 __all__ = [
     'EmailService',
     'SummaryService',
-    'create_authorization_url',
-    'get_tokens_from_code',
+    'AuthService',
+    'UserService',
     'OpenAIEmailSummarizer',
     'ProcessingStrategy'
 ]

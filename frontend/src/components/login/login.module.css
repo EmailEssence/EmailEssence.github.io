@@ -14,7 +14,7 @@
   height: clamp(300px, 40%, 300px);
   width: clamp(240px, 30%, 240px);
   border-radius: 10px;
-  padding: 20px;
+  padding: calc(1rem + 1vw);
   box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.3);
   display: flex;
   flex-direction: column;
@@ -23,27 +23,27 @@
 }
 
 .loginDiv .loginIcon {
-  width: 30px;
-  height: 30px;
-  margin: 20px;
+  width: calc(1.5rem + 0.5vw);
+  height: calc(1.5rem + 0.5vw);
+  margin: calc(1.5rem + 0.5vw);
   border-radius: 4px;
   box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2);
 }
 
 .loginDiv .loginIcon img {
-  font-size: 8px;
+  font-size: calc(0.5rem + 0.25vw);
 }
 
 .loginDiv .title {
   text-align: center;
-  font-size: 15px;
+  font-size: calc(1rem + 0.5vw);
   font-weight: bold;
 }
 
 .loginDiv .signUpLink {
-  padding: 10px;
+  padding: calc(0.5rem + 0.25vw);
   text-align: center;
-  font-size: 8px;
+  font-size: calc(0.5rem + 0.25vw);
   text-decoration: none;
 }
 
@@ -52,24 +52,24 @@
 }
 
 .loginDiv .inputBox {
-  padding: 5px;
-  width: 200px;
-  margin: 5px 0;
+  padding: calc(0.25rem + 0.25vw);
+  width: calc(10rem + 5vw);
+  margin: calc(0.25rem + 0.25vw) 0;
   border: 1px solid #161616;
   background-color: #161616;
   border-radius: 5px;
-  font-size: 8px;
+  font-size: calc(0.5rem + 0.25vw);
 }
 
 .loginDiv .loginButton {
-  padding: 5px;
+  padding: calc(0.25rem + 0.25vw);
   width: 100%;
-  margin: 10px 0;
+  margin: calc(0.5rem + 0.5vw) 0;
   background-color: #d9d9d9;
   border: 1px solid black;
   border-radius: 5px;
   box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2);
-  font-size: 8px;
+  font-size: calc(0.5rem + 0.25vw);
 }
 
 .loginDiv .loginButton:hover {

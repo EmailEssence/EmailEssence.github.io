@@ -10,7 +10,8 @@ import json
 import urllib.parse
 import base64
 import uuid
-from typing import Dict, Optional
+from typing import Dict, Optional, Any
+from functools import lru_cache
 
 from fastapi import APIRouter, HTTPException, status, Depends, Request, Query, Form
 from fastapi.security import OAuth2AuthorizationCodeBearer, OAuth2PasswordBearer
@@ -21,11 +22,12 @@ from starlette.concurrency import run_in_threadpool
 from pydantic import BaseModel, EmailStr
 from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
-from database import db
 
-from app.services.auth_service import create_authorization_url, get_tokens_from_code, get_credentials, get_credentials_from_token, SCOPES, get_redirect_uri
-from app.services.user_service import get_or_create_user
+from app.services.auth_service import AuthService, SCOPES
+from app.services.user_service import UserService
 from app.utils.config import get_settings
+from app.services.database.factories import get_auth_service, get_user_service
+from app.models import TokenData, TokenResponse, AuthStatusResponse, ExchangeCodeRequest, RefreshTokenRequest, VerifyTokenRequest
 
 router = APIRouter()
 settings = get_settings()
@@ -36,44 +38,19 @@ settings = get_settings()
 # It only shows a token field without client_id/client_secret
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token", description="Enter the token you received from the login flow (without Bearer prefix)")
 
-# -- Pydantic Models --
-
-class ExchangeCodeRequest(BaseModel):
-    """Request model for exchanging an OAuth authorization code for tokens"""
-    code: str
-    user_email: EmailStr
-
-class RefreshTokenRequest(BaseModel):
-    """Request model for refreshing an access token"""
-    user_email: EmailStr
-
-class VerifyTokenRequest(BaseModel):
-    """Request model for token verification"""
-    token: str
-
-class TokenResponse(BaseModel):
-    """Response model for token-related endpoints"""
-    access_token: str
-    token_type: str
-    expires_in: int = 3600
-    refresh_token: Optional[str] = None
-
-class AuthStatusResponse(BaseModel):
-    """Response model for authentication status"""
-    is_authenticated: bool
-    token_valid: Optional[bool] = None
-    has_refresh_token: Optional[bool] = None
-    error: Optional[str] = None
-
 # -- Authentication Utility --
 
-async def get_current_user_email(token: str = Depends(oauth2_scheme)):
+async def get_current_user_email(
+    token: str = Depends(oauth2_scheme),
+    auth_service: AuthService = Depends(get_auth_service)
+):
     """
     Dependency to extract user email from valid token.
     Will raise 401 automatically if token is invalid.
     
     Args:
         token: JWT token from OAuth2 authentication
+        auth_service: Auth service instance
         
     Returns:
         str: User's email address
@@ -83,7 +60,7 @@ async def get_current_user_email(token: str = Depends(oauth2_scheme)):
     """
     try:
         # Get user info from token
-        user_data = await get_credentials_from_token(token)
+        user_data = await auth_service.get_credentials_from_token(token)
         return user_data['email']
     except Exception as e:
         raise HTTPException(
@@ -104,16 +81,20 @@ def debug(message: str):
     description="Initiates the OAuth2 authentication process with Google. Redirects to Google's consent screen.",
     response_class=RedirectResponse
 )
-async def login(redirect_uri: str = Query(
-    ..., 
-    description="Frontend URI to redirect back to after authentication. Use http://localhost:8000/docs for Swagger testing."
-)):
+async def login(
+    redirect_uri: str = Query(
+        ..., 
+        description="Frontend URI to redirect back to after authentication. Use http://localhost:8000/docs for Swagger testing."
+    ),
+    auth_service: AuthService = Depends(get_auth_service)
+):
     """
     Initiates the OAuth flow with Google, storing the frontend's redirect URI in the state parameter.
     For testing in Swagger UI, use 'http://localhost:8000/docs' as the redirect_uri.
     
     Args:
         redirect_uri: Frontend URI to redirect back to after successful authentication
+        auth_service: Auth service instance
         
     Returns:
         RedirectResponse: Redirects to Google's authentication page
@@ -131,7 +112,7 @@ async def login(redirect_uri: str = Query(
         encoded_custom_state = base64.urlsafe_b64encode(json.dumps(custom_state).encode()).decode()
 
         # Get the authorization URL from auth_service.py - PASS OUR STATE
-        result = create_authorization_url(encoded_custom_state)
+        result = auth_service.create_authorization_url(encoded_custom_state)
         authorization_url = result["authorization_url"]
 
         debug(f"Generated Google OAuth URL: {authorization_url}")
@@ -147,9 +128,23 @@ async def login(redirect_uri: str = Query(
         )
 
 @router.get("/callback")
-async def callback(code: str, state: str = Query(None)):
+async def callback(
+    code: str, 
+    state: str = Query(None),
+    auth_service: AuthService = Depends(get_auth_service),
+    user_service: UserService = Depends(get_user_service)
+):
     """
     Handles the OAuth callback from Google and exchanges the authorization code for access tokens.
+    
+    Args:
+        code: Authorization code from Google
+        state: State parameter containing encoded redirect URI
+        auth_service: Auth service instance
+        user_service: User service instance
+        
+    Returns:
+        RedirectResponse: Redirects to frontend with authentication state
     """
     debug(f"Received callback with code: {code}")
     
@@ -166,36 +161,19 @@ async def callback(code: str, state: str = Query(None)):
         if not frontend_url:
             raise ValueError("Missing redirect URI in state parameter")
 
-        # Exchange code for tokens - But we need to get the user email to store properly
-        # First exchange without storing
-        client_id = settings.google_client_id
-        client_secret = settings.google_client_secret
-
-        client_config = {
-            "web": {
-                "client_id": client_id,
-                "client_secret": client_secret,
-                "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-                "token_uri": "https://oauth2.googleapis.com/token",
-                "redirect_uris": [get_redirect_uri()]
-            }
-        }
-
-        # Create a flow to exchange code for credentials
-        flow = Flow.from_client_config(
-            client_config=client_config,
-            scopes=SCOPES
+        # Exchange code for tokens and get user info in one step
+        debug("Exchanging code for tokens and getting user info...")
+        token_data = await auth_service.get_tokens_from_code(code, None)  # First exchange
+        
+        # Get user info using the token
+        credentials = Credentials(
+            token=token_data.token,  # Access token as attribute
+            token_uri=token_data.token_uri,
+            client_id=token_data.client_id,
+            client_secret=token_data.client_secret,
+            scopes=token_data.scopes
         )
-        flow.redirect_uri = get_redirect_uri()
         
-        # Get tokens from the authorization code
-        debug("Fetching OAuth token from Google...")
-        flow.fetch_token(code=code)
-        credentials = flow.credentials
-        
-        debug("OAuth token successfully retrieved")
-
-        # Now use the credentials to get user info and extract email
         service = await run_in_threadpool(lambda: 
             build('oauth2', 'v2', credentials=credentials)
         )
@@ -210,47 +188,30 @@ async def callback(code: str, state: str = Query(None)):
         if not user_email:
             raise ValueError("Could not retrieve user email from Google")
         
-        # Now properly store the tokens with the user email
-        token_data = {
-            'token': credentials.token,
-            'refresh_token': credentials.refresh_token,
-            'token_uri': credentials.token_uri,
-            'client_id': credentials.client_id,
-            'client_secret': credentials.client_secret,
-            'scopes': credentials.scopes
-        }
-        
-        # Store in MongoDB
-        debug(f"Storing tokens in database for {user_email}...")
-        await db.tokens.update_one(
-            {"user_email": user_email},
-            {"$set": token_data},
-            upsert=True
-        )
-        debug("Tokens successfully stored in database")
-        
-        # Store user in database if not found
-        user = await get_or_create_user(user_info, credentials)  # Create user if not found
-        debug(f"User ensured in database: {user.get('email', 'Unknown')}")
-
-        # Prepare auth response for frontend
-        auth_state = {
-            "authenticated": True,
-            "token": credentials.token
-        }
-        
+        # Check if user exists, create if not
+        user = await user_service.get_user_by_email(user_email)
+        if not user:
+            debug(f"Creating new user: {user_email}")
+            user = await user_service.create_user({
+                "email": user_email,
+                "name": user_info.get("name", ""),
+                "picture": user_info.get("picture", ""),
+                "google_id": user_info.get("id")
+            })
+        else:
+            debug(f"Found existing user: {user_email}")
         
         # Special handling for Swagger UI testing
         if "localhost:8000/docs" in frontend_url or "/docs" in frontend_url:
             # Redirect to our token display page instead of back to Swagger directly
             return RedirectResponse(
-                url=f"/auth/test-token-display?token={token_data['token']}"
+                url=f"/auth/test-token-display?token={token_data.token}"
             )
             
         # Normal redirect for frontend apps
         auth_state = {
             "authenticated": True,
-            "token": token_data['token']
+            "token": token_data.token
         }
 
         encoded_state = urllib.parse.quote(json.dumps(auth_state))
@@ -269,7 +230,10 @@ async def callback(code: str, state: str = Query(None)):
         )
 
 @router.post("/exchange", response_model=TokenResponse)
-async def exchange_code(request: ExchangeCodeRequest):
+async def exchange_code(
+    request: ExchangeCodeRequest,
+    auth_service: AuthService = Depends(get_auth_service)
+):
     """
     Exchanges an authorization code for tokens and stores them in the database.
     Requires the user's email to associate the tokens.
@@ -284,14 +248,14 @@ async def exchange_code(request: ExchangeCodeRequest):
             )
         
         # Exchange auth code for tokens and store them in MongoDB
-        tokens = await run_in_threadpool(lambda: get_tokens_from_code(request.code, request.user_email))
+        tokens = await auth_service.get_tokens_from_code(request.code, request.user_email)
         
         debug(f"Token exchange successful for {request.user_email}")
         return TokenResponse(
-            access_token=tokens["token"],
+            access_token=tokens.token,
             token_type="bearer",
             expires_in=3600,
-            refresh_token=tokens.get("refresh_token")
+            refresh_token=tokens.refresh_token
         )
         
     except Exception as e:
@@ -302,7 +266,10 @@ async def exchange_code(request: ExchangeCodeRequest):
         )
 
 @router.get("/token", response_model=TokenResponse)
-async def get_token(user_email: str = Query(...)):
+async def get_token(
+    user_email: str = Query(...),
+    auth_service: AuthService = Depends(get_auth_service)
+):
     """
     Retrieves the stored access token for the user.
     If expired, it will refresh the token automatically.
@@ -310,9 +277,9 @@ async def get_token(user_email: str = Query(...)):
     
     try:
         # Fetch stored token from MongoDB
-        token = await run_in_threadpool(lambda: get_credentials(user_email))
+        token = await auth_service.get_token_data(user_email)
         return TokenResponse(
-            access_token=token,
+            access_token=token.token,
             token_type="bearer"
         )
     except Exception as e:
@@ -324,7 +291,8 @@ async def get_token(user_email: str = Query(...)):
 @router.post("/refresh", response_model=TokenResponse)
 async def refresh_token(
     request: RefreshTokenRequest,
-    current_user_email: str = Depends(get_current_user_email)
+    current_user_email: str = Depends(get_current_user_email),
+    auth_service: AuthService = Depends(get_auth_service)
 ):
     """
     Forces a refresh of the user's token, if a refresh token is available.
@@ -339,9 +307,9 @@ async def refresh_token(
             )
 
         # Refresh token using stored credentials in MongoDB
-        token = await run_in_threadpool(lambda: get_credentials(request.user_email))
+        token = await auth_service.get_token_data(request.user_email)
         return TokenResponse(
-            access_token=token,
+            access_token=token.token,
             token_type="bearer"
         )
     except Exception as e:
@@ -351,7 +319,10 @@ async def refresh_token(
         )
 
 @router.get("/status", response_model=AuthStatusResponse)
-async def auth_status(token: str = Depends(oauth2_scheme)):
+async def auth_status(
+    token: str = Depends(oauth2_scheme),
+    auth_service: AuthService = Depends(get_auth_service)
+):
     """
     Returns the user's authentication status.
     Requires authentication.
@@ -359,7 +330,7 @@ async def auth_status(token: str = Depends(oauth2_scheme)):
     
     try:
         # Extract user info from the token
-        user_data = await get_credentials_from_token(token)
+        user_data = await auth_service.get_credentials_from_token(token)
         user_email = user_data['email']
         
         debug(f"User email extracted from token: {user_email}")
@@ -367,7 +338,7 @@ async def auth_status(token: str = Depends(oauth2_scheme)):
         # Get detailed credentials from the database using that email
         try:
             # Get the token record directly from the database instead of using get_credentials
-            token_record = await db.tokens.find_one({"user_email": user_email})
+            token_record = await auth_service.get_token_record(user_email)
             
             if not token_record:
                 return AuthStatusResponse(
@@ -403,7 +374,8 @@ async def auth_status(token: str = Depends(oauth2_scheme)):
 @router.post("/verify")
 async def verify_token(
     request: VerifyTokenRequest,
-    token: str = Depends(oauth2_scheme)  # Requiring auth ensures only authenticated users can verify tokens
+    token: str = Depends(oauth2_scheme),  # Requiring auth ensures only authenticated users can verify tokens
+    auth_service: AuthService = Depends(get_auth_service)
 ):
     """
     Verifies a given access token by refreshing it.
@@ -572,25 +544,40 @@ async def display_token_for_testing(token: str = Query(None), error: str = Query
     else:
         return HTMLResponse(content="<h1>No token provided</h1>")
 
-@router.post("/token", summary="For Swagger UI auth only - paste your Google token here")
+@router.post("/token", summary="Store a Google token")
 async def token_endpoint(
     username: str = Form("oauth", description="Just use 'oauth' here"),
-    password: str = Form(..., description="Paste your Google token here")
+    password: str = Form(..., description="Paste your Google token here"),
+    auth_service: AuthService = Depends(get_auth_service)
 ):
     """
-    This endpoint is for Swagger UI authentication only.
+    Store a Google token in the database.
     
-    Just paste your Google token in the password field.
-    The username field is not used - you can leave it as 'oauth'.
+    Args:
+        username: Not used, can be left as 'oauth'
+        password: The Google token to store
     """
     try:
-        # We'll use the password field as the token
         token = password
         
-        # Validate the token to ensure it works
-        await get_credentials_from_token(token)
+        # Validate token and get user info
+        validation_result = await auth_service.get_credentials_from_token(token)
+        user_email = validation_result['email']
         
-        # Return a standard OAuth2 token response
+        # Store the token in our repository
+        token_data = {
+            "email": user_email,
+            "token": token,
+            "refresh_token": None,
+            "token_uri": "https://oauth2.googleapis.com/token",
+            "client_id": settings.google_client_id,
+            "client_secret": settings.google_client_secret,
+            "scopes": SCOPES
+        }
+        
+        # Store with the validated email
+        await auth_service.token_repository.update_by_email(user_email, token_data)
+        
         return {
             "access_token": token,
             "token_type": "bearer"
@@ -598,5 +585,5 @@ async def token_endpoint(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Invalid token: {str(e)}"
+            detail=f"Failed to store token: {str(e)}"
         )

@@ -6,15 +6,15 @@ fetching individual email details, marking emails as read, and deleting emails.
 It provides a set of REST endpoints for interacting with the user's email data.
 """
 
-import logging
-from typing import List, Optional
 from fastapi import APIRouter, HTTPException, Query, Depends, status
-from pydantic import BaseModel
-from app.services import EmailService
-from app.models import EmailSchema, ReaderViewResponse
-from functools import lru_cache
 from fastapi.security import OAuth2PasswordBearer
-from app.services.auth_service import get_credentials_from_token
+from typing import List, Optional
+from pydantic import BaseModel
+import logging
+from functools import lru_cache
+
+from app.services import EmailService, AuthService
+from app.models import EmailSchema, ReaderViewResponse
 from app.routers.user_router import get_current_user_info, get_current_user
 
 router = APIRouter()
@@ -111,7 +111,7 @@ async def retrieve_emails(
         logger.debug(f"Email retrieval request with refresh={refresh}", extra={"params": debug_info["request_params"]})
         
         # Get the user ID from the authenticated user
-        user_id = str(user.get("_id", user.get("google_id")))
+        user_id = str(user.google_id)
         logger.debug(f"User ID for email retrieval: {user_id}")
         
         emails, total, service_debug_info = await email_service.fetch_emails(

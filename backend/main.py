@@ -2,13 +2,13 @@
 import os
 from fastapi import FastAPI, HTTPException, Depends, status
 from fastapi.responses import FileResponse
-from starlette.concurrency import run_in_threadpool
 from fastapi.middleware.cors import CORSMiddleware
-
+from starlette.concurrency import run_in_threadpool
+import logging
 
 from app.routers import emails_router, summaries_router, auth_router, user_router
+from app.services.database.connection import DatabaseConnection
 from app.models import EmailSchema, SummarySchema, UserSchema
-from database import db  
 
 
 # from app.models.user_model import User
@@ -33,26 +33,37 @@ app.add_middleware(
         "http://127.0.0.1:5173",  # Vite with IP
         "http://127.0.0.1:4200",  # Angular with IP
         "https://emailessence.github.io",
+        "https://ee-backend-w86t.onrender.com",  # Your backend deployment URL
     ],
     allow_credentials=True,
     allow_methods=["*"],  # Allows all methods
     allow_headers=["*"],  # Allows all headers
 )
 
+logger = logging.getLogger(__name__)
 
 async def startup_db_client():
     """
     Initializes MongoDB connection on startup.
+    
+    This function:
+    1. Gets the singleton database connection instance
+    2. Initializes the connection asynchronously
+    3. Handles any connection errors gracefully
     """
-    print("🔄 Connecting to MongoDB...")
     try:
-        await db.command("ping")  
-        collections = await db.list_collection_names()
-        print(f"✅ Collections in DB: {collections}")
-        print("✅ MongoDB connection successful!")
+        # Get the singleton instance and initialize it
+        db = DatabaseConnection()
+        await db.initialize()
+        
     except Exception as e:
-        print(f"❌ Failed to connect to MongoDB: {str(e)}")
+        logger.error(f"❌ Failed to connect to MongoDB: {str(e)}")
+        raise RuntimeError("Failed to initialize database connection") from e
 
+# Register startup event handler
+@app.on_event("startup")
+async def startup_event():
+    await startup_db_client()
 
 # Register routers
 app.include_router(auth_router, prefix="/auth", tags=["Auth"])

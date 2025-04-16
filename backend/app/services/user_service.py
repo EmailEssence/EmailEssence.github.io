@@ -1,119 +1,221 @@
-from database import db
-from app.models.user_model import UserSchema, OAuthSchema
+import logging
+from typing import Optional, Dict, Any
+from fastapi import HTTPException, status
 from bson import ObjectId
+from google.oauth2.credentials import Credentials
 
-# Debugging helper function
-def debug(message: str):
-    print(f"[DEBUG] {message}")
+from app.models import UserSchema, TokenData, PreferencesSchema
+from app.services.database.user_repository import UserRepository
+from app.services.database.factories import get_user_repository
 
-async def get_or_create_user(user_info, credentials=None):
-    """Finds or creates a user in the database based on Google OAuth data."""
-    google_id = user_info["id"]  # Unique Google ID
-    debug(f"Checking if user with Google ID {google_id} exists...")
+logger = logging.getLogger(__name__)
 
-    existing_user = await db.users.find_one({"google_id": google_id})
-
-    if existing_user:
-        # Convert _id to string for JSON serialization
-        existing_user["_id"] = str(existing_user["_id"])
-        debug(f"User found: {existing_user['email']}")
-        return existing_user
-
-    debug(f"User not found. Creating new user with email: {user_info['email']}")
-
-    # Create OAuth data dict if credentials are provided
-    # Currently passes OAuth object directly to the schema
-    oauth_data = {}
-    if credentials:
-        oauth_data = OAuthSchema(
-        token=credentials.token,
-        refresh_token=credentials.refresh_token,
-        token_uri=credentials.token_uri,
-        client_id=credentials.client_id,
-        client_secret=credentials.client_secret,
-        scopes=credentials.scopes  # Handles list correctly
-    ) if credentials else None
+class UserService:
+    """
+    Service for handling user-related operations.
     
-    debug(f"OAuth credentials included for {user_info['email']}.")
-
-    # Create new user record
-    new_user = UserSchema(
-        google_id=google_id,
-        email=user_info["email"],
-        name=user_info.get("name", user_info.get("email").split("@")[0]),
-        oauth=oauth_data
-    )
-
-    # Insert into MongoDB
-    inserted_id = await db.users.insert_one(new_user.model_dump())
-    debug(f"New user inserted with ID: {inserted_id.inserted_id}")
-
-    new_user_dict = new_user.model_dump()
-    new_user_dict["_id"] = str(inserted_id.inserted_id)  # Convert ObjectId to string
-    return new_user_dict
-
-async def get_user_by_id(user_id: str):
-    """Retrieve user by ID."""
-    debug(f"Fetching user with ID: {user_id}")
-
-    if not ObjectId.is_valid(user_id):
-        debug("[ERROR] Invalid ObjectId format.")
-        return None
+    This class provides methods for user management, including:
+    - Creating and retrieving users
+    - Updating user information
+    - Managing user authentication state
+    """
     
-    user = await db.users.find_one({"_id": ObjectId(user_id)})
-    
-    if user:
-        user["_id"] = str(user["_id"])  # Convert ObjectId to string for frontend compatibility
-        debug(f"User retrieved: {user.get('email', 'Unknown')}")
-    else:
-        debug("[ERROR] User not found.")
-    
-    return user
+    def __init__(self, user_repository: UserRepository):
+        """
+        Initialize the user service.
+        
+        Args:
+            user_repository: User repository instance
+        """
+        self.user_repository = user_repository
+        # Note: We can't call ensure_indexes here because it's async
+        # The indexes will be created on first use
 
-async def update_user(user_id: str, user_data: dict):
-    """Update a user's information."""
-    debug(f"Updating user with ID: {user_id}")
+    async def get_user(self, user_id: str) -> Optional[UserSchema]:
+        """
+        Get a user by ID.
+        
+        Args:
+            user_id: User ID
+            
+        Returns:
+            User if found, None otherwise
+        """
+        try:
+            return await self.user_repository.find_by_id(user_id)
+        except Exception as e:
+            logger.error(f"Failed to get user: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to get user"
+            )
 
-    if not ObjectId.is_valid(user_id):
-        debug("[ERROR] Invalid ObjectId format.")
-        return None
-    
-    result = await db.users.update_one({"_id": ObjectId(user_id)}, {"$set": user_data})
-    
-    if result.modified_count == 0:
-        debug("[ERROR] No modifications were made.")
-        return None  # No update performed
-    
-    debug(f"User {user_id} updated successfully.")
-    return await get_user_by_id(user_id)
+    async def get_user_by_email(self, email: str) -> Optional[UserSchema]:
+        """
+        Get a user by email.
+        
+        Args:
+            email: User email
+            
+        Returns:
+            User if found, None otherwise
+        """
+        try:
+            return await self.user_repository.find_by_email(email)
+        except Exception as e:
+            logger.error(f"Failed to get user by email: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to get user by email"
+            )
 
-async def delete_user(user_id: str):
-    """Delete a user from the database."""
-    debug(f"Attempting to delete user with ID: {user_id}")
+    async def create_user(self, user_data: Dict[str, Any]) -> UserSchema:
+        """
+        Create a new user.
+        
+        Args:
+            user_data: User data
+            
+        Returns:
+            Created user
+        """
+        # Ensure indexes exist before creating user
+        await self.user_repository.ensure_indexes()
+        
+        try:
+            # Create a complete user data dictionary with all required fields
+            complete_user_data = {
+                "google_id": user_data.get("google_id", ""),
+                "email": user_data.get("email", ""),
+                "name": user_data.get("name", ""),
+                "oauth": {
+                    "token": "",
+                    "refresh_token": None,
+                    "token_uri": "https://oauth2.googleapis.com/token",
+                    "client_id": "",
+                    "client_secret": "",
+                    "scopes": []
+                },
+                "preferences": PreferencesSchema().model_dump()
+            }
+            
+            # Update with any provided values
+            complete_user_data.update(user_data)
+            
+            # Create UserSchema instance
+            user = UserSchema(**complete_user_data)
+            
+            # Insert into database
+            user_id = await self.user_repository.insert_one(user)
+            user._id = user_id
+            
+            return user
+        except Exception as e:
+            logger.error(f"Failed to create user: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to create user"
+            )
 
-    if not ObjectId.is_valid(user_id):
-        debug("[ERROR] Invalid ObjectId format.")
-        return False
+    async def update_user(self, user_id: str, user_data: Dict[str, Any]) -> Optional[UserSchema]:
+        """
+        Update a user.
+        
+        Args:
+            user_id: User ID
+            user_data: Updated user data
+            
+        Returns:
+            Optional[UserSchema]: Updated user if successful, None otherwise
+        """
+        try:
+            # First get the current user to ensure it exists
+            current_user = await self.user_repository.find_by_id(user_id)
+            if not current_user:
+                logger.error(f"User not found: {user_id}")
+                return None
 
-    result = await db.users.delete_one({"_id": ObjectId(user_id)})
-    return result.deleted_count > 0
+            # Update the user
+            success = await self.user_repository.update_one(user_id, user_data)
+            if not success:
+                logger.error(f"Update failed for user: {user_id}")
+                return None
 
+            # Get the updated user
+            updated_user = await self.user_repository.find_by_id(user_id)
+            if not updated_user:
+                logger.error(f"Failed to fetch updated user: {user_id}")
+                return None
 
-async def get_user_preferences(google_id: str):
-    """Retrieve only user preferences."""
-    debug(f"Fetching preferences for Google ID: {google_id}")
-    user = await db.users.find_one({"google_id": google_id}, {"preferences": 1, "_id": 0})
-    return user.get("preferences", {}) if user else None
-    
+            return UserSchema(**updated_user)
+        except Exception as e:
+            logger.error(f"Failed to update user: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to update user"
+            )
 
+    async def delete_user(self, user_id: str) -> bool:
+        """
+        Delete a user.
+        
+        Args:
+            user_id: User ID
+            
+        Returns:
+            True if deleted, False otherwise
+        """
+        try:
+            return await self.user_repository.delete_one(user_id)
+        except Exception as e:
+            logger.error(f"Failed to delete user: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to delete user"
+            )
 
-async def update_user_preferences(google_id: str, preferences: dict):
-    """Update user preferences."""
-    debug(f"Updating preferences for Google ID: {google_id}")
+    async def get_preferences(self, google_id: str) -> Dict[str, Any]:
+        """
+        Get user preferences.
+        
+        Args:
+            google_id: User's Google ID
+            
+        Returns:
+            Dict[str, Any]: User preferences
+        """
+        try:
+            logger.debug(f"Fetching preferences for Google ID: {google_id}")
+            user = await self.user_repository.find_one({"google_id": google_id})
+            return user.get("preferences", {}) if user else {}
+        except Exception as e:
+            logger.error(f"Failed to get preferences: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to get preferences"
+            )
 
-    result = await db.users.update_one(
+    async def update_preferences(self, google_id: str, preferences: Dict[str, Any]) -> bool:
+        """
+        Update user preferences.
+        
+        Args:
+            google_id: User's Google ID
+            preferences: New preferences
+            
+        Returns:
+            bool: True if update successful
+        """
+        try:
+            logger.debug(f"Updating preferences for Google ID: {google_id}")
+            result = await self.user_repository.update_one(
         {"google_id": google_id},
         {"$set": {"preferences": preferences}}
     )
-    
-    return result.modified_count > 0
+            return result
+        except Exception as e:
+            logger.error(f"Failed to update preferences: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to update preferences"
+            )
