@@ -54,6 +54,9 @@ EmailEssence is a sophisticated email management solution that leverages artific
 
 ### Installation
 
+#### Environment Variables
+Create a `.env` file in the backend directory using `.env.example` as a template:
+
 #### Backend Setup
 We use UV (https://astral.sh/uv) for Python package management. Choose your platform:
 
@@ -89,9 +92,6 @@ npm install
 cd backend
 uvicorn main:app --reload
 ```
-
-### Environment Variables
-Create a `.env` file in the backend directory using `.env.example` as a template:
 
 ### Starting the Frontend
 ```bash
