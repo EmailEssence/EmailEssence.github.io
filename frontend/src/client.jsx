@@ -1,24 +1,24 @@
 import { useEffect, useReducer } from "react";
+import { Routes, Route, Outlet, useNavigate } from "react-router";
 import "./client.css";
 import Dashboard from "./components/dashboard/dashboard";
 import Inbox from "./components/inbox/inbox";
 import { Settings } from "./components/settings/settings";
 import SideBar from "./components/sidebar/sidebar";
-import fetchEmails from "./emails/emailParse";
+import { fetchNewEmails } from "./emails/emailParse";
 import PropTypes from "prop-types";
 import { clientReducer, userPreferencesReducer } from "./reducers";
 
 function Client({
   emailsByDate,
-  setEmailsByDate,
   defaultUserPreferences = {
     isChecked: true,
     emailFetchInterval: 120,
     theme: "light",
   },
 }) {
+  const navigate = useNavigate();
   const [client, dispatchClient] = useReducer(clientReducer, {
-    curPage: "dashboard",
     expandedSideBar: false,
     curEmail: emailsByDate[0],
   });
@@ -30,19 +30,12 @@ function Client({
   useEffect(() => {
     const clock = setInterval(async () => {
       try {
-        const requestedEmails = await fetchEmails(100); // Limited to 100 new emails per interval cycle
-        if (requestedEmails.length > 0) {
-          const newEmails = getNewEmails(requestedEmails, emailsByDate); // O(n^2) operation
-          if (newEmails.length > 0) {
-            setEmailsByDate([...newEmails, ...emailsByDate]);
-          }
-        }
+        await fetchNewEmails();
       } catch (error) {
         console.error(`Loading Emails Error: ${error}`);
       }
     }, userPreferences.emailFetchInterval * 1000);
     return () => clearInterval(clock);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userPreferences.emailFetchInterval]);
 
   const root = document.querySelector(":root");
@@ -59,10 +52,7 @@ function Client({
   };
 
   const handlePageChange = (pageName) => {
-    dispatchClient({
-      type: "pageChange",
-      page: client.curPage === pageName ? "dashboard" : pageName,
-    });
+    navigate(pageName);
   };
 
   const handleToggleSummariesInInbox = () => {
@@ -93,69 +83,56 @@ function Client({
     });
   };
 
-  const getPage = () => {
-    switch (client.curPage) {
-      case "inbox":
-        return (
-          <Inbox
-            displaySummaries={userPreferences.isChecked}
-            emailList={emailsByDate}
-            setCurEmail={handleSetCurEmail}
-            curEmail={client.curEmail}
-          />
-        );
-      case "settings":
-        return (
-          <Settings
-            isChecked={userPreferences.isChecked}
-            handleToggleSummariesInInbox={handleToggleSummariesInInbox}
-            emailFetchInterval={userPreferences.emailFetchInterval}
-            handleSetEmailFetchInterval={handleSetEmailFetchInterval}
-            theme={userPreferences.theme}
-            handleSetTheme={handleSetTheme}
-          />
-        );
-      default:
-        return (
-          <Dashboard
-            emailList={emailsByDate}
-            handlePageChange={handlePageChange}
-            setCurEmail={handleSetCurEmail}
-          />
-        );
-    }
-  };
-
-  const emailClient = () => {
-    return (
-      <div className="client">
-        <SideBar
-          onLogoClick={handleLogoClick}
-          expanded={client.expandedSideBar}
-          handlePageChange={handlePageChange}
-          selected={client.curPage}
+  return (
+    <div className="client">
+      <SideBar
+        onLogoClick={handleLogoClick}
+        expanded={client.expandedSideBar}
+        handlePageChange={handlePageChange}
+      />
+      <Routes>
+        <Route
+          path="dashboard"
+          element={
+            <Dashboard
+              emailList={emailsByDate}
+              handlePageChange={handlePageChange}
+              setCurEmail={handleSetCurEmail}
+            />
+          }
         />
-        {getPage()}
-      </div>
-    );
-  };
-
-  return <>{emailClient()}</>;
-}
-
-function getNewEmails(requestedEmails, allEmails) {
-  return requestedEmails.filter((reqEmail) => {
-    let exists = false;
-    for (const email of allEmails) {
-      if (email.email_id === reqEmail.email_id) exists = true;
-    }
-    return !exists;
-  });
+        <Route
+          path="inbox"
+          element={
+            <Inbox
+              displaySummaries={userPreferences.isChecked}
+              emailList={emailsByDate}
+              setCurEmail={handleSetCurEmail}
+              curEmail={client.curEmail}
+            />
+          }
+        />
+        <Route
+          path="settings"
+          element={
+            <Settings
+              isChecked={userPreferences.isChecked}
+              handleToggleSummariesInInbox={handleToggleSummariesInInbox}
+              emailFetchInterval={userPreferences.emailFetchInterval}
+              handleSetEmailFetchInterval={handleSetEmailFetchInterval}
+              theme={userPreferences.theme}
+              handleSetTheme={handleSetTheme}
+            />
+          }
+        />
+      </Routes>
+      <Outlet />
+    </div>
+  );
 }
 
 Client.propTypes = {
   emailsByDate: PropTypes.array,
-  setEmailsByDate: PropTypes.func,
   defaultUserPreferences: PropTypes.object,
 };
 

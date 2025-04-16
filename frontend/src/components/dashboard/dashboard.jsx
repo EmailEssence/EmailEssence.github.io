@@ -48,7 +48,7 @@ function WEListEmail({ email, setCurEmail, handlePageChange }) {
         className="email-link"
         onClick={() => {
           setCurEmail(email);
-          handlePageChange("inbox");
+          handlePageChange("/client/inbox");
         }}
       >
         <ViewIcon />

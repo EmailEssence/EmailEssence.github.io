@@ -2,18 +2,30 @@ import InboxIcon from "../../assets/InboxIcon";
 import Logo from "../../assets/Logo";
 import SettingsIcon from "../../assets/SettingsIcon";
 import PropTypes from "prop-types";
+import DashboardIcon from "../../assets/DashboardIcon";
+import { useLocation } from "react-router";
 import "./sidebar.css";
 
-function SideBar({ onLogoClick, expanded, handlePageChange, selected }) {
+function SideBar({ onLogoClick, expanded, handlePageChange }) {
+  const location = useLocation();
+  const route = location.pathname;
   return (
     <div className="sidebar" data-testid="sidebar">
-      <Button expanded={expanded} onClick={onLogoClick} name="">
+      <Button expanded={expanded} onClick={onLogoClick} name="logo">
         <Logo />
       </Button>
       <Button
         expanded={expanded}
-        curState={selected}
-        onClick={() => handlePageChange("inbox")}
+        curState={route}
+        onClick={() => handlePageChange("/client/dashboard")}
+        name="dashboard"
+      >
+        <DashboardIcon />
+      </Button>
+      <Button
+        expanded={expanded}
+        curState={route}
+        onClick={() => handlePageChange("/client/inbox")}
         name="inbox"
       >
         <InboxIcon />
@@ -21,8 +33,8 @@ function SideBar({ onLogoClick, expanded, handlePageChange, selected }) {
       <div></div>
       <Button
         expanded={expanded}
-        curState={selected}
-        onClick={() => handlePageChange("settings")}
+        curState={route}
+        onClick={() => handlePageChange("/client/settings")}
         name="settings"
       >
         <SettingsIcon />
@@ -31,20 +43,20 @@ function SideBar({ onLogoClick, expanded, handlePageChange, selected }) {
   );
 }
 
-function Button({ expanded, curState = "N", onClick, name, children }) {
+function Button({ expanded, curState = "None", onClick, name, children }) {
   const text =
-    name.length > 0 ? `${name[0].toUpperCase()}${name.slice(1)}` : "";
-  const selectedClass = curState === name ? " selected" : "";
+    name === "logo" ? "" : `${name[0].toUpperCase()}${name.slice(1)}`;
+  const selectedClass = curState.includes(name) ? " selected" : "";
   return (
     <div
       className={`container${selectedClass}`}
       onClick={onClick}
       role="button"
       aria-pressed="false"
-      data-testid={name.length > 0 ? name : "logo"}
+      data-testid={name}
     >
       <div className="icon">
-        <div className={text.length < 1 ? "logo" : ""}>{children}</div>
+        <div className={name === "logo" ? "logo" : ""}>{children}</div>
         {expanded && <p>{text}</p>}
       </div>
     </div>

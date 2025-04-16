@@ -1,27 +1,16 @@
-import { baseUrl } from "../emails/emailParse";
-
-export const parseURL = (url) => {
-  const code = "code=";
-  const i1 = url.indexOf(code);
-  const i2 = url.indexOf("scope=");
-  if (i1 === -1 || i2 === -1) {
-    return null;
-  }
-  return url.substring(i1 + code.length, i2 - 1);
-};
-
+import { baseUrl, retrieveUserData } from "../emails/emailParse";
 export const authenticate = async () => {
   // Check for auth hash and render OAuthCallback if present
   try {
-    const redirect_uri = window.location.origin;
+    const redirect_uri = `${window.location.origin}/loading`;
     window.location.href = `${baseUrl}/auth/login?redirect_uri=${redirect_uri}`;
   } catch (error) {
     console.error("Login Error", error);
   }
 };
 
-export const handleOAuthCallback = async (handleAuthenticate) => {
-  console.log(window.location.hash);
+// When Reach loading component call this function
+export const handleOAuthCallback = async () => {
   const hash = window.location.hash;
   if (hash && hash.startsWith("#auth=")) {
     try {
@@ -31,17 +20,34 @@ export const handleOAuthCallback = async (handleAuthenticate) => {
       if (authState.authenticated && authState.token) {
         const isAuthenticated = checkAuthStatus(authState.token);
         if (isAuthenticated) {
-          handleAuthenticate(authState.token);
+          await handleAuthenticate(authState.token);
         } else {
-          console.log("not authenticated");
+          handleAuthError("Unable to authenticate");
         }
       }
-      window.location.hash = "";
       return;
     } catch (error) {
+      window.location.hash = "";
       console.error("Error parsing auth state:", error);
+      handleAuthError(error);
     }
   }
+};
+
+export const handleAuthenticate = async (token) => {
+  try {
+    localStorage.setItem("auth_token", token);
+    await retrieveUserData();
+  } catch (error) {
+    handleAuthError(error);
+  }
+};
+
+const handleAuthError = async (error) => {
+  console.error("Auth flow error:", error);
+  localStorage.removeItem("auth_token");
+  localStorage.setItem("error_message", error.message); // Store error message in local storage
+  window.location.href = "/error"; // go to error page
 };
 
 export const checkAuthStatus = async (token) => {

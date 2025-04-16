@@ -1,4 +1,56 @@
+import { fetchUserPreferences } from "../components/settings/settings";
+
 export const baseUrl = "https://ee-backend-w86t.onrender.com";
+export let emails = [];
+export let userPreferences = {
+  isChecked: true,
+  emailFetchInterval: 120,
+  theme: "light",
+};
+
+export const fetchNewEmails = async () => {
+  try {
+    const requestedEmails = await fetchEmails(100);
+    if (requestedEmails.length > 0) {
+      const newEmails = getNewEmails(requestedEmails, emails); // O(n^2) operation
+      if (newEmails.length > 0) {
+        emails = [...emails, ...newEmails];
+        window.location.hash = "#newEmails";
+      }
+    }
+  } catch (error) {
+    console.error(`Error fetching new emails: ${error}`);
+  }
+};
+
+function getNewEmails(requestedEmails, allEmails) {
+  return requestedEmails.filter((reqEmail) => {
+    let exists = false;
+    for (const email of allEmails) {
+      if (email.email_id === reqEmail.email_id) exists = true;
+    }
+    return !exists;
+  });
+}
+
+export const retrieveUserData = async () => {
+  try {
+    emails = await fetchEmails(100);
+    const user_id = null; // Get user ID
+    if (user_id) getUserPreferences(user_id);
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+const getUserPreferences = async (user_id) => {
+  try {
+    const preferences = await fetchUserPreferences(user_id);
+    userPreferences = preferences;
+  } catch (error) {
+    console.error(error);
+  }
+};
 
 async function getEmails(extension) {
   const option = {
@@ -68,18 +120,19 @@ function parseDate(date) {
 export default async function fetchEmails(numRequested) {
   try {
     // Fetch both emails and summaries concurrently
-    const emails = await getEmails(numRequested);
-    const ids = emails.emails.map((email) => {
+    const newEmails = await getEmails(numRequested);
+    const ids = newEmails.emails.map((email) => {
       return email.email_id;
     });
     const summaries = await getSummaries(ids);
+    summaries.reverse(); // link summaries to respected email
     // Validate array responses
-    if (!Array.isArray(emails.emails)) {
-      console.error("Invalid emails response:", emails);
+    if (!Array.isArray(newEmails.emails)) {
+      console.error("Invalid emails response:", newEmails);
       return [];
     }
     // Handle case where summaries length doesn't match emails
-    const processedEmails = emails.emails.map((email, index) => {
+    const processedEmails = newEmails.emails.map((email, index) => {
       const summary = summaries[index] || { summary_text: "", keywords: [] };
 
       return {
@@ -89,6 +142,7 @@ export default async function fetchEmails(numRequested) {
         received_at: parseDate(email.received_at),
       };
     });
+
     return processedEmails;
   } catch (error) {
     console.error("Email processing error:", error);
