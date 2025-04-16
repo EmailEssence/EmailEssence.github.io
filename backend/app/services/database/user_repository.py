@@ -26,14 +26,26 @@ class UserRepository(BaseRepository[UserSchema], IUserRepository):
             collection: MongoDB collection instance
         """
         super().__init__(collection, UserSchema)
+        # Create indexes
+        self.collection.create_index("google_id", unique=True)
+        self.collection.create_index("email", unique=True)
     
-    async def ensure_indexes(self):
+    async def find_by_google_id(self, google_id: str) -> Optional[UserSchema]:
         """
-        Ensure that required indexes exist.
-        This should be called after the repository is initialized.
+        Find a user by Google ID.
+        
+        Args:
+            google_id: Google ID to search for
+            
+        Returns:
+            Optional[UserSchema]: User if found, None otherwise
         """
-        await self._collection.create_index("email", unique=True)
-        await self._collection.create_index("google_id", unique=True)
+        doc = await self.find_one({"google_id": google_id})
+        if doc:
+            if isinstance(doc, UserSchema):
+                return doc
+            return UserSchema(**doc)
+        return None
     
     async def find_by_email(self, email: str) -> Optional[UserSchema]:
         """
@@ -45,8 +57,85 @@ class UserRepository(BaseRepository[UserSchema], IUserRepository):
         Returns:
             Optional[UserSchema]: User if found, None otherwise
         """
-        return await self.find_one({"email": email})
+        doc = await self.find_one({"email": email})
+        if doc:
+            if isinstance(doc, UserSchema):
+                return doc
+            return UserSchema(**doc)
+        return None
     
+    async def insert_one(self, user: UserSchema) -> str:
+        """
+        Insert a new user.
+        
+        Args:
+            user: User to insert
+            
+        Returns:
+            str: ID of the inserted user
+        """
+        try:
+            result = await self.collection.insert_one(user.model_dump())
+            return str(result.inserted_id)
+        except Exception as e:
+            raise
+    
+    async def update_by_google_id(self, google_id: str, update_data: Dict[str, Any]) -> bool:
+        """
+        Update a user by Google ID.
+        
+        Args:
+            google_id: Google ID of the user to update
+            update_data: Data to update
+            
+        Returns:
+            bool: True if update was successful
+        """
+        try:
+            result = await self.collection.update_one(
+                {"google_id": google_id},
+                {"$set": update_data}
+            )
+            return result.modified_count > 0
+        except Exception as e:
+            raise
+    
+    async def update_preferences(self, google_id: str, preferences: Dict[str, Any]) -> bool:
+        """
+        Update user preferences.
+        
+        Args:
+            google_id: Google ID of the user
+            preferences: New preferences to set
+            
+        Returns:
+            bool: True if update was successful
+        """
+        try:
+            result = await self.collection.update_one(
+                {"google_id": google_id},
+                {"$set": {"preferences": preferences}}
+            )
+            return result.modified_count > 0
+        except Exception as e:
+            raise
+    
+    async def delete_by_google_id(self, google_id: str) -> bool:
+        """
+        Delete a user by Google ID.
+        
+        Args:
+            google_id: Google ID of the user to delete
+            
+        Returns:
+            bool: True if deletion was successful
+        """
+        try:
+            result = await self.collection.delete_one({"google_id": google_id})
+            return result.deleted_count > 0
+        except Exception as e:
+            raise
+
     async def find_by_username(self, username: str) -> Optional[UserSchema]:
         """
         Find a user by username.
@@ -58,47 +147,6 @@ class UserRepository(BaseRepository[UserSchema], IUserRepository):
             Optional[UserSchema]: User if found, None otherwise
         """
         return await self.find_one({"username": username})
-
-    async def find_by_google_id(self, google_id: str) -> Optional[UserSchema]:
-        """
-        Find a user by Google ID.
-        
-        Args:
-            google_id: Google ID to search for
-            
-        Returns:
-            Optional[UserSchema]: User if found, None otherwise
-        """
-        return await self.find_one({"google_id": google_id})
-
-    async def update_preferences(self, user_id: str, preferences: Dict[str, Any]) -> bool:
-        """
-        Update user preferences.
-        
-        Args:
-            user_id: ID of the user
-            preferences: New preferences to set
-            
-        Returns:
-            bool: True if update successful
-        """
-        result = await self._collection.update_one(
-            {"_id": ObjectId(user_id)},
-            {"$set": {"preferences": preferences}}
-        )
-        return result.modified_count > 0
-
-    async def insert_one(self, user: UserSchema) -> str:
-        """
-        Insert a single user.
-        
-        Args:
-            user: User to insert
-            
-        Returns:
-            str: ID of the inserted user
-        """
-        return await super().insert_one(user)
 
     async def update_by_email(self, email: str, user_data: Dict[str, Any]) -> bool:
         """

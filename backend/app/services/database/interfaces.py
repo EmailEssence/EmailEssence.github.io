@@ -49,7 +49,15 @@ class IUserRepository(IRepository):
         pass
     
     @abstractmethod
-    async def find_by_username(self, username: str) -> Optional[BaseModel]:
+    async def find_by_google_id(self, google_id: str) -> Optional[BaseModel]:
+        pass
+    
+    @abstractmethod
+    async def update_by_google_id(self, google_id: str, update_data: Dict[str, Any]) -> bool:
+        pass
+    
+    @abstractmethod
+    async def update_preferences(self, google_id: str, preferences: Dict[str, Any]) -> bool:
         pass
 
 class ISummaryRepository(IRepository):
@@ -59,17 +67,21 @@ class ISummaryRepository(IRepository):
         pass
     
     @abstractmethod
-    async def find_by_user_id(self, user_id: str) -> List[BaseModel]:
+    async def find_by_google_id(self, google_id: str) -> List[BaseModel]:
         pass 
 
 class ITokenRepository(IRepository):
     """Token repository interface"""
     @abstractmethod
-    async def find_by_email(self, email: str) -> Optional[BaseModel]:
+    async def find_by_google_id(self, google_id: str) -> Optional[BaseModel]:
         pass
     
     @abstractmethod
     async def find_by_token(self, token: str) -> Optional[BaseModel]:
+        pass
+    
+    @abstractmethod
+    async def update_by_google_id(self, google_id: str, update_data: Dict[str, Any]) -> bool:
         pass
     
     

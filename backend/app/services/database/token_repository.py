@@ -5,13 +5,10 @@ Repository for managing OAuth tokens in MongoDB.
 from typing import List, Optional, Dict, Any
 from motor.motor_asyncio import AsyncIOMotorCollection
 from bson import ObjectId
-import logging
 
 from app.models.auth_models import TokenData
 from app.services.database.base_repository import BaseRepository
 from app.services.database.interfaces import ITokenRepository
-
-logger = logging.getLogger(__name__)
 
 class TokenRepository(BaseRepository[TokenData], ITokenRepository):
     """
@@ -29,93 +26,95 @@ class TokenRepository(BaseRepository[TokenData], ITokenRepository):
             collection: MongoDB collection instance
         """
         super().__init__(collection, TokenData)
+        # Create index on google_id
+        self.collection.create_index("google_id", unique=True)
     
-    async def find_by_email(self, email: str) -> Optional[TokenData]:
+    async def find_by_google_id(self, google_id: str) -> Optional[TokenData]:
         """
-        Find a token by email.
+        Find a token by Google ID.
         
         Args:
-            email: Email address to search for
+            google_id: Google ID to search for
             
         Returns:
             Optional[TokenData]: Token if found, None otherwise
         """
-        logger.debug(f"Looking up tokens for email: {email}")
-        doc = await self.find_one({"email": email})
+        doc = await self.find_one({"google_id": google_id})
         if doc:
-            logger.info(f"Found tokens for email: {email}")
-            # If doc is already a TokenData instance, return it directly
             if isinstance(doc, TokenData):
                 return doc
-            # Otherwise convert dict to TokenData
-            return self._model_class(**doc)
-        else:
-            logger.warning(f"No tokens found for email: {email}")
-            return None
+            return TokenData(**doc)
+        return None
     
     async def find_by_token(self, token: str) -> Optional[TokenData]:
         """
-        Find a token by token string.
+        Find a token by access token.
         
         Args:
-            token: Token string to search for
+            token: Access token to search for
             
         Returns:
             Optional[TokenData]: Token if found, None otherwise
         """
         doc = await self.find_one({"token": token})
-        return self._model_class(**doc) if doc else None
-
+        if doc:
+            if isinstance(doc, TokenData):
+                return doc
+            return TokenData(**doc)
+        return None
+    
     async def insert_one(self, token: TokenData) -> str:
         """
-        Insert a single token.
+        Insert a new token or update if it already exists.
         
         Args:
-            token: Token to insert
+            token: Token to insert/update
             
         Returns:
-            str: ID of the inserted token
+            str: ID of the token
         """
-        return await super().insert_one(token.model_dump())
-
-    async def update_by_email(self, email: str, update_data: Dict[str, Any]) -> bool:
+        try:
+            token_dict = token.model_dump()
+            return await self.upsert_one(
+                {"google_id": token.google_id},
+                token_dict
+            )
+        except Exception as e:
+            raise
+    
+    async def update_by_google_id(self, google_id: str, update_data: Dict[str, Any]) -> bool:
         """
-        Update a token by email.
+        Update a token by Google ID.
         
         Args:
-            email: Email address
+            google_id: Google ID of the token to update
             update_data: Data to update
             
         Returns:
-            bool: True if update successful
+            bool: True if update was successful
         """
-        logger.debug(f"Updating tokens for email: {email}")
-        result = await self._collection.update_one(
-            {"email": email},
-            {"$set": update_data}
-        )
-        success = result.modified_count > 0
-        if success:
-            logger.info(f"Successfully updated tokens for email: {email}")
-        else:
-            logger.warning(f"No tokens updated for email: {email}")
-        return success
-
-    async def delete_by_email(self, email: str) -> bool:
+        try:
+            # Use upsert to handle both insert and update cases
+            result = await self.upsert_one(
+                {"google_id": google_id},
+                update_data
+            )
+            return result is not None
+        except Exception as e:
+            raise
+    
+    async def delete_by_google_id(self, google_id: str) -> bool:
         """
-        Delete a token by email.
+        Delete a token by Google ID.
         
         Args:
-            email: Email address
+            google_id: Google ID of the token to delete
             
         Returns:
-            bool: True if deletion successful
+            bool: True if deletion was successful
         """
-        logger.debug(f"Deleting tokens for email: {email}")
-        result = await self._collection.delete_one({"email": email})
-        success = result.deleted_count > 0
-        if success:
-            logger.info(f"Successfully deleted tokens for email: {email}")
-        else:
-            logger.warning(f"No tokens deleted for email: {email}")
-        return success 
+        try:
+            result = await self.collection.delete_one({"google_id": google_id})
+            return result.deleted_count > 0
+        except Exception as e:
+            raise 

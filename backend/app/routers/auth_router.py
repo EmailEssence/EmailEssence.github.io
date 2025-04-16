@@ -563,10 +563,11 @@ async def token_endpoint(
         # Validate token and get user info
         validation_result = await auth_service.get_credentials_from_token(token)
         user_email = validation_result['email']
+        google_id = validation_result['user_info']['google_id']
         
         # Store the token in our repository
         token_data = {
-            "email": user_email,
+            "google_id": google_id,
             "token": token,
             "refresh_token": None,
             "token_uri": "https://oauth2.googleapis.com/token",
@@ -575,8 +576,11 @@ async def token_endpoint(
             "scopes": SCOPES
         }
         
-        # Store with the validated email
-        await auth_service.token_repository.update_by_email(user_email, token_data)
+        # Try to update by google_id first
+        updated = await auth_service.token_repository.update_by_google_id(google_id, token_data)
+        if not updated:
+            # If update failed, try to insert new token
+            await auth_service.token_repository.insert_one(TokenData(**token_data))
         
         return {
             "access_token": token,

@@ -27,8 +27,8 @@ class BaseRepository(Generic[T]):
             collection: MongoDB collection instance
             model_class: Pydantic model class for type safety
         """
-        self._collection = collection
-        self._model_class = model_class
+        self.collection = collection
+        self.model_class = model_class
 
     def _get_collection(self) -> AsyncIOMotorCollection:
         """
@@ -37,9 +37,9 @@ class BaseRepository(Generic[T]):
         Returns:
             AsyncIOMotorCollection: MongoDB collection instance
         """
-        if self._collection is None:
-            self._collection = instance.db[self.collection_name]
-        return self._collection
+        if self.collection is None:
+            self.collection = instance.db[self.collection_name]
+        return self.collection
 
     def _to_model(self, doc: Optional[Dict[str, Any]]) -> Optional[T]:
         """
@@ -55,10 +55,10 @@ class BaseRepository(Generic[T]):
             return None
         try:
             # If doc is already a model instance, return it directly
-            if isinstance(doc, self._model_class):
+            if isinstance(doc, self.model_class):
                 return doc
             # Otherwise convert dict to model
-            return self._model_class(**doc)
+            return self.model_class(**doc)
         except Exception as e:
             raise
 
@@ -91,7 +91,7 @@ class BaseRepository(Generic[T]):
             **kwargs: Additional index options
         """
         try:
-            await self._collection.create_index(field, unique=unique, **kwargs)
+            await self._get_collection().create_index(field, unique=unique, **kwargs)
         except Exception as e:
             raise
 
@@ -106,8 +106,7 @@ class BaseRepository(Generic[T]):
             Optional[T]: Document if found, None otherwise
         """
         try:
-            collection = self._get_collection()
-            doc = await collection.find_one(query)
+            doc = await self._get_collection().find_one(query)
             return self._to_model(doc)
         except Exception as e:
             raise
@@ -146,8 +145,7 @@ class BaseRepository(Generic[T]):
             List[T]: List of matching documents
         """
         try:
-            collection = self._get_collection()
-            cursor = collection.find(query)
+            cursor = self._get_collection().find(query)
             
             if sort:
                 cursor = cursor.sort(sort)
@@ -169,51 +167,44 @@ class BaseRepository(Generic[T]):
             str: ID of the inserted document
         """
         try:
-            collection = self._get_collection()
             document = self._to_document(model)
-            result = await collection.insert_one(document)
+            result = await self._get_collection().insert_one(document)
             return str(result.inserted_id)
         except Exception as e:
             raise
 
-    async def update_one(self, document_id: str, update_data: Dict[str, Any]) -> bool:
+    async def update_one(self, query: Dict[str, Any], update_data: Dict[str, Any]) -> bool:
         """
-        Update a single document by ID.
+        Update a single document matching the query.
         
         Args:
-            document_id: ID of the document to update
+            query: MongoDB query filter
             update_data: Data to update
             
         Returns:
             bool: True if update successful
         """
-        if not ObjectId.is_valid(document_id):
-            return False
         try:
-            collection = self._get_collection()
-            result = await collection.update_one(
-                {"_id": ObjectId(document_id)},
+            result = await self._get_collection().update_one(
+                query,
                 {"$set": update_data}
             )
             return result.modified_count > 0
         except Exception as e:
             raise
 
-    async def delete_one(self, document_id: str) -> bool:
+    async def delete_one(self, query: Dict[str, Any]) -> bool:
         """
-        Delete a single document by ID.
+        Delete a single document matching the query.
         
         Args:
-            document_id: ID of the document to delete
+            query: MongoDB query filter
             
         Returns:
             bool: True if deletion successful
         """
-        if not ObjectId.is_valid(document_id):
-            return False
         try:
-            collection = self._get_collection()
-            result = await collection.delete_one({"_id": ObjectId(document_id)})
+            result = await self._get_collection().delete_one(query)
             return result.deleted_count > 0
         except Exception as e:
             raise
@@ -229,7 +220,38 @@ class BaseRepository(Generic[T]):
             int: Number of matching documents
         """
         try:
-            collection = self._get_collection()
-            return await collection.count_documents(query)
+            return await self._get_collection().count_documents(query)
+        except Exception as e:
+            raise
+
+    async def upsert_one(self, query: Dict[str, Any], update_data: Dict[str, Any]) -> str:
+        """
+        Update a document if it exists, otherwise insert it.
+        
+        Args:
+            query: MongoDB query filter to find the document
+            update_data: Data to update/insert
+            
+        Returns:
+            str: ID of the document (existing or newly inserted)
+        """
+        try:
+            result = await self._get_collection().update_one(
+                query,
+                {"$set": update_data},
+                upsert=True
+            )
+            if result.upserted_id:
+                return str(result.upserted_id)
+            # If no upsert happened, find the existing document
+            doc = await self.find_one(query)
+            if doc:
+                # Try to get _id first, then try the query key
+                if hasattr(doc, '_id'):
+                    return str(doc._id)
+                # Get the first key from the query as the identifier
+                identifier_key = next(iter(query.keys()))
+                return str(getattr(doc, identifier_key))
+            return None
         except Exception as e:
             raise 

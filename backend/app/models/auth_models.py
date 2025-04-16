@@ -9,6 +9,7 @@ class TokenData(BaseModel):
     """
     Base model for OAuth token data.
     """
+    google_id: str  # Shared index with UserSchema
     token: str
     refresh_token: Optional[str] = None
     token_uri: str

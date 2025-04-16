@@ -173,29 +173,58 @@ class AuthService:
             TokenData: Token data
         """
         try:
+            # Create flow instance
+            client_config = {
+                "web": {
+                    "client_id": settings.google_client_id,
+                    "client_secret": settings.google_client_secret,
+                    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+                    "token_uri": "https://oauth2.googleapis.com/token",
+                    "redirect_uris": [self.get_redirect_uri()]
+                }
+            }
+            
+            flow = Flow.from_client_config(client_config, SCOPES)
+            flow.redirect_uri = self.get_redirect_uri()
+            
             # Exchange code for tokens
-            credentials = Credentials.from_authorized_user_info({
-                "code": code,
-                "client_id": "your-client-id",
-                "client_secret": "your-client-secret",
-                "redirect_uri": "your-redirect-uri"
-            })
+            flow.fetch_token(code=code)
+            
+            # Get user info to get google_id
+            service = await run_in_threadpool(lambda: 
+                build('oauth2', 'v2', credentials=flow.credentials)
+            )
+            
+            user_info = await run_in_threadpool(lambda: 
+                service.userinfo().get().execute()
+            )
+            
+            if not user_info or not user_info.get('id'):
+                raise ValueError("Unable to retrieve user info from token")
             
             # Create token data
             token_data = {
-                "token": credentials.token,
-                "refresh_token": credentials.refresh_token,
-                "token_uri": credentials.token_uri,
-                "client_id": credentials.client_id,
-                "client_secret": credentials.client_secret,
-                "scopes": credentials.scopes
+                "google_id": user_info['id'],
+                "token": flow.credentials.token,
+                "refresh_token": flow.credentials.refresh_token,
+                "token_uri": flow.credentials.token_uri,
+                "client_id": flow.credentials.client_id,
+                "client_secret": flow.credentials.client_secret,
+                "scopes": flow.credentials.scopes
             }
             
             # Create TokenData instance
             token = TokenData(**token_data)
             
-            # Store in database
-            await self.token_repository.insert_one(token)
+            try:
+                # Try to insert new token
+                await self.token_repository.insert_one(token)
+            except Exception as e:
+                if "duplicate key error" in str(e):
+                    # If token exists, update it
+                    await self.token_repository.update_by_google_id(user_info['id'], token_data)
+                else:
+                    raise
             
             logger.info(f"Successfully stored tokens for user: {email}")
             return token
@@ -279,20 +308,59 @@ class AuthService:
         logger.debug("Validating access token and retrieving user info...")
 
         try:
-            credentials = Credentials(
-                token=token,
-                token_uri="https://oauth2.googleapis.com/token",
-                client_id=settings.google_client_id,
-                client_secret=settings.google_client_secret
-            )
+            # First try to validate the token directly
+            try:
+                credentials = Credentials(
+                    token=token,
+                    token_uri="https://oauth2.googleapis.com/token",
+                    client_id=settings.google_client_id,
+                    client_secret=settings.google_client_secret
+                )
 
-            service = await run_in_threadpool(lambda: 
-                build('oauth2', 'v2', credentials=credentials)
-            )
-            
-            user_info = await run_in_threadpool(lambda: 
-                service.userinfo().get().execute()
-            )
+                service = await run_in_threadpool(lambda: 
+                    build('oauth2', 'v2', credentials=credentials)
+                )
+                
+                user_info = await run_in_threadpool(lambda: 
+                    service.userinfo().get().execute()
+                )
+            except Exception as e:
+                logger.debug(f"Initial token validation failed, attempting refresh: {e}")
+                # If token validation fails, try to get a new token using refresh token
+                token_record = await self.token_repository.find_by_token(token)
+                if not token_record or not token_record.refresh_token:
+                    raise HTTPException(
+                        status_code=status.HTTP_401_UNAUTHORIZED,
+                        detail="Invalid or expired token"
+                    )
+                
+                # Create credentials with refresh token
+                credentials = Credentials(
+                    None,
+                    refresh_token=token_record.refresh_token,
+                    token_uri="https://oauth2.googleapis.com/token",
+                    client_id=settings.google_client_id,
+                    client_secret=settings.google_client_secret
+                )
+                
+                # Refresh the token
+                credentials.refresh(Request())
+                
+                # Update the token in the database
+                await self.token_repository.update_tokens(
+                    token_record.email,
+                    credentials.token,
+                    credentials.refresh_token
+                )
+                
+                # Build service with new credentials
+                service = await run_in_threadpool(lambda: 
+                    build('oauth2', 'v2', credentials=credentials)
+                )
+                
+                user_info = await run_in_threadpool(lambda: 
+                    service.userinfo().get().execute()
+                )
 
             if not user_info or not user_info.get('email'):
                 logger.error("Unable to retrieve user email from token.")

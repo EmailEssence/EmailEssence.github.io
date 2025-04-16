@@ -18,12 +18,4 @@ class UserSchema(BaseModel):
     google_id: str  # Google User ID
     email: EmailStr
     name: str
-    oauth: TokenData = Field(default_factory=lambda: TokenData(
-        token="",
-        refresh_token=None,
-        token_uri="https://oauth2.googleapis.com/token",
-        client_id="",
-        client_secret="",
-        scopes=[]
-    ))
     preferences: PreferencesSchema = Field(default_factory=PreferencesSchema) 
