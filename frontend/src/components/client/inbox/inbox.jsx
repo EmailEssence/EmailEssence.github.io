@@ -1,8 +1,8 @@
-import EmailDisplay from "./emailDisplay";
-import { useEffect, useRef, useState } from "react";
-import ArrowIcon from "../../assets/InboxArrow";
-import { emailsPerPage } from "../../assets/constants";
 import PropTypes from "prop-types";
+import { useEffect, useRef, useState } from "react";
+import ArrowIcon from "../../../assets/InboxArrow";
+import { emailsPerPage } from "../../../assets/constants";
+import EmailDisplay from "./emailDisplay";
 import "./emailEntry.css";
 import "./emailList.css";
 

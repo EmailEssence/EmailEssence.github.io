@@ -1,9 +1,9 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { useEffect, useRef, useState } from "react";
-import FullScreenIcon from "../../assets/FullScreenIcon";
-import InboxIcon from "../../assets/InboxArrow";
-import { emailsPerPage } from "../../assets/constants";
 import PropTypes from "prop-types";
+import { useEffect, useRef, useState } from "react";
+import FullScreenIcon from "../../../assets/FullScreenIcon";
+import InboxIcon from "../../../assets/InboxArrow";
+import { emailsPerPage } from "../../../assets/constants";
 import "./miniview.css";
 
 function MiniViewPanel({ emailList, handlePageChange, setCurEmail }) {

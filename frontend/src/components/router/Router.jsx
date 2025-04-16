@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router";
-import { authenticate } from "./authentication/authenticate";
-import Client from "./client";
-import Login from "./components/login/login";
-import { emails, userPreferences } from "./emails/emailParse";
+import { authenticate } from "../../authentication/authenticate";
+import { emails, userPreferences } from "../../emails/emailParse";
+import Client from "../client/client";
+import Login from "../login/login";
 import Error from "./Error";
 import Loading from "./Loading";
 

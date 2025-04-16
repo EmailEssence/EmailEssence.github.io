@@ -1,8 +1,8 @@
-import ReactDom from "react-dom";
-import ReaderViewIcon from "../../assets/ReaderView";
 import { Readability } from "@mozilla/readability";
-import { useEffect, useState } from "react";
 import PropTypes from "prop-types";
+import { useEffect, useState } from "react";
+import ReactDom from "react-dom";
+import ReaderViewIcon from "../../../assets/ReaderView";
 import "./emailDisplay.css";
 
 function EmailDisplay({

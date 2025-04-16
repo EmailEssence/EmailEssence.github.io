@@ -1,9 +1,9 @@
-import InboxIcon from "../../assets/InboxIcon";
-import Logo from "../../assets/Logo";
-import SettingsIcon from "../../assets/SettingsIcon";
 import PropTypes from "prop-types";
-import DashboardIcon from "../../assets/DashboardIcon";
 import { useLocation } from "react-router";
+import DashboardIcon from "../../../assets/DashboardIcon";
+import InboxIcon from "../../../assets/InboxIcon";
+import Logo from "../../../assets/Logo";
+import SettingsIcon from "../../../assets/SettingsIcon";
 import "./sidebar.css";
 
 function SideBar({ onLogoClick, expanded, handlePageChange }) {

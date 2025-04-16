@@ -1,4 +1,4 @@
-import { fetchUserPreferences } from "../components/settings/settings";
+import { fetchUserPreferences } from "../components/client/settings/settings";
 
 export const baseUrl = "https://ee-backend-w86t.onrender.com";
 export let emails = [];

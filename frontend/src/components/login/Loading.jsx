@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router";
-import { handleOAuthCallback } from "./authentication/authenticate";
+import { handleOAuthCallback } from "../../authentication/authenticate";
 import "./loading.css";
 
 export default function Loading() {

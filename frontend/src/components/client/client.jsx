@@ -1,13 +1,13 @@
-import { useEffect, useReducer } from "react";
-import { Routes, Route, Outlet, useNavigate } from "react-router";
-import "./client.css";
-import Dashboard from "./components/dashboard/dashboard";
-import Inbox from "./components/inbox/inbox";
-import { Settings } from "./components/settings/settings";
-import SideBar from "./components/sidebar/sidebar";
-import { fetchNewEmails } from "./emails/emailParse";
 import PropTypes from "prop-types";
+import { useEffect, useReducer } from "react";
+import { Outlet, Route, Routes, useNavigate } from "react-router";
+import { fetchNewEmails } from "../../emails/emailParse";
+import "./client.css";
+import Dashboard from "./dashboard/dashboard";
+import Inbox from "./inbox/inbox";
 import { clientReducer, userPreferencesReducer } from "./reducers";
+import { Settings } from "./settings/settings";
+import SideBar from "./sidebar/sidebar";
 
 function Client({
   emailsByDate,
