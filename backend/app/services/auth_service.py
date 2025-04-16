@@ -264,20 +264,20 @@ class AuthService:
                 detail="Failed to get current user"
             )
 
-    async def get_token_data(self, email: str) -> Optional[TokenData]:
+    async def get_token_data(self, google_id: str) -> Optional[TokenData]:
         """
         Get token data for a user.
         
         Args:
-            email: User's email address
+            google_id: User's Google ID
             
         Returns:
             Optional[TokenData]: Token data if found, None otherwise
         """
         try:
-            return await self.token_repository.find_by_email(email)
+            return await self.token_repository.find_by_google_id(google_id)
         except Exception as e:
-            logger.error(f"Failed to get token record for email {email}: {e}")
+            logger.error(f"Failed to get token record for google_id {google_id}: {e}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Failed to get token record"
@@ -381,27 +381,27 @@ class AuthService:
             logger.exception("Token validation failed.")
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=f"Invalid token: {str(e)}")
 
-    async def get_token_record(self, email: str) -> Optional[Dict[str, Any]]:
+    async def get_token_record(self, google_id: str) -> Optional[Dict[str, Any]]:
         """
         Get the complete token record from the database.
         
         Args:
-            email: User's email address
+            google_id: User's Google ID
             
         Returns:
             Optional[Dict[str, Any]]: Complete token record if found, None otherwise
         """
         try:
-            logger.debug(f"Getting token record for email: {email}")
-            token_data = await self.token_repository.find_by_email(email)
+            logger.debug(f"Getting token record for google_id: {google_id}")
+            token_data = await self.token_repository.find_by_google_id(google_id)
             if not token_data:
-                logger.warning(f"No token record found for email: {email}")
+                logger.warning(f"No token record found for google_id: {google_id}")
                 return None
-            logger.info(f"Found token record for email: {email}")
+            logger.info(f"Found token record for google_id: {google_id}")
             # Convert TokenData to dict if it's a model instance
             if hasattr(token_data, 'model_dump'):
                 return token_data.model_dump()
             return token_data
         except Exception as e:
-            logger.error(f"Failed to get token record for email {email}: {e}")
+            logger.error(f"Failed to get token record for google_id {google_id}: {e}")
             return None

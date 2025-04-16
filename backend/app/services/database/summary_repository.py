@@ -47,17 +47,17 @@ class SummaryRepository(BaseRepository[SummarySchema], ISummaryRepository):
             return self._model_class(**doc)
         return None
     
-    async def find_by_user_id(self, user_id: str) -> List[SummarySchema]:
+    async def find_by_google_id(self, google_id: str) -> List[SummarySchema]:
         """
-        Find summaries by user ID.
+        Find summaries by Google user ID.
         
         Args:
-            user_id: ID of the user
+            google_id: Google ID of the user
             
         Returns:
             List[SummarySchema]: List of summaries
         """
-        docs = await self.find_many({"user_id": user_id})
+        docs = await self.find_many({"google_id": google_id})
         return [self._model_class(**doc) if not isinstance(doc, SummarySchema) else doc for doc in docs]
 
     async def insert_one(self, summary: SummarySchema) -> str:
@@ -76,35 +76,42 @@ class SummaryRepository(BaseRepository[SummarySchema], ISummaryRepository):
         # Otherwise create a new SummarySchema instance
         return await super().insert_one(self._model_class(**summary))
 
-    async def update_by_email_id(self, email_id: str, update_data: Dict[str, Any]) -> bool:
+    async def update_by_email_id(
+        self, 
+        email_id: str, 
+        update_data: Dict[str, Any],
+        upsert: bool = False
+    ) -> bool:
         """
         Update a summary by email ID.
         
         Args:
             email_id: ID of the email
             update_data: Data to update
+            upsert: If True, create a new document if no match is found
             
         Returns:
             bool: True if update successful
         """
         result = await self._collection.update_one(
             {"email_id": email_id},
-            {"$set": update_data}
+            {"$set": update_data},
+            upsert=upsert
         )
-        return result.modified_count > 0
+        return result.modified_count > 0 or (upsert and result.upserted_id is not None)
 
-    async def delete_by_email_id(self, email_id: str, user_id: str) -> bool:
+    async def delete_by_email_id(self, email_id: str, google_id: str) -> bool:
         """
-        Delete a summary by email ID and user ID.
+        Delete a summary by email ID and Google user ID.
         
         Args:
             email_id: ID of the email
-            user_id: ID of the user
+            google_id: Google ID of the user
             
         Returns:
             bool: True if deletion successful
         """
-        result = await self._collection.delete_one({"email_id": email_id, "user_id": user_id})
+        result = await self._collection.delete_one({"email_id": email_id, "google_id": google_id})
         return result.deleted_count > 0
 
     async def find_many(

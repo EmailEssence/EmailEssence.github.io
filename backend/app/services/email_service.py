@@ -17,7 +17,7 @@ from fastapi import HTTPException, status
 from bson.objectid import ObjectId
 from starlette.concurrency import run_in_threadpool
 
-from app.models import EmailSchema, ReaderViewResponse
+from app.models import EmailSchema, ReaderViewResponse, UserSchema
 from app.services.database.email_repository import EmailRepository
 from app.services.database.factories import get_email_repository, get_user_service, get_auth_service
 from app.services.database.connection import instance
@@ -131,7 +131,7 @@ class EmailService:
         return self._clean_body(body)
 
     def _parse_email_message(self, uid: int, email_message: email.message.Message, 
-                           body: str, received_date: datetime, user_id: str = 'default') -> dict:
+                           body: str, received_date: datetime, google_id: str = 'default') -> dict:
         """Parse email message into schema-compliant format."""
         subject = self._decode_email_field(email_message.get('Subject'))
         from_ = self._decode_email_field(email_message.get('From'))
@@ -140,7 +140,7 @@ class EmailService:
         recipients = [addr.strip() for addr in to_field.split(',')] if to_field else []
 
         return {
-            'user_id': user_id,
+            'google_id': google_id,
             'email_id': str(uid),
             'sender': from_,
             'recipients': recipients,
@@ -156,7 +156,7 @@ class EmailService:
     # -------------------------------------------------------------------------
     
     async def fetch_from_imap(self, token: str, email_account: str,
-                             user_id: str = 'default', 
+                             google_id: str = 'default', 
                              limit: Optional[int] = None,
                              since_date: Optional[datetime] = None, 
                              folder: str = 'INBOX', 
@@ -164,12 +164,12 @@ class EmailService:
         """Fetch emails from IMAP server"""
         return await run_in_threadpool(
             lambda: self._fetch_from_imap_sync(
-                token, email_account, user_id, limit, since_date, folder, criteria
+                token, email_account, google_id, limit, since_date, folder, criteria
             )
         )
     
     def _fetch_from_imap_sync(self, token: str, email_account: str,
-                            user_id: str = 'default', limit: Optional[int] = None,
+                            google_id: str = 'default', limit: Optional[int] = None,
                             since_date: Optional[datetime] = None, 
                             folder: str = 'INBOX', criteria: str = 'ALL') -> List[dict]:
         """Synchronous implementation of IMAP fetching"""
@@ -210,7 +210,7 @@ class EmailService:
                         email_message=email_message,
                         body=body,
                         received_date=received_date,
-                        user_id=user_id
+                        google_id=google_id
                     )
                     
                     emails.append(email_data)
@@ -230,7 +230,7 @@ class EmailService:
         try:
             # Ensure email_id is string and use it directly
             email_id = str(email_data["email_id"])
-            existing_email = await self.email_repository.find_by_id(email_id, email_data["user_id"])
+            existing_email = await self.email_repository.find_by_id(email_id, email_data["google_id"])
             if not existing_email:
                 # If email_data is already an EmailSchema instance, use it directly
                 if isinstance(email_data, EmailSchema):
@@ -244,7 +244,7 @@ class EmailService:
             logger.error(f"Error saving email {email_data['email_id']}: {e}")
             raise HTTPException(status_code=500, detail=str(e))
 
-    async def get_emails_from_db(self, user_id: str, query: Dict = None, 
+    async def get_emails_from_db(self, google_id: str, query: Dict = None, 
                                 skip: int = 0, limit: int = 100,
                                 sort_by: str = "received_at", 
                                 sort_order: str = "desc") -> List[EmailSchema]:
@@ -252,7 +252,7 @@ class EmailService:
         try:
             sort_direction = -1 if sort_order == "desc" else 1
             filter_query = query or {}
-            filter_query["user_id"] = user_id
+            filter_query["google_id"] = google_id
             
             results = await self.email_repository.find_many(
                 filter_query,
@@ -262,22 +262,22 @@ class EmailService:
             )
             return [result if isinstance(result, EmailSchema) else EmailSchema(**result) for result in results]
         except Exception as e:
-            logger.exception(f"Failed to retrieve emails from database for user {user_id}")
+            logger.exception(f"Failed to retrieve emails from database for user {google_id}")
             raise HTTPException(status_code=500, detail=str(e))
 
-    async def get_email(self, email_id: str, user_id: str) -> Optional[EmailSchema]:
+    async def get_email(self, email_id: str, google_id: str) -> Optional[EmailSchema]:
         """
         Get an email by IMAP UID.
         
         Args:
             email_id: IMAP UID of the email
-            user_id: ID of the user
+            google_id: Google ID of the user
             
         Returns:
             Optional[EmailSchema]: Email if found, None otherwise
         """
         try:
-            email_data = await self.email_repository.find_by_id(str(email_id), user_id)
+            email_data = await self.email_repository.find_by_id(str(email_id), google_id)
             if not email_data:
                 return None
             # If email_data is already an EmailSchema instance, return it directly
@@ -292,39 +292,39 @@ class EmailService:
                 detail="Failed to get email"
             )
 
-    async def mark_email_as_read(self, email_id: str, user_id: str) -> Optional[EmailSchema]:
+    async def mark_email_as_read(self, email_id: str, google_id: str) -> Optional[EmailSchema]:
         """Mark an email as read."""
         try:
             email_id = str(email_id)
-            email_data = await self.email_repository.find_by_id(email_id, user_id)
-            if not email_data or email_data["user_id"] != user_id:
-                logger.warning(f"Email {email_id} not found for user {user_id}")
+            email_data = await self.email_repository.find_by_id(email_id, google_id)
+            if not email_data or email_data["google_id"] != google_id:
+                logger.warning(f"Email {email_id} not found for user {google_id}")
                 return None
                 
             email_data["is_read"] = True
-            await self.email_repository.update_by_id(email_id, user_id, email_data)
+            await self.email_repository.update_by_id(email_id, google_id, email_data)
             # If email_data is already an EmailSchema instance, return it directly
             if isinstance(email_data, EmailSchema):
                 return email_data
             # Otherwise create a new EmailSchema instance
             return EmailSchema(**email_data)
         except Exception as e:
-            logger.exception(f"Failed to mark email {email_id} as read for user {user_id}")
+            logger.exception(f"Failed to mark email {email_id} as read for user {google_id}")
             raise HTTPException(status_code=500, detail=str(e))
         
-    async def delete_email(self, email_id: str, user_id: str) -> bool:
+    async def delete_email(self, email_id: str, google_id: str) -> bool:
         """
         Delete an email.
         
         Args:
             email_id: IMAP UID of the email
-            user_id: ID of the user
+            google_id: Google ID of the user
             
         Returns:
             bool: True if deletion successful
         """
         try:
-            return await self.email_repository.delete_by_id(str(email_id), user_id)
+            return await self.email_repository.delete_by_id(str(email_id), google_id)
         except Exception as e:
             logger.error(f"Failed to delete email: {e}")
             raise HTTPException(
@@ -336,10 +336,10 @@ class EmailService:
     # Content Processing Methods
     # -------------------------------------------------------------------------
     
-    async def get_email_reader_view(self, email_id: str, user_id: str) -> Optional[ReaderViewResponse]:
+    async def get_email_reader_view(self, email_id: str, google_id: str) -> Optional[ReaderViewResponse]:
         """Process an email to generate a reader-view friendly version."""
         try:
-            email = await self.get_email(email_id, user_id)
+            email = await self.get_email(email_id, google_id)
             if not email:
                 return None
                 
@@ -381,25 +381,25 @@ class EmailService:
             )
             
         except Exception as e:
-            logger.exception(f"Failed to generate reader view for email {email_id} for user {user_id}")
+            logger.exception(f"Failed to generate reader view for email {email_id} for user {google_id}")
             raise HTTPException(status_code=500, detail=str(e))
         
     # -------------------------------------------------------------------------
     # Public API Methods
     # -------------------------------------------------------------------------
     
-    async def fetch_emails(self, user_id: str, skip: int = 0, limit: int = 20,
+    async def fetch_emails(self, google_id: str, skip: int = 0, limit: int = 20,
                           unread_only: bool = False, category: Optional[str] = None,
                           search: Optional[str] = None, sort_by: str = "received_at",
                           sort_order: str = "desc", refresh: bool = False) -> Tuple[List[EmailSchema], int, Dict[str, Any]]:
         """Main email fetching function that combines IMAP and database operations."""
         try:
-            debug_info = {"db_query": {}, "timing": {}, "source": "database", "user_id": user_id}
+            debug_info = {"db_query": {}, "timing": {}, "source": "database", "google_id": google_id}
             
             if refresh:
-                await self._refresh_emails_from_imap(user_id, debug_info)
+                await self._refresh_emails_from_imap(google_id, debug_info)
             
-            query = self._build_email_query(user_id, unread_only, category, search)
+            query = self._build_email_query(google_id, unread_only, category, search)
             debug_info["db_query"] = query
             
             sort_direction = -1 if sort_order == "desc" else 1
@@ -417,16 +417,16 @@ class EmailService:
             )
             debug_info["timing"]["main_query"] = (datetime.now() - start_time).total_seconds()
             
-            logger.info(f"Retrieved {len(emails)} emails out of {total} total for user {user_id}")
+            logger.info(f"Retrieved {len(emails)} emails out of {total} total for user {google_id}")
             return emails, total, debug_info
             
         except Exception as e:
-            logger.exception(f"Email fetch operation failed for user {user_id}")
+            logger.exception(f"Email fetch operation failed for user {google_id}")
             if isinstance(e, HTTPException):
                 raise e
             raise HTTPException(status_code=500, detail=str(e))
     
-    async def _refresh_emails_from_imap(self, user_id: str, debug_info: Dict[str, Any]) -> None:
+    async def _refresh_emails_from_imap(self, google_id: str, debug_info: Dict[str, Any]) -> None:
         """Internal method to refresh emails from IMAP"""
         debug_info["source"] = "imap+database"
         debug_info["timing"]["imap_fetch_start"] = datetime.now().isoformat()
@@ -437,61 +437,56 @@ class EmailService:
             user_service = get_user_service()
             auth_service = get_auth_service()
             
-            # Try to find user by ID or email
-            user = await user_service.get_user(user_id)
+            # Get user by google_id
+            user = await user_service.get_user(google_id)
             if not user:
-                user = await user_service.get_user_by_email(user_id)
-            
-            if not user:
-                logger.error(f"User {user_id} not found in database during IMAP refresh")
-                debug_info["imap_error"] = f"User {user_id} not found"
+                logger.error(f"User {google_id} not found in database during IMAP refresh")
+                debug_info["imap_error"] = f"User {google_id} not found"
                 return
                 
             user_email = user.email
             if not user_email:
-                logger.error(f"Email address not found for user {user_id}")
+                logger.error(f"Email address not found for user {google_id}")
                 debug_info["imap_error"] = "User email not found"
                 return
             
             logger.info(f"Fetching emails for {user_email}")
             
-            # Get token from token repository
-            token_data = await auth_service.get_token_data(user_email)
+            # Get token using google_id
+            token_data = await auth_service.get_token_data(google_id)
             if not token_data:
-                logger.error(f"No token found for user {user_id} with email {user_email}")
+                logger.error(f"No token found for user {google_id}")
                 debug_info["imap_error"] = "No token found for user"
                 return
-            
-            normalized_user_id = str(user.google_id)
             
             logger.info(f"Fetching emails from IMAP for {user_email}")
             imap_emails = await self.fetch_from_imap(
                 token=token_data.token,
                 email_account=user_email,
-                user_id=normalized_user_id,
+                google_id=google_id,
                 limit=50
             )
             
             logger.info(f"Retrieved {len(imap_emails)} emails from IMAP for {user_email}")
             
             for email_data in imap_emails:
-                email_data["user_id"] = normalized_user_id
+                email_data["google_id"] = google_id
                 await self.save_email_to_db(email_data)
             
             debug_info["imap_fetch_count"] = len(imap_emails)
             logger.info(f"Saved {len(imap_emails)} emails to database for {user_email}")
             
         except Exception as e:
-            logger.exception(f"IMAP fetch failed for user {user_id}: {str(e)}")
+            logger.exception(f"IMAP fetch failed for user {google_id}: {str(e)}")
             debug_info["imap_error"] = str(e)
             
         finally:
             debug_info["timing"]["imap_fetch_duration"] = (datetime.now() - start_time).total_seconds()
     
-    def _build_email_query(self, user_id: str, unread_only: bool, category: Optional[str], 
+    def _build_email_query(self, google_id: str, unread_only: bool, category: Optional[str], 
                           search: Optional[str]) -> Dict[str, Any]:
         """Build query filter for emails"""
-        query = {"user_id": user_id}
+        query = {"google_id": google_id}
         
         if unread_only:
             query["is_read"] = False

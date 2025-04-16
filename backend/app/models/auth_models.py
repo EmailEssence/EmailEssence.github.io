@@ -40,13 +40,13 @@ class ExchangeCodeRequest(BaseModel):
     Request model for exchanging an OAuth authorization code for tokens.
     """
     code: str
-    user_email: EmailStr
+    user_email: EmailStr  # Needed to look up/create user before we have google_id
 
 class RefreshTokenRequest(BaseModel):
     """
     Request model for refreshing an access token.
     """
-    user_email: EmailStr
+    user_email: EmailStr  # Needed to look up user's tokens
 
 class VerifyTokenRequest(BaseModel):
     """

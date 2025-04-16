@@ -173,13 +173,19 @@ class BaseRepository(Generic[T]):
         except Exception as e:
             raise
 
-    async def update_one(self, query: Dict[str, Any], update_data: Dict[str, Any]) -> bool:
+    async def update_one(
+        self, 
+        query: Dict[str, Any], 
+        update_data: Dict[str, Any],
+        upsert: bool = False
+    ) -> bool:
         """
         Update a single document matching the query.
         
         Args:
             query: MongoDB query filter
             update_data: Data to update
+            upsert: If True, create a new document if no match is found
             
         Returns:
             bool: True if update successful
@@ -187,9 +193,10 @@ class BaseRepository(Generic[T]):
         try:
             result = await self._get_collection().update_one(
                 query,
-                {"$set": update_data}
+                {"$set": update_data},
+                upsert=upsert
             )
-            return result.modified_count > 0
+            return result.modified_count > 0 or (upsert and result.upserted_id is not None)
         except Exception as e:
             raise
 
