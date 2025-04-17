@@ -90,9 +90,7 @@ class UserService:
         Returns:
             Created user
         """
-        # Ensure indexes exist before creating user
-        await self.user_repository.ensure_indexes()
-        
+
         try:
             # Create a complete user data dictionary with all required fields
             complete_user_data = {
