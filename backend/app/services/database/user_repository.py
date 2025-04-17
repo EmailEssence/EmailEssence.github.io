@@ -27,8 +27,8 @@ class UserRepository(BaseRepository[UserSchema], IUserRepository):
         """
         super().__init__(collection, UserSchema)
         # Create indexes
-        self.collection.create_index("google_id", unique=True)
-        self.collection.create_index("email", unique=True)
+        self.collection.create_index("google_id", unique=True)  # One user per Google ID
+        self.collection.create_index("email", unique=True)      # One user per email
     
     async def find_by_google_id(self, google_id: str) -> Optional[UserSchema]:
         """
@@ -57,13 +57,20 @@ class UserRepository(BaseRepository[UserSchema], IUserRepository):
         Returns:
             Optional[UserSchema]: User if found, None otherwise
         """
-        doc = await self.find_one({"email": email})
-        if doc:
-            if isinstance(doc, UserSchema):
-                return doc
-            return UserSchema(**doc)
-        return None
+        return await self.find_one({"email": email})
     
+    async def find_by_username(self, username: str) -> Optional[UserSchema]:
+        """
+        Find a user by username.
+        
+        Args:
+            username: Username to search for
+            
+        Returns:
+            Optional[UserSchema]: User if found, None otherwise
+        """
+        return await self.find_one({"username": username})
+
     async def insert_one(self, user: UserSchema) -> str:
         """
         Insert a new user.
@@ -109,16 +116,12 @@ class UserRepository(BaseRepository[UserSchema], IUserRepository):
             preferences: New preferences to set
             
         Returns:
-            bool: True if update was successful
+            bool: True if update successful
         """
-        try:
-            result = await self.collection.update_one(
-                {"google_id": google_id},
-                {"$set": {"preferences": preferences}}
-            )
-            return result.modified_count > 0
-        except Exception as e:
-            raise
+        return await self.update_by_google_id(
+            google_id,
+            {"preferences": preferences}
+        )
     
     async def delete_by_google_id(self, google_id: str) -> bool:
         """
@@ -136,34 +139,18 @@ class UserRepository(BaseRepository[UserSchema], IUserRepository):
         except Exception as e:
             raise
 
-    async def find_by_username(self, username: str) -> Optional[UserSchema]:
-        """
-        Find a user by username.
-        
-        Args:
-            username: Username to search for
-            
-        Returns:
-            Optional[UserSchema]: User if found, None otherwise
-        """
-        return await self.find_one({"username": username})
-
-    async def update_by_email(self, email: str, user_data: Dict[str, Any]) -> bool:
+    async def update_by_email(self, email: str, update_data: Dict[str, Any]) -> bool:
         """
         Update a user by email.
         
         Args:
             email: Email address to update user for
-            user_data: New user data
+            update_data: New user data
             
         Returns:
             bool: True if update successful
         """
-        result = await self._collection.update_one(
-            {"email": email},
-            {"$set": user_data}
-        )
-        return result.modified_count > 0
+        return await self.update_one({"email": email}, update_data)
     
     async def delete_by_email(self, email: str) -> bool:
         """
@@ -175,8 +162,7 @@ class UserRepository(BaseRepository[UserSchema], IUserRepository):
         Returns:
             bool: True if deletion successful
         """
-        result = await self._collection.delete_one({"email": email})
-        return result.deleted_count > 0
+        return await self.delete_one({"email": email})
 
     async def find_by_id(self, id: str) -> Optional[UserSchema]:
         """
@@ -210,16 +196,8 @@ class UserRepository(BaseRepository[UserSchema], IUserRepository):
         """
         # Try MongoDB ObjectId first
         if ObjectId.is_valid(document_id):
-            result = await self._collection.update_one(
-                {"_id": ObjectId(document_id)},
-                {"$set": update_data}
-            )
-            if result.modified_count > 0:
+            if await self.update_one({"_id": ObjectId(document_id)}, update_data):
                 return True
         
         # Try Google ID if not found or not a valid ObjectId
-        result = await self._collection.update_one(
-            {"google_id": document_id},
-            {"$set": update_data}
-        )
-        return result.modified_count > 0 
+        return await self.update_one({"google_id": document_id}, update_data) 

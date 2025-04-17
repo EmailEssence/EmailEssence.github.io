@@ -26,8 +26,9 @@ class TokenRepository(BaseRepository[TokenData], ITokenRepository):
             collection: MongoDB collection instance
         """
         super().__init__(collection, TokenData)
-        # Create index on google_id
-        self.collection.create_index("google_id", unique=True)
+        # Create indexes
+        self.collection.create_index("google_id", unique=True)  # One token per Google ID
+        self.collection.create_index("token", unique=True)      # One token per access token
     
     async def find_by_google_id(self, google_id: str) -> Optional[TokenData]:
         """
@@ -56,12 +57,7 @@ class TokenRepository(BaseRepository[TokenData], ITokenRepository):
         Returns:
             Optional[TokenData]: Token if found, None otherwise
         """
-        doc = await self.find_one({"token": token})
-        if doc:
-            if isinstance(doc, TokenData):
-                return doc
-            return TokenData(**doc)
-        return None
+        return await self.find_one({"token": token})
     
     async def insert_one(self, token: TokenData) -> str:
         """
@@ -73,14 +69,10 @@ class TokenRepository(BaseRepository[TokenData], ITokenRepository):
         Returns:
             str: ID of the token
         """
-        try:
-            token_dict = token.model_dump()
-            return await self.upsert_one(
-                {"google_id": token.google_id},
-                token_dict
-            )
-        except Exception as e:
-            raise
+        return await self.upsert_one(
+            {"google_id": token.google_id},
+            token.model_dump()
+        )
     
     async def update_by_google_id(self, google_id: str, update_data: Dict[str, Any]) -> bool:
         """
@@ -93,15 +85,11 @@ class TokenRepository(BaseRepository[TokenData], ITokenRepository):
         Returns:
             bool: True if update was successful
         """
-        try:
-            # Use upsert to handle both insert and update cases
-            result = await self.upsert_one(
-                {"google_id": google_id},
-                update_data
-            )
-            return result is not None
-        except Exception as e:
-            raise
+        result = await self.upsert_one(
+            {"google_id": google_id},
+            update_data
+        )
+        return result is not None
     
     async def delete_by_google_id(self, google_id: str) -> bool:
         """

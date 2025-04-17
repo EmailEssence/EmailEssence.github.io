@@ -27,6 +27,10 @@ class SummaryRepository(BaseRepository[SummarySchema], ISummaryRepository):
             collection: MongoDB collection instance
         """
         super().__init__(collection, SummarySchema)
+        # Create indexes
+        self.collection.create_index("google_id")  # Non-unique since users can have multiple summaries
+        self.collection.create_index([("email_id", 1), ("google_id", 1)], unique=True)  # Unique summary per email per user
+        self.collection.create_index("generated_at")  # For time-based queries
     
     async def find_by_email_id(self, email_id: str) -> Optional[SummarySchema]:
         """
@@ -38,14 +42,7 @@ class SummaryRepository(BaseRepository[SummarySchema], ISummaryRepository):
         Returns:
             Optional[SummarySchema]: Summary if found, None otherwise
         """
-        doc = await self.find_one({"email_id": email_id})
-        if doc:
-            # If doc is already a SummarySchema instance, return it directly
-            if isinstance(doc, SummarySchema):
-                return doc
-            # Otherwise convert dict to SummarySchema
-            return self._model_class(**doc)
-        return None
+        return await self.find_one({"email_id": email_id})
     
     async def find_by_google_id(self, google_id: str) -> List[SummarySchema]:
         """
@@ -57,24 +54,7 @@ class SummaryRepository(BaseRepository[SummarySchema], ISummaryRepository):
         Returns:
             List[SummarySchema]: List of summaries
         """
-        docs = await self.find_many({"google_id": google_id})
-        return [self._model_class(**doc) if not isinstance(doc, SummarySchema) else doc for doc in docs]
-
-    async def insert_one(self, summary: SummarySchema) -> str:
-        """
-        Insert a single summary.
-        
-        Args:
-            summary: Summary to insert
-            
-        Returns:
-            str: ID of the inserted summary
-        """
-        # If summary is already a SummarySchema instance, use it directly
-        if isinstance(summary, SummarySchema):
-            return await super().insert_one(summary)
-        # Otherwise create a new SummarySchema instance
-        return await super().insert_one(self._model_class(**summary))
+        return await self.find_many({"google_id": google_id})
 
     async def update_by_email_id(
         self, 
@@ -93,14 +73,13 @@ class SummaryRepository(BaseRepository[SummarySchema], ISummaryRepository):
         Returns:
             bool: True if update successful
         """
-        result = await self._collection.update_one(
+        return await self.update_one(
             {"email_id": email_id},
-            {"$set": update_data},
+            update_data,
             upsert=upsert
         )
-        return result.modified_count > 0 or (upsert and result.upserted_id is not None)
 
-    async def delete_by_email_id(self, email_id: str, google_id: str) -> bool:
+    async def delete_by_email_and_google_id(self, email_id: str, google_id: str) -> bool:
         """
         Delete a summary by email ID and Google user ID.
         
@@ -111,8 +90,7 @@ class SummaryRepository(BaseRepository[SummarySchema], ISummaryRepository):
         Returns:
             bool: True if deletion successful
         """
-        result = await self._collection.delete_one({"email_id": email_id, "google_id": google_id})
-        return result.deleted_count > 0
+        return await self.delete_one({"email_id": email_id, "google_id": google_id})
 
     async def find_many(
         self, 
@@ -133,15 +111,11 @@ class SummaryRepository(BaseRepository[SummarySchema], ISummaryRepository):
         Returns:
             List[SummarySchema]: List of matching summaries
         """
-        try:
-            # Ensure datetime fields are properly handled
-            if "generated_at" in query:
-                if isinstance(query["generated_at"], dict):
-                    for op, value in query["generated_at"].items():
-                        if isinstance(value, datetime):
-                            query["generated_at"][op] = value
-            
-            docs = await super().find_many(query, limit, skip, sort)
-            return [self._to_model(doc) for doc in docs]
-        except Exception as e:
-            raise 
+        # Ensure datetime fields are properly handled
+        if "generated_at" in query:
+            if isinstance(query["generated_at"], dict):
+                for op, value in query["generated_at"].items():
+                    if isinstance(value, datetime):
+                        query["generated_at"][op] = value
+        
+        return await super().find_many(query, limit, skip, sort) 

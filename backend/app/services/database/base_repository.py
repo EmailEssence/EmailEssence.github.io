@@ -261,4 +261,42 @@ class BaseRepository(Generic[T]):
                 return str(getattr(doc, identifier_key))
             return None
         except Exception as e:
-            raise 
+            raise
+
+    async def find_by_google_id(self, google_id: str) -> Optional[T]:
+        """
+        Find a document by Google ID.
+        
+        Args:
+            google_id: Google ID to search for
+            
+        Returns:
+            Optional[T]: Document if found, None otherwise
+        """
+        return await self.find_one({"google_id": google_id})
+
+    async def update_by_google_id(self, google_id: str, update_data: Dict[str, Any], upsert: bool = False) -> bool:
+        """
+        Update a document by Google ID.
+        
+        Args:
+            google_id: Google ID of the document to update
+            update_data: Data to update
+            upsert: If True, create a new document if no match is found
+            
+        Returns:
+            bool: True if update successful
+        """
+        return await self.update_one({"google_id": google_id}, update_data, upsert=upsert)
+
+    async def delete_by_google_id(self, google_id: str) -> bool:
+        """
+        Delete a document by Google ID.
+        
+        Args:
+            google_id: Google ID of the document to delete
+            
+        Returns:
+            bool: True if deletion successful
+        """
+        return await self.delete_one({"google_id": google_id}) 

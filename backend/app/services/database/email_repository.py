@@ -26,6 +26,11 @@ class EmailRepository(BaseRepository[EmailSchema], IEmailRepository):
             collection: MongoDB collection instance
         """
         super().__init__(collection, EmailSchema)
+        # Create indexes
+        self.collection.create_index("google_id")  # Non-unique since users can have multiple emails
+        self.collection.create_index([("email_id", 1), ("google_id", 1)], unique=True)  # Unique email per user
+        self.collection.create_index("thread_id")  # For thread grouping
+        self.collection.create_index("is_read")    # For unread email queries
     
     async def find_by_google_id(self, google_id: str, limit: int = 100) -> List[EmailSchema]:
         """
@@ -38,10 +43,9 @@ class EmailRepository(BaseRepository[EmailSchema], IEmailRepository):
         Returns:
             List[EmailSchema]: List of emails
         """
-        docs = await self.find_many({"google_id": google_id}, limit=limit)
-        return [self._model_class(**doc) for doc in docs]
+        return await self.find_many({"google_id": google_id}, limit=limit)
     
-    async def find_by_id(self, email_id: str, google_id: str) -> Optional[EmailSchema]:
+    async def find_by_email_and_google_id(self, email_id: str, google_id: str) -> Optional[EmailSchema]:
         """
         Find an email by IMAP UID and Google user ID.
         
@@ -52,16 +56,14 @@ class EmailRepository(BaseRepository[EmailSchema], IEmailRepository):
         Returns:
             Optional[EmailSchema]: Email if found, None otherwise
         """
-        doc = await self.find_one({"email_id": email_id, "google_id": google_id})
-        if doc:
-            # If doc is already an EmailSchema instance, return it directly
-            if isinstance(doc, EmailSchema):
-                return doc
-            # Otherwise convert dict to EmailSchema
-            return self._model_class(**doc)
-        return None
+        return await self.find_one({"email_id": email_id, "google_id": google_id})
     
-    async def update_by_id(self, email_id: str, google_id: str, update_data: Dict[str, Any]) -> bool:
+    async def update_by_email_and_google_id(
+        self, 
+        email_id: str, 
+        google_id: str, 
+        update_data: Dict[str, Any]
+    ) -> bool:
         """
         Update an email by IMAP UID and Google user ID.
         
@@ -73,13 +75,12 @@ class EmailRepository(BaseRepository[EmailSchema], IEmailRepository):
         Returns:
             bool: True if update successful
         """
-        result = await self._collection.update_one(
+        return await self.update_one(
             {"email_id": email_id, "google_id": google_id},
-            {"$set": update_data}
+            update_data
         )
-        return result.modified_count > 0
     
-    async def delete_by_id(self, email_id: str, google_id: str) -> bool:
+    async def delete_by_email_and_google_id(self, email_id: str, google_id: str) -> bool:
         """
         Delete an email by IMAP UID and Google user ID.
         
@@ -90,8 +91,7 @@ class EmailRepository(BaseRepository[EmailSchema], IEmailRepository):
         Returns:
             bool: True if deletion successful
         """
-        result = await self._collection.delete_one({"email_id": email_id, "google_id": google_id})
-        return result.deleted_count > 0
+        return await self.delete_one({"email_id": email_id, "google_id": google_id})
 
     async def find_by_thread_id(self, thread_id: str) -> List[EmailSchema]:
         """
@@ -103,20 +103,7 @@ class EmailRepository(BaseRepository[EmailSchema], IEmailRepository):
         Returns:
             List[EmailSchema]: List of matching emails
         """
-        docs = await self.find_many({"thread_id": thread_id})
-        return [self._model_class(**doc) for doc in docs]
-
-    async def insert_one(self, email: EmailSchema) -> str:
-        """
-        Insert a single email.
-        
-        Args:
-            email: Email to insert
-            
-        Returns:
-            str: ID of the inserted email
-        """
-        return await super().insert_one(email.model_dump())
+        return await self.find_many({"thread_id": thread_id})
 
     async def find_by_email_id(self, email_id: str) -> Optional[EmailSchema]:
         """
@@ -128,8 +115,7 @@ class EmailRepository(BaseRepository[EmailSchema], IEmailRepository):
         Returns:
             Optional[EmailSchema]: Email if found, None otherwise
         """
-        doc = await self.find_one({"email_id": email_id})
-        return self._model_class(**doc) if doc else None
+        return await self.find_one({"email_id": email_id})
 
     async def find_unread(self) -> List[EmailSchema]:
         """
@@ -138,8 +124,7 @@ class EmailRepository(BaseRepository[EmailSchema], IEmailRepository):
         Returns:
             List[EmailSchema]: List of unread emails
         """
-        docs = await self.find_many({"is_read": False})
-        return [self._model_class(**doc) for doc in docs]
+        return await self.find_many({"is_read": False})
 
     async def mark_as_read(self, email_id: str) -> Optional[EmailSchema]:
         """
@@ -151,10 +136,9 @@ class EmailRepository(BaseRepository[EmailSchema], IEmailRepository):
         Returns:
             Optional[EmailSchema]: Updated email if found, None otherwise
         """
-        result = await self._collection.update_one(
+        if await self.update_one(
             {"email_id": email_id},
             {"$set": {"is_read": True}}
-        )
-        if result.modified_count > 0:
+        ):
             return await self.find_by_email_id(email_id)
         return None 

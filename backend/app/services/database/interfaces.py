@@ -27,6 +27,18 @@ class IRepository(ABC):
     @abstractmethod
     async def delete_one(self, query: Dict[str, Any]) -> Any:
         pass
+    
+    @abstractmethod
+    async def find_by_google_id(self, google_id: str) -> Optional[BaseModel]:
+        pass
+    
+    @abstractmethod
+    async def update_by_google_id(self, google_id: str, update_data: Dict[str, Any], upsert: bool = False) -> bool:
+        pass
+    
+    @abstractmethod
+    async def delete_by_google_id(self, google_id: str) -> bool:
+        pass
 
 class IEmailRepository(IRepository):
     """Email repository interface"""
@@ -49,14 +61,6 @@ class IUserRepository(IRepository):
         pass
     
     @abstractmethod
-    async def find_by_google_id(self, google_id: str) -> Optional[BaseModel]:
-        pass
-    
-    @abstractmethod
-    async def update_by_google_id(self, google_id: str, update_data: Dict[str, Any]) -> bool:
-        pass
-    
-    @abstractmethod
     async def update_preferences(self, google_id: str, preferences: Dict[str, Any]) -> bool:
         pass
 
@@ -65,23 +69,11 @@ class ISummaryRepository(IRepository):
     @abstractmethod
     async def find_by_email_id(self, email_id: str) -> Optional[BaseModel]:
         pass
-    
-    @abstractmethod
-    async def find_by_google_id(self, google_id: str) -> List[BaseModel]:
-        pass 
 
 class ITokenRepository(IRepository):
     """Token repository interface"""
     @abstractmethod
-    async def find_by_google_id(self, google_id: str) -> Optional[BaseModel]:
-        pass
-    
-    @abstractmethod
     async def find_by_token(self, token: str) -> Optional[BaseModel]:
         pass
-    
-    @abstractmethod
-    async def update_by_google_id(self, google_id: str, update_data: Dict[str, Any]) -> bool:
-        pass
-    
+
     
