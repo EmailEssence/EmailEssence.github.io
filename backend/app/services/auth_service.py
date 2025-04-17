@@ -5,23 +5,31 @@ This module provides services for OAuth2 authentication, token management,
 and user authentication with Google.
 """
 
+import logging
 import os
-import logging  
+from typing import Optional, Dict, Any
+from datetime import datetime, timedelta
+from fastapi import HTTPException, status
+from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import Flow
 from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
-from dotenv import load_dotenv
-from fastapi import HTTPException, status, Depends
-from typing import Optional, Dict, Any
-from app.models import UserSchema
-from app.models.auth_models import TokenData, TokenResponse
-from google.oauth2.credentials import Credentials
 from starlette.concurrency import run_in_threadpool
-from app.utils.config import get_settings
-from app.services.database.token_repository import TokenRepository
-from app.services.database.user_repository import UserRepository
-from app.services.database.factories import get_token_repository, get_user_repository
+
+# Import from app modules
+from app.models import TokenData, AuthState
+from app.services.database import TokenRepository, UserRepository, get_token_repository, get_user_repository
 from app.services.user_service import UserService
+from app.utils.config import Settings, get_settings
+
+# Configure logging
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
+
+logger = logging.getLogger(__name__)
 
 settings = get_settings()
 
@@ -31,8 +39,6 @@ SCOPES = [
     'openid',
     'https://www.googleapis.com/auth/userinfo.profile'
 ]
-
-logger = logging.getLogger(__name__)
 
 class AuthService:
     """

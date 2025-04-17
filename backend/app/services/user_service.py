@@ -1,12 +1,23 @@
+"""
+User service for handling user-related operations.
+"""
+
 import logging
 from typing import Optional, Dict, Any
 from fastapi import HTTPException, status
 from bson import ObjectId
 from google.oauth2.credentials import Credentials
 
+# Import from app modules
 from app.models import UserSchema, TokenData, PreferencesSchema
-from app.services.database.user_repository import UserRepository
-from app.services.database.factories import get_user_repository
+from app.services.database import UserRepository, get_user_repository
+
+# Configure logging
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
 
 logger = logging.getLogger(__name__)
 
