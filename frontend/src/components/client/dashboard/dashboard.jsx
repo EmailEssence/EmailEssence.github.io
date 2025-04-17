@@ -1,5 +1,5 @@
-import ViewIcon from "../../assets/ViewIcon";
-import { getTop5 } from "../../emails/emailParse";
+import ViewIcon from "../../../assets/ViewIcon";
+import { getTop5 } from "../../../emails/emailParse";
 import MiniViewPanel from "./miniview";
 import PropTypes from "prop-types";
 import "./dashboard.css";

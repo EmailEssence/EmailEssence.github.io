@@ -81,7 +81,7 @@ describe("Inbox Component", () => {
   });
 });
 
-describe.skip("Email Display Component", () => {
+describe("Email Display Component", () => {
   it("renders EmailDisplay component", () => {
     render(<EmailDisplay curEmail={mockEmailList[0]} />);
     expect(screen.getByText("Body 1")).toBeInTheDocument();
