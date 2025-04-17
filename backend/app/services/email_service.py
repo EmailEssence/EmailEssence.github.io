@@ -272,7 +272,7 @@ class EmailService:
         """Store email in database if not exists"""
         try:
             email_id = str(email_data["email_id"])
-            existing_email = await self.email_repository.find_by_id(email_id, email_data["google_id"])
+            existing_email = await self.email_repository.find_by_email_and_google_id(email_id, email_data["google_id"])
             if not existing_email:
                 email_schema = self._ensure_email_schema(email_data)
                 await self.email_repository.insert_one(email_schema)
@@ -312,7 +312,7 @@ class EmailService:
             Optional[EmailSchema]: Email if found, None otherwise
         """
         try:
-            email_data = await self.email_repository.find_by_id(str(email_id), google_id)
+            email_data = await self.email_repository.find_by_email_and_google_id(str(email_id), google_id)
             if not email_data:
                 return None
             return self._ensure_email_schema(email_data)
@@ -323,13 +323,13 @@ class EmailService:
         """Mark an email as read."""
         try:
             email_id = str(email_id)
-            email_data = await self.email_repository.find_by_id(email_id, google_id)
+            email_data = await self.email_repository.find_by_email_and_google_id(email_id, google_id)
             if not email_data or email_data["google_id"] != google_id:
                 self._log_operation('warning', f"Email {email_id} not found for user {google_id}")
                 return None
                 
             email_data["is_read"] = True
-            await self.email_repository.update_by_id(email_id, google_id, email_data)
+            await self.email_repository.update_by_email_and_google_id(email_id, google_id, email_data)
             return self._ensure_email_schema(email_data)
         except Exception as e:
             self._handle_email_error(e, "mark as read", email_id, google_id)
