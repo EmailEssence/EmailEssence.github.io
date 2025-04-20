@@ -11,7 +11,7 @@ function EmailDisplay({
     email_id: 1,
     sender: "",
     recipients: "",
-    subject: "",
+    subject: "Test Subject",
     body: "",
     received_at: [0, 0, 0],
     summary_text: "",

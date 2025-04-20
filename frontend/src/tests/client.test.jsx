@@ -14,7 +14,7 @@ const mockEmail1 = [
     received_at: ["2000", "01", "01", "00:00"],
     category: "MockCategory",
     is_read: false,
-    summary_text: "Test Summary",
+    summary_text: "Test Summary11",
     keywords: ["Mock", "Test"],
   },
 ];
@@ -30,7 +30,7 @@ const mockEmail2 = [
     received_at: ["2000", "02", "01", "00:00"],
     category: "MockCategory",
     is_read: false,
-    summary_text: "Test Summary",
+    summary_text: "Test Summary22",
     keywords: ["Mock", "Test"],
   },
 ];
@@ -40,7 +40,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   vi.mock("../emails/emailParse", () => ({
     fetchNewEmails: vi.fn(),
-    getTop5: vi.fn(),
+    getTop5: vi.fn(() => [...mockEmail1, ...mockEmail2]),
     default: vi.fn(),
   }));
 });
@@ -48,7 +48,7 @@ beforeEach(() => {
 describe("Client Component", () => {
   it("Renders Component & Sidebar", () => {
     render(
-      <MemoryRouter initialEntries={["/client/dashboard"]}>
+      <MemoryRouter initialEntries={["/dashboard"]}>
         <Client emailsByDate={mockEmail1} />
       </MemoryRouter>
     );
@@ -58,7 +58,7 @@ describe("Client Component", () => {
   it("Runs Effect", async () => {
     vi.useFakeTimers();
     render(
-      <MemoryRouter initialEntries={["client/dashboard"]}>
+      <MemoryRouter initialEntries={["/dashboard"]}>
         <Client
           emailsByDate={mockEmail1}
           defaultUserPreferences={{
@@ -86,9 +86,9 @@ describe("Client Component", () => {
 
   // Create Test for HandleSetTheme
 
-  it.skip("Runs handleSetCurEmail & Switches To Inbox On MiniView Email Click", () => {
+  it("Runs handleSetCurEmail & Switches To Inbox On MiniView Email Click", () => {
     render(
-      <MemoryRouter initialEntries={["client/dashboard"]}>
+      <MemoryRouter initialEntries={["/dashboard"]}>
         <Client emailsByDate={[...mockEmail1, ...mockEmail2]} />
       </MemoryRouter>
     );
@@ -101,7 +101,7 @@ describe("Client Component", () => {
 describe("SideBar Page Changes", () => {
   it("Expands SideBar", () => {
     render(
-      <MemoryRouter initialEntries={["client/dashboard"]}>
+      <MemoryRouter initialEntries={["/dashboard"]}>
         <Client emailsByDate={mockEmail1} />
       </MemoryRouter>
     );
@@ -122,7 +122,7 @@ describe("SideBar Page Changes", () => {
     // Check we are in settings page
   });
 
-  it.skip("Goes To Inobx Page", () => {
+  it("Goes To Inobx Page", () => {
     render(
       <MemoryRouter initialEntries={["client/dashboard"]}>
         <Client emailsByDate={mockEmail1} />
@@ -130,10 +130,10 @@ describe("SideBar Page Changes", () => {
     );
     const inboxButton = screen.getByTestId("inbox");
     fireEvent.click(inboxButton);
-    // Check we are in inbox component
+    expect(screen.getByText("Test Body")).toBeInTheDocument();
   });
 
-  it.skip("Returns To Dashboard", () => {
+  it("Returns To Dashboard", () => {
     render(
       <MemoryRouter initialEntries={["client/dashboard"]}>
         <Client emailsByDate={mockEmail1} />
@@ -143,6 +143,6 @@ describe("SideBar Page Changes", () => {
     fireEvent.click(inboxButton);
     const dashboardButton = screen.getByTestId("dashboard");
     fireEvent.click(dashboardButton);
-    // Check we are in dashboard component
+    expect(screen.getByText("Test Summary22")).toBeInTheDocument();
   });
 });
