@@ -53,7 +53,6 @@ function Client({
 
   const handlePageChange = (pageName) => {
     const toChange = import.meta.env.MODE === "test" ? "/client" : null;
-    console.log(toChange);
     if (toChange) {
       navigate(pageName.replace(toChange, ""));
     } else {
