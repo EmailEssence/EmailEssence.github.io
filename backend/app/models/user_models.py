@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, ConfigDict
 from typing import Optional, Dict, List
 from bson import ObjectId
 from app.models.auth_models import TokenData
@@ -18,4 +18,6 @@ class UserSchema(BaseModel):
     google_id: str  # Google User ID
     email: EmailStr
     name: str
-    preferences: PreferencesSchema = Field(default_factory=PreferencesSchema) 
+    preferences: PreferencesSchema = Field(default_factory=PreferencesSchema)
+    
+    model_config = ConfigDict()

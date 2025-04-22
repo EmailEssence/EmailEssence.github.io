@@ -2,7 +2,7 @@
 Authentication-related Pydantic models.
 """
 
-from pydantic import BaseModel, Field, EmailStr
+from pydantic import BaseModel, Field, EmailStr, ConfigDict
 from typing import Optional, List, Dict, Any
 
 class TokenData(BaseModel):
@@ -16,6 +16,8 @@ class TokenData(BaseModel):
     client_id: str
     client_secret: str
     scopes: List[str]
+    
+    model_config = ConfigDict(frozen=True)  # Make token data immutable
 
 class TokenResponse(BaseModel):
     """

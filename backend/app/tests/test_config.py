@@ -4,6 +4,7 @@ Test configuration module for test environment settings
 from app.utils.config import Settings, SummarizerProvider
 import os
 from functools import lru_cache
+from pydantic import ConfigDict
 
 class MockSettings(Settings):
     """
@@ -29,9 +30,7 @@ class MockSettings(Settings):
     summarizer_model: str = os.getenv("SUMMARIZER_MODEL", "gpt-4o-mini")
     summarizer_batch_threshold: int = int(os.getenv("SUMMARIZER_BATCH_THRESHOLD", "10"))
     
-    class Config:
-        env_file = ".env.test"
-        use_enum_values = True
+    model_config = ConfigDict(env_file=".env.test", use_enum_values=True)
 
 @lru_cache()
 def get_test_settings() -> MockSettings:
