@@ -5,7 +5,7 @@ from app.utils.config import Settings, SummarizerProvider
 import os
 from functools import lru_cache
 
-class TestSettings(Settings):
+class MockSettings(Settings):
     """
     Test-specific settings that override the main application settings.
     This uses environment variables set in the root conftest.py
@@ -34,12 +34,12 @@ class TestSettings(Settings):
         use_enum_values = True
 
 @lru_cache()
-def get_test_settings() -> TestSettings:
+def get_test_settings() -> MockSettings:
     """
     Returns cached test settings.
     This should be used in place of get_settings() during tests.
     """
-    return TestSettings()
+    return MockSettings()
 
 # Function to patch the get_settings to return test settings
 def override_get_settings():

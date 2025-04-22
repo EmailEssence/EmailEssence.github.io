@@ -54,7 +54,7 @@ def pytest_collection_modifyitems(config, items):
 def patch_modules():
     """Patch system modules to use test mocks"""
     # Path to our mock module
-    from app.tests.database_mock import db as mock_db
+    from app.tests.database_mock import mock_db
     
     # Create a mock module for 'database'
     class MockDatabaseModule:
