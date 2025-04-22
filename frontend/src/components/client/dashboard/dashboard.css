@@ -1,4 +1,12 @@
-@import url("../../main.css");
+@import url("../../../main.css");
+.dashboard {
+  padding: 3vh 1vw;
+  display: flex;
+  gap: 1.5%;
+  align-items: flex-start;
+  background-color: var(--color-background2);
+}
+
 .dashboard .weighted-email-list-container {
   max-height: 94vh;
   background: var(--color-background);

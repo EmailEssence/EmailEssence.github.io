@@ -1,21 +1,12 @@
-/* eslint-disable react/prop-types */
-// import ReaderViewIcon from "../../assets/ReaderView";
-import { Readability } from "@mozilla/readability";
+import PropTypes from "prop-types";
 import { useEffect, useRef, useState } from "react";
-import ReactDom from "react-dom";
-import ArrowIcon from "../../assets/InboxArrow";
-import ReaderViewIcon from "../../assets/ReaderView";
-import { emailsPerPage } from "../../assets/constants";
-import "./emailDisplay.css";
+import ArrowIcon from "../../../assets/InboxArrow";
+import { emailsPerPage } from "../../../assets/constants";
+import EmailDisplay from "./emailDisplay";
 import "./emailEntry.css";
 import "./emailList.css";
 
-export default function Inbox({
-  displaySummaries,
-  emailList,
-  setCurEmail,
-  curEmail,
-}) {
+function Inbox({ displaySummaries, emailList, setCurEmail, curEmail }) {
   return (
     <div className="inbox-display">
       <InboxEmailList
@@ -113,74 +104,26 @@ function InboxEmailList({ displaySummaries, emailList, curEmail, onClick }) {
   );
 }
 
-function EmailDisplay({ curEmail }) {
-  const date = getDate(curEmail.received_at);
-  return (
-    <div className="email-display">
-      <div className="header">
-        <div className="from">{curEmail.sender}</div>
-        <div className="title">{curEmail.subject}</div>
-        <div className="to">{`To: ${curEmail.recipients}`}</div>
-        <div className="date">{`Date: ${date}`}</div>
-        <div className="reader-view">
-          <ReaderView curEmail={curEmail} />
-        </div>
-      </div>
-      <div className="body">
-        <div className="content-container">
-          <div className="content">{curEmail.body}</div>
-        </div>
-      </div>
-    </div>
-  );
-}
+Inbox.propTypes = {
+  displaySummaries: PropTypes.bool,
+  emailList: PropTypes.array,
+  setCurEmail: PropTypes.func,
+  curEmail: PropTypes.object,
+};
 
-function ReaderView({ curEmail }) {
-  const [text, setText] = useState("Loading ...");
-  const [displaying, setDisplaying] = useState(false);
+EmailEntry.propTypes = {
+  displaySummary: PropTypes.bool,
+  email: PropTypes.object,
+  onClick: PropTypes.func,
+  selected: PropTypes.bool,
+};
 
-  function displayReaderView() {
-    if (!displaying) {
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(curEmail.body, "text/html");
-      const article = new Readability(doc).parse();
-      setText(article.textContent);
-    }
-    setDisplaying(!displaying);
-  }
-
-  useEffect(() => {
-    setDisplaying(false);
-    setText("Loading...");
-  }, [curEmail]); // Inefficient way to clean state when email switches
-
-  return (
-    <div>
-      <div className="icon-container" onClick={displayReaderView}>
-        <ReaderViewIcon />
-      </div>
-      <PopUp isOpen={displaying} handleClose={displayReaderView}>
-        <div>{text}</div>
-      </PopUp>
-    </div>
-  );
-}
-
-function PopUp({ isOpen, handleClose, children }) {
-  if (!isOpen) return null;
-  return ReactDom.createPortal(
-    <>
-      <div className="overlay-background" />
-      <div className="pop-up-container">
-        {children}
-        <div className="button" onClick={handleClose}>
-          Click To Close
-        </div>
-      </div>
-    </>,
-    document.getElementById("portal")
-  );
-}
+InboxEmailList.propTypes = {
+  displaySummaries: PropTypes.bool,
+  emailList: PropTypes.array,
+  curEmail: PropTypes.object,
+  onClick: PropTypes.func,
+};
 
 const getDate = (date) => {
   return `${date[1]}/${date[2]}/${date[0]}`;
@@ -189,3 +132,5 @@ const getDate = (date) => {
 const getSenderName = (sender) => {
   return sender.slice(0, sender.indexOf("<"));
 };
+
+export default Inbox;
