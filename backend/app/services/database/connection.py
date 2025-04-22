@@ -47,6 +47,20 @@ class DatabaseConnection:
                 logger.error(f"❌ Failed to connect to MongoDB: {e}")
                 raise
 
+    async def shutdown(self):
+        """
+        Shutdown the database connection asynchronously.
+        """
+        if self._client is not None:
+            try:
+                self._client.close()  # Note: Motor's close() method is not a coroutine
+                self._client = None
+                self._db = None
+                logger.info("✅ Disconnected from MongoDB")
+            except Exception as e:
+                logger.error(f"❌ Failed to disconnect from MongoDB: {e}")
+                raise
+
     @property
     def client(self):
         """
@@ -70,16 +84,6 @@ class DatabaseConnection:
         if self._db is None:
             raise RuntimeError("Database not connected")
         return self._db
-
-    async def close(self):
-        """
-        Close the database connection.
-        """
-        if self._client is not None:
-            self._client.close()
-            self._client = None
-            self._db = None
-            logger.info("Disconnected from MongoDB")
 
 # Create a single instance
 instance = DatabaseConnection() 

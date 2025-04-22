@@ -4,6 +4,7 @@ from fastapi import FastAPI, HTTPException, Depends, status
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.concurrency import run_in_threadpool
+from contextlib import asynccontextmanager
 import logging
 
 from app.routers import emails_router, summaries_router, auth_router, user_router
@@ -13,13 +14,43 @@ from app.models import EmailSchema, SummarySchema, UserSchema
 
 # from app.models.user_model import User
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await startup_db_client()
+    yield
+    await shutdown_db_client()
+
+async def startup_db_client():
+    """
+    Initializes MongoDB connection on startup.
+    """
+    try:
+        # Get the singleton instance and initialize it
+        db = DatabaseConnection()
+        await db.initialize()
+    except Exception as e:
+        raise RuntimeError("Failed to initialize database connection") from e
+
+async def shutdown_db_client():
+    """
+    Closes MongoDB connection on shutdown.
+    """
+    try:
+        # Get the singleton instance and close it   
+        db = DatabaseConnection()
+        await db.shutdown()  # Use shutdown instead of close
+    except Exception as e:
+        raise RuntimeError("Failed to close database connection") from e
+
 app = FastAPI(
-    title="Email Essence",
-    description="A fast, scalable, and secure email summarization service.",
+    title="Email Essence API",
+    description="API for the Email Essence application",
     version="0.1.0",
     # terms_of_service="https://example.com/terms",
     # contact={"name": "Support", "url": "https://example.com/support"},
+    lifespan=lifespan
 )
+
 
 # Configure CORS
 app.add_middleware(
@@ -41,29 +72,6 @@ app.add_middleware(
 )
 
 logger = logging.getLogger(__name__)
-
-async def startup_db_client():
-    """
-    Initializes MongoDB connection on startup.
-    
-    This function:
-    1. Gets the singleton database connection instance
-    2. Initializes the connection asynchronously
-    3. Handles any connection errors gracefully
-    """
-    try:
-        # Get the singleton instance and initialize it
-        db = DatabaseConnection()
-        await db.initialize()
-        
-    except Exception as e:
-        logger.error(f"❌ Failed to connect to MongoDB: {str(e)}")
-        raise RuntimeError("Failed to initialize database connection") from e
-
-# Register startup event handler
-@app.on_event("startup")
-async def startup_event():
-    await startup_db_client()
 
 # Register routers
 app.include_router(auth_router, prefix="/auth", tags=["Auth"])
@@ -98,6 +106,7 @@ async def health_check():
     
     # Check MongoDB connection
     try:
+        db = DatabaseConnection()
         await db.command("ping")
         health_status["components"]["database"] = "connected"
     except Exception as e:
