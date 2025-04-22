@@ -4,6 +4,7 @@ Factory functions for creating repository and service instances.
 
 from functools import lru_cache
 from typing import Optional
+import logging
 
 from app.services.database.connection import instance
 from app.services.database.email_repository import EmailRepository
@@ -100,4 +101,29 @@ def get_summary_service() -> 'SummaryService':
         SummaryService: Cached service instance
     """
     from app.services.summarization.summary_service import SummaryService
-    return SummaryService(summary_repository=get_summary_repository()) 
+    return SummaryService(summary_repository=get_summary_repository())
+
+async def setup_all_repositories():
+    """
+    Set up all repositories by creating their indexes.
+    This should be called during application startup.
+    """
+    try:
+        # Get all repositories
+        email_repo = get_email_repository()
+        user_repo = get_user_repository()
+        token_repo = get_token_repository()
+        summary_repo = get_summary_repository()
+        
+        # Setup indexes for all repositories
+        await email_repo.setup_indexes()
+        await user_repo.setup_indexes()
+        await token_repo.setup_indexes()
+        await summary_repo.setup_indexes()
+        
+        return True
+    except Exception as e:
+        logging.error(f"Failed to set up repositories: {str(e)}")
+        return False
+
+# Add to __all__ exports 

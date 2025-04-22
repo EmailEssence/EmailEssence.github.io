@@ -26,9 +26,12 @@ class TokenRepository(BaseRepository[TokenData], ITokenRepository):
             collection: MongoDB collection instance
         """
         super().__init__(collection, TokenData)
-        # Create indexes
-        self.collection.create_index("google_id", unique=True)  # One token per Google ID
-        self.collection.create_index("token", unique=True)      # One token per access token
+        self.collection = collection
+    
+    async def setup_indexes(self):
+        """Create indexes for the token collection."""
+        await self.collection.create_index("google_id", unique=True)
+        await self.collection.create_index("token", unique=True)
     
     async def find_by_google_id(self, google_id: str) -> Optional[TokenData]:
         """

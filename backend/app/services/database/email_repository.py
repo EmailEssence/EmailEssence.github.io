@@ -26,11 +26,13 @@ class EmailRepository(BaseRepository[EmailSchema], IEmailRepository):
             collection: MongoDB collection instance
         """
         super().__init__(collection, EmailSchema)
-        # Create indexes
-        self.collection.create_index("google_id")  # Non-unique since users can have multiple emails
-        self.collection.create_index([("email_id", 1), ("google_id", 1)], unique=True)  # Unique email per user
-        self.collection.create_index("thread_id")  # For thread grouping
-        self.collection.create_index("is_read")    # For unread email queries
+        self.collection = collection
+    
+    async def setup_indexes(self):
+        await self.collection.create_index("google_id")
+        await self.collection.create_index([("email_id", 1), ("google_id", 1)], unique=True)
+        await self.collection.create_index("thread_id")
+        await self.collection.create_index("is_read")
     
     async def find_by_google_id(self, google_id: str, limit: int = 100) -> List[EmailSchema]:
         """

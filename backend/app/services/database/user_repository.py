@@ -26,9 +26,12 @@ class UserRepository(BaseRepository[UserSchema], IUserRepository):
             collection: MongoDB collection instance
         """
         super().__init__(collection, UserSchema)
-        # Create indexes
-        self.collection.create_index("google_id", unique=True)  # One user per Google ID
-        self.collection.create_index("email", unique=True)      # One user per email
+        self.collection = collection
+    
+    async def setup_indexes(self):
+        """Create indexes for the user collection."""
+        await self.collection.create_index("google_id", unique=True)
+        await self.collection.create_index("email", unique=True)
     
     async def find_by_google_id(self, google_id: str) -> Optional[UserSchema]:
         """

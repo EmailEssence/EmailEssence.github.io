@@ -27,11 +27,14 @@ class SummaryRepository(BaseRepository[SummarySchema], ISummaryRepository):
             collection: MongoDB collection instance
         """
         super().__init__(collection, SummarySchema)
-        # Create indexes
-        self.collection.create_index("google_id")  # Non-unique since users can have multiple summaries
-        self.collection.create_index([("email_id", 1), ("google_id", 1)], unique=True)  # Unique summary per email per user
-        self.collection.create_index("generated_at")  # For time-based queries
+        self.collection = collection
     
+    async def setup_indexes(self):
+        """Create indexes for the summary collection."""
+        await self.collection.create_index("google_id")
+        await self.collection.create_index([("email_id", 1), ("google_id", 1)], unique=True)
+        await self.collection.create_index("generated_at")
+
     async def find_by_email_id(self, email_id: str) -> Optional[SummarySchema]:
         """
         Find a summary by email ID.
