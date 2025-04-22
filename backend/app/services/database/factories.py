@@ -57,7 +57,7 @@ def get_summary_repository() -> SummaryRepository:
     return repo
 
 @lru_cache()
-def get_auth_service() -> 'AuthService':
+def get_auth_service() -> 'AuthService': # type: ignore
     """
     Get a cached instance of AuthService.
     
@@ -71,7 +71,7 @@ def get_auth_service() -> 'AuthService':
     )
 
 @lru_cache()
-def get_user_service() -> 'UserService':
+def get_user_service() -> 'UserService': # type: ignore
     """
     Get a cached instance of UserService.
     
@@ -82,7 +82,7 @@ def get_user_service() -> 'UserService':
     return UserService(user_repository=get_user_repository())
 
 @lru_cache()
-def get_email_service() -> 'EmailService':
+def get_email_service() -> 'EmailService': # type: ignore
     """
     Get a cached instance of EmailService.
     
@@ -93,7 +93,7 @@ def get_email_service() -> 'EmailService':
     return EmailService(email_repository=get_email_repository())
 
 @lru_cache()
-def get_summary_service() -> 'SummaryService':
+def get_summary_service() -> 'SummaryService': # type: ignore
     """
     Get a cached instance of SummaryService.
     
