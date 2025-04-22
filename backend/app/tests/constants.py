@@ -10,6 +10,68 @@ from app.models import EmailSchema, SummarySchema, UserSchema, TokenData, Prefer
 Test constants fixtures
 """
 
+# Mock data constants
+EMAIL_DATA = [
+    {
+        "email_id": "test_1",
+        "google_id": "user123",
+        "sender": "test@example.com",
+        "recipients": ["recipient@example.com"],
+        "subject": "Test Email 1",
+        "body": "This is a test email body",
+        "received_at": "2023-01-01T00:00:00Z",
+        "category": "inbox",
+        "is_read": False
+    },
+    {
+        "email_id": "test_2",
+        "google_id": "user123",
+        "sender": "another@example.com",
+        "recipients": ["recipient@example.com"],
+        "subject": "Test Email 2",
+        "body": "This is another test email body",
+        "received_at": "2023-01-02T00:00:00Z",
+        "category": "inbox",
+        "is_read": True
+    }
+]
+
+USER_DATA = [
+    {
+        "google_id": "user123",
+        "email": "user@example.com",
+        "name": "Test User",
+        "preferences": {
+            "summaries": True,
+            "theme": "dark",
+            "fetch_frequency": "60"
+        }
+    }
+]
+
+TOKEN_DATA = [
+    {
+        "google_id": "user123",
+        "token": "access_token_123",
+        "refresh_token": "refresh_token_123",
+        "token_uri": "https://oauth2.googleapis.com/token",
+        "client_id": "test_client_id",
+        "client_secret": "test_client_secret",
+        "scopes": ["https://www.googleapis.com/auth/gmail.readonly"]
+    }
+]
+
+SUMMARY_DATA = [
+    {
+        "email_id": "test_1",
+        "google_id": "user123",
+        "summary_text": "Test email summary",
+        "keywords": ["test", "email"],
+        "generated_at": "2023-01-01T01:00:00Z",
+        "model_info": {"model": "test-model"}
+    }
+]
+
 # Test data fixtures
 @pytest.fixture
 def mock_email_message():
@@ -25,56 +87,22 @@ def mock_email_message():
 @pytest.fixture
 def mock_email_schema():
     """Create a mock EmailSchema for testing"""
-    return EmailSchema(
-        google_id="test_user",
-        email_id="test_123",
-        sender="sender@test.com",
-        recipients=["recipient@test.com"],
-        subject="Test Email",
-        body="This is a test email body",
-        received_at=datetime.now(timezone.utc),
-        category="test",
-        is_read=False
-    )
-
-# TODO Need raw summary mock (JSON response)
+    return EmailSchema(**EMAIL_DATA[0])
 
 @pytest.fixture
 def mock_summary_schema():
     """Create a mock summary model for testing"""
-    return SummarySchema(
-        google_id="test_user",
-        email_id="test_123",
-        summary_text="Test email summary",
-        keywords=["test", "email"],
-        generated_at=datetime.now(timezone.utc)
-    )
+    return SummarySchema(**SUMMARY_DATA[0])
 
 @pytest.fixture
 def mock_user():
     """Create a mock user model for testing"""
-    return UserSchema(
-        google_id="test_user",
-        email="test@test.com",
-        name="Test User",
-        preferences= PreferencesSchema
-    )
+    return UserSchema(**USER_DATA[0])
 
-# Mock Credentials fixture
 @pytest.fixture(scope="function")
 def mock_token_data():
-    """
-    Mock OAuth credentials for testing.
-    """
-    return TokenData(
-        google_id="test_user",
-        token="test_token",
-        refresh_token="test_refresh_token",
-        token_uri="https://oauth2.googleapis.com/token",
-        client_id="test_client_id",
-        client_secret="test_client_secret",
-        scopes=["https://mail.google.com/"]
-    )
+    """Mock OAuth credentials for testing."""
+    return TokenData(**TOKEN_DATA[0])
 
 # @pytest.fixture
 # def mock_db_cursor():

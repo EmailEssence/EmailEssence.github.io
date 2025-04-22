@@ -21,6 +21,8 @@ from app.services.database.user_repository import UserRepository
 from app.services.database.summary_repository import SummaryRepository
 from app.services.database.token_repository import TokenRepository
 
+from .constants import EMAIL_DATA, USER_DATA, TOKEN_DATA, SUMMARY_DATA
+
 
 class MockCursor:
     """
@@ -96,6 +98,8 @@ class MockCollection:
         def mock_find(query=None, **kwargs):
             # Filter data based on the query if needed for tests
             result = self.test_data
+            if query:
+                result = [doc for doc in result if all(doc.get(k) == v for k, v in query.items())]
             return MockCursor(result)
             
         self.find = MagicMock(side_effect=mock_find)
@@ -131,103 +135,74 @@ class MockCollection:
         """Configure update_one return values."""
         self.update_one.return_value.modified_count = modified_count
         self.update_one.return_value.upserted_id = upserted_id
+        
+        # Configure update_one to return modified_count=0 for non-existent documents
+        async def mock_update_one(filter, update, **kwargs):
+            # Check if document exists in test data
+            exists = any(all(doc.get(k) == v for k, v in filter.items()) for doc in self.test_data)
+            if not exists:
+                self.update_one.return_value.modified_count = 0
+            else:
+                self.update_one.return_value.modified_count = 1
+            return self.update_one.return_value
+        self.update_one.side_effect = mock_update_one
+    
+    def configure_delete_result(self, deleted_count=1):
+        """Configure delete_one return values."""
+        self.delete_one.return_value.deleted_count = deleted_count
+        
+        # Configure delete_one to return deleted_count=0 for non-existent documents
+        async def mock_delete_one(filter):
+            # Check if document exists in test data
+            exists = any(all(doc.get(k) == v for k, v in filter.items()) for doc in self.test_data)
+            if not exists:
+                self.delete_one.return_value.deleted_count = 0
+            else:
+                self.delete_one.return_value.deleted_count = 1
+            return self.delete_one.return_value
+        self.delete_one.side_effect = mock_delete_one
 
 
 # Create mock database
 mock_db = MagicMock(spec=AsyncIOMotorDatabase)
 
-# Sample data for email collection
-email_data = [
-    {
-        "email_id": "test_1",
-        "google_id": "user123",
-        "sender": "test@example.com",
-        "recipients": ["recipient@example.com"],
-        "subject": "Test Email 1",
-        "body": "This is a test email body",
-        "received_at": "2023-01-01T00:00:00Z",
-        "category": "inbox",
-        "is_read": False
-    },
-    {
-        "email_id": "test_2",
-        "google_id": "user123",
-        "sender": "another@example.com",
-        "recipients": ["recipient@example.com"],
-        "subject": "Test Email 2",
-        "body": "This is another test email body",
-        "received_at": "2023-01-02T00:00:00Z",
-        "category": "inbox",
-        "is_read": True
-    }
-]
-
-# Sample data for user collection
-user_data = [
-    {
-        "google_id": "user123",
-        "email": "user@example.com",
-        "name": "Test User",
-        "picture": "https://example.com/pic.jpg",
-        "preferences": {
-            "theme": "dark",
-            "emails_per_page": 25
-        }
-    }
-]
-
-# Sample data for token collection
-token_data = [
-    {
-        "google_id": "user123",
-        "token": "access_token_123",
-        "refresh_token": "refresh_token_123",
-        "token_type": "Bearer",
-        "expiry": "2023-12-31T23:59:59Z"
-    }
-]
-
-# Sample data for summary collection
-summary_data = [
-    {
-        "email_id": "test_1",
-        "google_id": "user123",
-        "summary": "This is a test summary",
-        "keywords": ["test", "email"],
-        "generated_at": "2023-01-01T01:00:00Z",
-        "model": "test-model"
-    }
-]
-
 # Add collections to the mock database
-mock_db.emails = MockCollection("emails", email_data)
-mock_db.users = MockCollection("users", user_data)
-mock_db.tokens = MockCollection("tokens", token_data)
-mock_db.summaries = MockCollection("summaries", summary_data)
+mock_db.emails = MockCollection("emails", EMAIL_DATA)
+mock_db.users = MockCollection("users", USER_DATA)
+mock_db.tokens = MockCollection("tokens", TOKEN_DATA)
+mock_db.summaries = MockCollection("summaries", SUMMARY_DATA)
 
 # Configure specific behavior for emails collection
 mock_db.emails.configure_find_one({
-    "email_id": {"value": "test_1", "result": email_data[0]},
-    "google_id": {"value": "user123", "result": email_data[0]}
+    "email_id": {"value": "test_1", "result": EMAIL_DATA[0]},
+    "google_id": {"value": "user123", "result": EMAIL_DATA[0]}
 })
+mock_db.emails.configure_update_result()
+mock_db.emails.configure_delete_result()
 
 # Configure specific behavior for users collection
 mock_db.users.configure_find_one({
-    "google_id": {"value": "user123", "result": user_data[0]},
-    "email": {"value": "user@example.com", "result": user_data[0]}
+    "google_id": {"value": "user123", "result": USER_DATA[0]},
+    "email": {"value": "user@example.com", "result": USER_DATA[0]}
 })
+mock_db.users.configure_update_result()
+mock_db.users.configure_delete_result()
 
 # Configure specific behavior for tokens collection
 mock_db.tokens.configure_find_one({
-    "google_id": {"value": "user123", "result": token_data[0]},
-    "token": {"value": "access_token_123", "result": token_data[0]}
+    "google_id": {"value": "user123", "result": TOKEN_DATA[0]},
+    "token": {"value": "access_token_123", "result": TOKEN_DATA[0]}
 })
+mock_db.tokens.configure_update_result()
+mock_db.tokens.configure_delete_result()
 
 # Configure specific behavior for summaries collection
 mock_db.summaries.configure_find_one({
-    "email_id": {"value": "test_1", "result": summary_data[0]},
-    "google_id": {"value": "user123", "result": summary_data[0]}
+    "email_id": {"value": "test_1", "result": SUMMARY_DATA[0]},
+    "google_id": {"value": "user123", "result": SUMMARY_DATA[0]}
 })
+mock_db.summaries.configure_update_result()
+mock_db.summaries.configure_delete_result()
 
 
 @pytest.fixture
