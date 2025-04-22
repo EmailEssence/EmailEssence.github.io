@@ -22,13 +22,19 @@ async def lifespan(app: FastAPI):
 
 async def startup_db_client():
     """
-    Initializes MongoDB connection on startup.
+    Initializes MongoDB connection and repository indexes on startup.
     """
     try:
         # Get the singleton instance and initialize it
         db = DatabaseConnection()
         await db.initialize()
+        
+        # Set up repository indexes
+        from app.services.database.factories import setup_all_repositories
+        await setup_all_repositories()
+        logging.info("✅ Database repository indexes set up successfully")
     except Exception as e:
+        logging.error(f"❌ Failed to initialize database: {str(e)}")
         raise RuntimeError("Failed to initialize database connection") from e
 
 async def shutdown_db_client():
