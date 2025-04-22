@@ -41,7 +41,7 @@ export function userPreferencesReducer(userPreferences, action) {
     case "emailFetchInterval": {
       saveUserPreferences({
         ...userPreferences,
-        isChecked: action.emailFetchInterval,
+        emailFetchInterval: action.emailFetchInterval,
       });
       return {
         ...userPreferences,
