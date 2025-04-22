@@ -87,7 +87,7 @@ describe("Email Display Component", () => {
     expect(screen.getByText("Body 1")).toBeInTheDocument();
   });
 
-  it("renders ReaderView", () => {
+  it("renders ReaderView Icon", () => {
     render(<EmailDisplay curEmail={mockEmailList[0]} />);
     const svgElement = screen.getByText(
       (content, element) => element.tagName.toLowerCase() === "svg"
