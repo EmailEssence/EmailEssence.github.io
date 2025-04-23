@@ -1,7 +1,7 @@
 import PropTypes from "prop-types";
 import { useEffect, useReducer } from "react";
 import { Outlet, Route, Routes, useNavigate } from "react-router";
-import { fetchNewEmails } from "../../emails/emailParse";
+import { fetchNewEmails } from "../../emails/emailHanlder";
 import "./client.css";
 import Dashboard from "./dashboard/dashboard";
 import Inbox from "./inbox/inbox";

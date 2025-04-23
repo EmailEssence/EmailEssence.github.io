@@ -154,6 +154,23 @@ export function getTop5(emails) {
   return emails.length > 5 ? emails.slice(0, 5) : emails;
 }
 
+export async function markEmailAsRead(emailId) {
+  console.log(emailId);
+  return;
+  // try {
+  //   const response = await fetch(`${baseUrl}/${emailId}/read`, {
+  //     method: "PUT",
+  //   });
+  //   if (!response.ok) {
+  //     throw new Error(`Failed to mark email as read: ${response.statusText}`);
+  //   }
+  //   const updatedEmail = await response.json();
+  //   return updatedEmail;
+  // } catch (error) {
+  //   console.error(error);
+  // }
+}
+
 // "user_id" ID of the user
 // "email_id" ID of the email (unique to each email)
 // "sender" email of the sender

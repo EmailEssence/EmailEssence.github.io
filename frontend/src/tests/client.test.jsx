@@ -38,7 +38,7 @@ const mockEmail2 = [
 beforeEach(() => {
   vi.clearAllTimers();
   vi.clearAllMocks();
-  vi.mock("../emails/emailParse", () => ({
+  vi.mock("../emails/emailHandler", () => ({
     fetchNewEmails: vi.fn(),
     getTop5: vi.fn(() => [...mockEmail1, ...mockEmail2]),
     default: vi.fn(),
@@ -69,7 +69,7 @@ describe("Client Component", () => {
         />
       </MemoryRouter>
     );
-    const { fetchNewEmails } = await import("../emails/emailParse");
+    const { fetchNewEmails } = await import("../emails/emailHanlder");
 
     expect(fetchNewEmails).not.toHaveBeenCalled();
 
@@ -102,7 +102,7 @@ describe("Client Component", () => {
         />
       </MemoryRouter>
     );
-    const { fetchNewEmails } = await import("../emails/emailParse");
+    const { fetchNewEmails } = await import("../emails/emailHanlder");
     expect(fetchNewEmails).not.toHaveBeenCalled();
 
     vi.advanceTimersByTime(1100); // 100 ms for padding

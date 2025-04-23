@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
-import { baseUrl } from '../../../emails/emailParse';
+import React, { useEffect, useState } from "react";
+import { baseUrl } from "../../../emails/emailHanlder";
 import "./settings.css";
 
-export function Settings ({
+export function Settings({
   isChecked,
   handleToggleSummariesInInbox,
   emailFetchInterval,
@@ -13,7 +13,7 @@ export function Settings ({
   const isDarkTheme = useSystemTheme();
   // useEffect that sets the dark mode class when the theme is set to system
   useEffect(() => {
-    if (theme === 'system') {
+    if (theme === "system") {
       if (isDarkTheme) {
         document.body.classList.add("dark-mode");
       } else {
@@ -33,10 +33,7 @@ export function Settings ({
         emailFetchInterval={emailFetchInterval}
         onSetEmailFetchInterval={handleSetEmailFetchInterval}
       />
-      <Theme
-        theme={theme}
-        onSetTheme={handleSetTheme}
-      />
+      <Theme theme={theme} onSetTheme={handleSetTheme} />
     </div>
   );
 }
@@ -47,7 +44,7 @@ export function SummariesInInbox({ isChecked, onToggle }) {
     <div className="settings-block">
       <h2>Summaries in Inbox</h2>
       <label className="switch">
-        <input type="checkbox" checked={isChecked} onChange={onToggle} /> 
+        <input type="checkbox" checked={isChecked} onChange={onToggle} />
         <span className="toggle"></span>
       </label>
     </div>
@@ -55,7 +52,10 @@ export function SummariesInInbox({ isChecked, onToggle }) {
 }
 
 // component that renders the email fetch interval slider
-export function EmailFetchInterval({ emailFetchInterval, onSetEmailFetchInterval }) {
+export function EmailFetchInterval({
+  emailFetchInterval,
+  onSetEmailFetchInterval,
+}) {
   return (
     <div className="settings-block email-fetch-interval">
       <div className="header-container">
@@ -88,7 +88,9 @@ export function Theme({ theme, onSetTheme }) {
     } else if (setTheme === "light") {
       document.body.classList.remove("dark-mode");
     } else if (setTheme === "system") {
-      const isDarkTheme = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      const isDarkTheme = window.matchMedia(
+        "(prefers-color-scheme: dark)"
+      ).matches;
       if (isDarkTheme) {
         document.body.classList.add("dark-mode");
       } else {
@@ -101,22 +103,27 @@ export function Theme({ theme, onSetTheme }) {
     <div className="settings-block">
       <h2>Theme</h2>
       <div className="theme-toggle-group">
-        {themes.map((t) => ( //renders the theme buttons
-          <button
-            key={t}
-            className={`theme-toggle-item ${theme === t ? "selected" : ""}`}
-            onClick={() => handleThemeChange(t)}
-          >
-            {t.charAt(0).toUpperCase() + t.slice(1)}
-          </button>
-        ))}
+        {themes.map(
+          (
+            t //renders the theme buttons
+          ) => (
+            <button
+              key={t}
+              className={`theme-toggle-item ${theme === t ? "selected" : ""}`}
+              onClick={() => handleThemeChange(t)}
+            >
+              {t.charAt(0).toUpperCase() + t.slice(1)}
+            </button>
+          )
+        )}
       </div>
     </div>
   );
 }
 
 const useSystemTheme = () => {
-  const getCurrentTheme = () => window.matchMedia("(prefers-color-scheme: dark)").matches;
+  const getCurrentTheme = () =>
+    window.matchMedia("(prefers-color-scheme: dark)").matches;
   const [isDarkTheme, setIsDarkTheme] = useState(getCurrentTheme());
 
   const mqListener = (e) => {
@@ -132,23 +139,22 @@ const useSystemTheme = () => {
   return isDarkTheme;
 };
 
-//  @router.get("/me"), gets current users profile, Retrieves the authenticated user's profile 
-export const fetchUserProfile = async() =>{
+//  @router.get("/me"), gets current users profile, Retrieves the authenticated user's profile
+export const fetchUserProfile = async () => {
   const response = await fetch(`${baseUrl}/user/me`, {
-    headers: {
-    },
+    headers: {},
   });
   if (!response.ok) {
     throw new Error(`Failed to fetch users profile ${response.status}`);
   }
   return response.json();
-}
+};
 
 // @router.get("/preferences"), gets the user preferences, Retrieves the authenticated user's preferences settings
 export const fetchUserPreferences = async () => {
   const response = await fetch(`${baseUrl}/user/preferences`, {
     headers: {
-      Authorization: 'Bearer ${token}',
+      Authorization: "Bearer ${token}",
       "Content-Type": "application/json",
     },
   });
@@ -156,64 +162,63 @@ export const fetchUserPreferences = async () => {
     throw new Error(`Failed to fetch user preferences ${response.status}`);
   }
   return response.json();
-}
+};
 
 // @router.put("/preferences"), updates the user preferences, Updates the authenticated user's preferences settings
 export const updateUserPreferences = async () => {
-  const response = await fetch('${baseUrl}/user/preferences', {
+  const response = await fetch("${baseUrl}/user/preferences", {
     headers: {
-      Authorization: 'Bearer ${token}',
+      Authorization: "Bearer ${token}",
       "Content-Type": "application/json",
     },
   });
   if (!response.ok) {
-    throw new Error('Failed to update user preferences ${response.status}');
+    throw new Error("Failed to update user preferences ${response.status}");
   }
   return response.json();
-}
+};
 
 // @router.get ("/user_id"). gets user by ID, retrieves user information by user ID
 export const fetchUserById = async (user_id) => {
-  const response = await fetch('${baseUrl}/user/${user_id}', {
+  const response = await fetch("${baseUrl}/user/${user_id}", {
     headers: {
-      Authorization: 'Bearer ${token}',
+      Authorization: "Bearer ${token}",
       "Content-Type": "application/json",
-    }
+    },
   });
   if (!response.ok) {
-    throw new Error('Failed to fetch user by ID ${response.status}');
+    throw new Error("Failed to fetch user by ID ${response.status}");
   }
   return response.json();
-}
+};
 
 // @router.put("/user_id"), updates user, updates user information by user ID
 export const updateUserById = async (user_id) => {
-  const response = await fetch('${baseUrl}/user/${user_id}', {
+  const response = await fetch("${baseUrl}/user/${user_id}", {
     headers: {
-      Authorization: 'Bearer ${token}',
+      Authorization: "Bearer ${token}",
       "Content-Type": "application/json",
-    }
+    },
   });
   if (!response.ok) {
-    throw new Error('Failed to update user by ID ${response.status}');
+    throw new Error("Failed to update user by ID ${response.status}");
   }
   return response.json();
-}
+};
 
 // @router.delete( "/user_id"), deletes user, deletes user account by user ID
 export const deleteUserById = async (user_id) => {
-  const response = await fetch('${baseUrl}/user/${user_id}', {
+  const response = await fetch("${baseUrl}/user/${user_id}", {
     headers: {
-      Authorization: 'Bearer ${token}',
+      Authorization: "Bearer ${token}",
       "Content-Type": "application/json",
-    }
+    },
   });
   if (!response.ok) {
-    throw new Error('Failed to delete user by ID ${response.status}');
+    throw new Error("Failed to delete user by ID ${response.status}");
   }
   return response.json();
-}
-
+};
 
 // function that gets the user preferences from the backend
 // export const fetchUserPreferences = async (user_id) => {
@@ -222,18 +227,20 @@ export const deleteUserById = async (user_id) => {
 //     throw new Error(`Failed to fetch ${response.status}`);
 //   }
 //   return response.json();
-// } 
+// }
 
 // function saves the user preferences to the backend
 export const saveUserPreferences = async (userPreferences) => {
-  const response = await fetch(`http://localhost:8000/user/${user_id}/preferences`, {
-    method: 'PUT',
-    headers: {'Content-Type':'application/json',},
-    body: JSON.stringify(userPreferences),
-  });
+  const response = await fetch(
+    `http://localhost:8000/user/${user_id}/preferences`,
+    {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(userPreferences),
+    }
+  );
   if (!response.ok) {
     throw new Error(`Failed to fetch ${response.status}`);
   }
   return response.json();
 };
-
