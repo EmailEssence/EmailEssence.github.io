@@ -42,7 +42,7 @@ jobs:
           cd backend
           source .venv/bin/activate
           which pytest
-          python -m pytest
+          python -m pytest --maxfail=2
         env:
           TEST_EMAIL_ACCOUNT: test@example.com
           TEST_GOOGLE_CLIENT_ID: test-client-id.apps.googleusercontent.com
@@ -159,4 +159,11 @@ jobs:
           echo "Docker image build completed successfully."
           echo "Deployment to production is handled by Render automatically."
           echo "No additional deployment steps needed in GitHub Actions."
+      
+      - name: Trigger Render Deployment
+        if: env.RENDER_DEPLOY_HOOK_URL != ''
+        run: |
+          curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+        env:
+          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
 
