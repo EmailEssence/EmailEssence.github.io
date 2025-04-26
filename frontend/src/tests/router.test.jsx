@@ -64,7 +64,7 @@ describe("Router Component", () => {
 
   it("Renders Into Client", () => {
     render(
-      <MemoryRouter initialEntries={["/client/dashboard#newEmails"]}>
+      <MemoryRouter initialEntries={["/client/dashboard"]}>
         <AppRouter />
       </MemoryRouter>
     );

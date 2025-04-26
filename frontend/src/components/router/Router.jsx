@@ -7,7 +7,7 @@ import {
   useLocation,
 } from "react-router";
 import { authenticate } from "../../authentication/authenticate";
-import { emails, userPreferences } from "../../emails/emailHanlder";
+import { emails, userPreferences } from "../../emails/emailHandler";
 import Client from "../client/client";
 import Login from "../login/login";
 import Error from "../login/Error";

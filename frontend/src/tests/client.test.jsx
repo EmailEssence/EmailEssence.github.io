@@ -69,7 +69,7 @@ describe("Client Component", () => {
         />
       </MemoryRouter>
     );
-    const { fetchNewEmails } = await import("../emails/emailHanlder");
+    const { fetchNewEmails } = await import("../emails/emailHandler");
 
     expect(fetchNewEmails).not.toHaveBeenCalled();
 
@@ -82,7 +82,7 @@ describe("Client Component", () => {
 
   it("Throws Update Emails Error", async () => {
     vi.clearAllMocks();
-    vi.mock("../emails/emailParse", () => ({
+    vi.mock("../emails/emailHandler", () => ({
       fetchNewEmails: vi.fn(() => {
         throw new Error("Failed to fetch new emails");
       }),
@@ -102,7 +102,7 @@ describe("Client Component", () => {
         />
       </MemoryRouter>
     );
-    const { fetchNewEmails } = await import("../emails/emailHanlder");
+    const { fetchNewEmails } = await import("../emails/emailHandler");
     expect(fetchNewEmails).not.toHaveBeenCalled();
 
     vi.advanceTimersByTime(1100); // 100 ms for padding
