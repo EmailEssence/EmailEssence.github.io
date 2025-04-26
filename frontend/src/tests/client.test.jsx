@@ -3,6 +3,8 @@ import { MemoryRouter } from "react-router";
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import Client from "../components/client/client";
 
+// physically impossible to test for lines 59 - 60
+
 const mockEmail1 = [
   {
     user_id: 1,
@@ -56,6 +58,39 @@ describe("Client Component", () => {
   });
 
   it("Runs Effect", async () => {
+    vi.useFakeTimers();
+    render(
+      <MemoryRouter initialEntries={["/dashboard"]}>
+        <Client
+          emailsByDate={mockEmail1}
+          defaultUserPreferences={{
+            isChecked: true,
+            emailFetchInterval: 1,
+            theme: "light",
+          }}
+        />
+      </MemoryRouter>
+    );
+    const { fetchNewEmails } = await import("../emails/emailHandler");
+
+    expect(fetchNewEmails).not.toHaveBeenCalled();
+
+    vi.advanceTimersByTime(1100); // 100 ms for padding
+
+    expect(fetchNewEmails).toHaveBeenCalled();
+
+    vi.useRealTimers();
+  });
+
+  it("Runs Effect & Throws Error", async () => {
+    vi.clearAllMocks();
+    vi.mock("../emails/emailHandler", () => ({
+      fetchNewEmails: vi.fn(() => {
+        throw new Error("Failed to fetch new emails");
+      }),
+      getTop5: vi.fn(() => [...mockEmail1, ...mockEmail2]),
+      default: vi.fn(),
+    }));
     vi.useFakeTimers();
     render(
       <MemoryRouter initialEntries={["/dashboard"]}>

@@ -1,4 +1,4 @@
-import { baseUrl, retrieveUserData } from "../emails/emailHanlder";
+import { baseUrl, retrieveUserData } from "../emails/emailHandler";
 export const authenticate = async () => {
   // Check for auth hash and render OAuthCallback if present
   try {
