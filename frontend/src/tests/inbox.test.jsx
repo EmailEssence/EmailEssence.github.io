@@ -3,6 +3,8 @@ import { describe, it, expect, vi } from "vitest";
 import Inbox from "../components/client/inbox/inbox";
 import EmailDisplay from "../components/client/inbox/emailDisplay";
 
+// Need to implement scrolling test
+
 const mockEmailList = [
   {
     email_id: "1",
@@ -14,17 +16,19 @@ const mockEmailList = [
     recipients: "recipient1@example.com",
     is_read: false,
   },
-  {
-    email_id: "2",
-    sender: "sender2@example.com",
-    received_at: [2025, 2, 17],
-    subject: "Subject 2",
-    summary_text: "Summary 2",
-    body: "Body 2",
-    recipients: "recipient2@example.com",
-    is_read: true,
-  },
 ];
+for (let i = 2; i < 50; i++) {
+  mockEmailList.push({
+    email_id: `${i}`,
+    sender: "sender1@example.com",
+    received_at: [2025, 2, 17],
+    subject: `Subject ${i}`,
+    summary_text: `Summary ${i}`,
+    body: `Body ${i}`,
+    recipients: "recipient1@example.com",
+    is_read: false,
+  });
+}
 
 const mockSetCurEmail = vi.fn(console.log("Hello words"));
 

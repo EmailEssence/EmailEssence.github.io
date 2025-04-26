@@ -15,7 +15,7 @@ const mockEmail1 = [
     body: "Test Body",
     received_at: ["2000", "01", "01", "00:00"],
     category: "MockCategory",
-    is_read: false,
+    is_read: true,
     summary_text: "Test Summary11",
     keywords: ["Mock", "Test"],
   },
