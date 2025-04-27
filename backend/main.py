@@ -85,6 +85,28 @@ app.include_router(user_router, prefix="/user", tags=["User"])
 app.include_router(emails_router, prefix="/emails", tags=["Emails"])
 app.include_router(summaries_router, prefix="/summaries", tags=["Summaries"])
 
+# Root route handler
+@app.get("/", tags=["Root"])
+async def root():
+    """
+    Root endpoint that returns basic API information.
+    Useful for users and systems that discover the API.
+    """
+    return {
+        "name": "Email Essence API",
+        "version": app.version,
+        "description": "API for summarizing and managing email content",
+        "documentation": "/docs",
+        "openapi": "/openapi.json",
+        "endpoints": [
+            {"path": "/auth", "description": "Authentication operations"},
+            {"path": "/user", "description": "User profile management"},
+            {"path": "/emails", "description": "Email retrieval and management"},
+            {"path": "/summaries", "description": "Email summarization"}
+        ],
+        "status": "online"
+    }
+
 # Serve favicon.ico from root directory
 @app.get('/favicon.ico')
 async def favicon():
