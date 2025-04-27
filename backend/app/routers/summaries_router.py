@@ -109,7 +109,8 @@ async def summarize_emails_endpoint(
         HTTPException: If summary retrieval or generation fails
     """
     try:
-        # Fetch emails
+        # Fetch emails using the proper instanced service
+        email_service = get_email_service()
         emails_data, _, _ = await email_service.fetch_emails(google_id=user.google_id)
         emails = [EmailSchema(**email_dict) for email_dict in emails_data]
         

@@ -84,13 +84,13 @@ def debug(message: str):
 async def login(
     redirect_uri: str = Query(
         ..., 
-        description="Frontend URI to redirect back to after authentication. Use http://localhost:8000/docs for Swagger testing."
+        description="Frontend URI to redirect back to after authentication. Use http://localhost:8000/docs / http://127.0.0.1:8000/docs for Swagger testing."
     ),
     auth_service: AuthService = Depends(get_auth_service)
 ):
     """
     Initiates the OAuth flow with Google, storing the frontend's redirect URI in the state parameter.
-    For testing in Swagger UI, use 'http://localhost:8000/docs' as the redirect_uri.
+    For testing in Swagger UI, use 'http://localhost:8000/docs' or 'http://127.0.0.1:8000/docs' as the redirect_uri.
     
     Args:
         redirect_uri: Frontend URI to redirect back to after successful authentication
