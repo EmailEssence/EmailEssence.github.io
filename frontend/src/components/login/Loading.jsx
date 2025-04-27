@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router";
 import { handleOAuthCallback } from "../../authentication/authenticate";
-import "./loading.css";
+import "./Loading.css";
 
 export default function Loading() {
   const navigate = useNavigate();
