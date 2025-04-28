@@ -2,24 +2,61 @@
 import os
 from fastapi import FastAPI, HTTPException, Depends, status
 from fastapi.responses import FileResponse
-from starlette.concurrency import run_in_threadpool
 from fastapi.middleware.cors import CORSMiddleware
-
+from starlette.concurrency import run_in_threadpool
+from contextlib import asynccontextmanager
+import logging
 
 from app.routers import emails_router, summaries_router, auth_router, user_router
+from app.services.database.connection import DatabaseConnection
 from app.models import EmailSchema, SummarySchema, UserSchema
-from database import db  
 
 
 # from app.models.user_model import User
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await startup_db_client()
+    yield
+    await shutdown_db_client()
+
+async def startup_db_client():
+    """
+    Initializes MongoDB connection and repository indexes on startup.
+    """
+    try:
+        # Get the singleton instance and initialize it
+        db = DatabaseConnection()
+        await db.initialize()
+        
+        # Set up repository indexes
+        from app.services.database.factories import setup_all_repositories
+        await setup_all_repositories()
+        logging.info("✅ Database repository indexes set up successfully")
+    except Exception as e:
+        logging.error(f"❌ Failed to initialize database: {str(e)}")
+        raise RuntimeError("Failed to initialize database connection") from e
+
+async def shutdown_db_client():
+    """
+    Closes MongoDB connection on shutdown.
+    """
+    try:
+        # Get the singleton instance and close it   
+        db = DatabaseConnection()
+        await db.shutdown()  # Use shutdown instead of close
+    except Exception as e:
+        raise RuntimeError("Failed to close database connection") from e
+
 app = FastAPI(
-    title="Email Essence",
-    description="A fast, scalable, and secure email summarization service.",
+    title="Email Essence API",
+    description="API for the Email Essence application",
     version="0.1.0",
     # terms_of_service="https://example.com/terms",
     # contact={"name": "Support", "url": "https://example.com/support"},
+    lifespan=lifespan
 )
+
 
 # Configure CORS
 app.add_middleware(
@@ -40,26 +77,35 @@ app.add_middleware(
     allow_headers=["*"],  # Allows all headers
 )
 
-
-async def startup_db_client():
-    """
-    Initializes MongoDB connection on startup.
-    """
-    print("🔄 Connecting to MongoDB...")
-    try:
-        await db.command("ping")  
-        collections = await db.list_collection_names()
-        print(f"✅ Collections in DB: {collections}")
-        print("✅ MongoDB connection successful!")
-    except Exception as e:
-        print(f"❌ Failed to connect to MongoDB: {str(e)}")
-
+logger = logging.getLogger(__name__)
 
 # Register routers
 app.include_router(auth_router, prefix="/auth", tags=["Auth"])
 app.include_router(user_router, prefix="/user", tags=["User"])
 app.include_router(emails_router, prefix="/emails", tags=["Emails"])
 app.include_router(summaries_router, prefix="/summaries", tags=["Summaries"])
+
+# Root route handler
+@app.get("/", tags=["Root"])
+async def root():
+    """
+    Root endpoint that returns basic API information.
+    Useful for users and systems that discover the API.
+    """
+    return {
+        "name": "Email Essence API",
+        "version": app.version,
+        "description": "API for summarizing and managing email content",
+        "documentation": "/docs",
+        "openapi": "/openapi.json",
+        "endpoints": [
+            {"path": "/auth", "description": "Authentication operations"},
+            {"path": "/user", "description": "User profile management"},
+            {"path": "/emails", "description": "Email retrieval and management"},
+            {"path": "/summaries", "description": "Email summarization"}
+        ],
+        "status": "online"
+    }
 
 # Serve favicon.ico from root directory
 @app.get('/favicon.ico')
@@ -88,6 +134,7 @@ async def health_check():
     
     # Check MongoDB connection
     try:
+        db = DatabaseConnection()
         await db.command("ping")
         health_status["components"]["database"] = "connected"
     except Exception as e:

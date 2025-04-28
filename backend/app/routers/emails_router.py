@@ -6,16 +6,19 @@ fetching individual email details, marking emails as read, and deleting emails.
 It provides a set of REST endpoints for interacting with the user's email data.
 """
 
-import logging
-from typing import List, Optional
 from fastapi import APIRouter, HTTPException, Query, Depends, status
-from pydantic import BaseModel
-from app.services import EmailService
-from app.models import EmailSchema, ReaderViewResponse
-from functools import lru_cache
 from fastapi.security import OAuth2PasswordBearer
-from app.services.auth_service import get_credentials_from_token
-from app.routers.user_router import get_current_user_info, get_current_user
+from typing import List, Optional
+from pydantic import BaseModel
+import logging
+from functools import lru_cache
+
+from app.models.email_models import EmailSchema, EmailResponse, ReaderViewResponse
+from app.models.user_models import UserSchema
+from app.routers.user_router import get_current_user
+from app.services.database.factories import get_email_repository, get_email_service
+from app.services.database.email_repository import EmailRepository
+from app.services.email_service import EmailService
 
 router = APIRouter()
 
@@ -31,25 +34,6 @@ logging.getLogger('pymongo').setLevel(logging.WARNING)
 
 # Create module-specific logger
 logger = logging.getLogger(__name__)
-
-# -------------------------------------------------------------------------
-# Service dependency injection for better scalability
-# -------------------------------------------------------------------------
-
-@lru_cache()
-def get_email_service() -> EmailService:
-    """
-    Factory function that returns an EmailService instance.
-    Using lru_cache for efficiency so we don't create a new instance for every request.
-    """
-    return EmailService()
-
-class EmailResponse(BaseModel):
-    """Response model for email listing endpoints"""
-    emails: List[EmailSchema]
-    total: int
-    has_more: bool
-    debug_info: dict
 
 @router.get(
     "/", 
@@ -67,7 +51,7 @@ async def retrieve_emails(
     sort_order: str = Query(default="desc", enum=["asc", "desc"]),
     refresh: bool = Query(default=False, description="Whether to refresh emails from IMAP first"),
     email_service: EmailService = Depends(get_email_service),
-    user: dict = Depends(get_current_user)
+    user: UserSchema = Depends(get_current_user)
 ):
     """
     Retrieve emails with filtering, sorting, and pagination options.
@@ -109,13 +93,10 @@ async def retrieve_emails(
     try:
         # Log request parameters
         logger.debug(f"Email retrieval request with refresh={refresh}", extra={"params": debug_info["request_params"]})
-        
-        # Get the user ID from the authenticated user
-        user_id = str(user.get("_id", user.get("google_id")))
-        logger.debug(f"User ID for email retrieval: {user_id}")
+        logger.debug(f"Google ID for email retrieval: {user.google_id}")
         
         emails, total, service_debug_info = await email_service.fetch_emails(
-            user_id=user_id,
+            google_id=user.google_id,
             skip=skip,
             limit=limit,
             unread_only=unread_only,
@@ -151,7 +132,7 @@ async def retrieve_emails(
 async def retrieve_email(
     email_id: str, 
     email_service: EmailService = Depends(get_email_service),
-    user: dict = Depends(get_current_user)
+    user: UserSchema = Depends(get_current_user)
 ):
     """
     Retrieve a specific email by its ID.
@@ -167,8 +148,7 @@ async def retrieve_email(
     Raises:
         HTTPException: If email not found
     """
-    user_id = user.get("_id", user.get("google_id"))
-    email = await email_service.get_email(email_id, user_id)
+    email = await email_service.get_email(email_id, user.google_id)
     if not email:
         raise HTTPException(status_code=404, detail="Email not found")
     return email
@@ -182,7 +162,7 @@ async def retrieve_email(
 async def mark_email_as_read(
     email_id: str,
     email_service: EmailService = Depends(get_email_service),
-    user: dict = Depends(get_current_user)
+    user: UserSchema = Depends(get_current_user)
 ):
     """
     Mark a specific email as read.
@@ -198,8 +178,7 @@ async def mark_email_as_read(
     Raises:
         HTTPException: If email not found or update fails
     """
-    user_id = user.get("_id", user.get("google_id"))
-    updated_email = await email_service.mark_email_as_read(email_id, user_id)
+    updated_email = await email_service.mark_email_as_read(email_id, user.google_id)
     if not updated_email:
         raise HTTPException(status_code=404, detail="Email not found")
     return updated_email
@@ -213,7 +192,7 @@ async def mark_email_as_read(
 async def delete_email(
     email_id: str,
     email_service: EmailService = Depends(get_email_service),
-    user: dict = Depends(get_current_user)
+    user: UserSchema = Depends(get_current_user)
 ):
     """
     Delete a specific email.
@@ -229,8 +208,7 @@ async def delete_email(
     Raises:
         HTTPException: If email not found or deletion fails
     """
-    user_id = user.get("_id", user.get("google_id"))
-    success = await email_service.delete_email(email_id, user_id)
+    success = await email_service.delete_email(email_id, user.google_id)
     if not success:
         raise HTTPException(status_code=404, detail="Email not found")
     return {"message": "Email deleted successfully"}
@@ -244,7 +222,7 @@ async def delete_email(
 async def get_email_reader_view(
     email_id: str,
     email_service: EmailService = Depends(get_email_service),
-    user: dict = Depends(get_current_user)
+    user: UserSchema = Depends(get_current_user)
 ):
     """
     Get a reader-friendly version of an email.
@@ -263,8 +241,7 @@ async def get_email_reader_view(
     try:
         logger.debug(f"Reader view requested for email {email_id}")
         
-        user_id = user.get("_id", user.get("google_id"))
-        reader_content = await email_service.get_email_reader_view(email_id, user_id)
+        reader_content = await email_service.get_email_reader_view(email_id, user.google_id)
         
         if not reader_content:
             raise HTTPException(status_code=404, detail="Email not found")

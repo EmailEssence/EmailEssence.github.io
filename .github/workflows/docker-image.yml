@@ -13,7 +13,7 @@ jobs:
   check-tests:
     runs-on: ubuntu-latest
     outputs:
-      run-tests: ${{ github.event_name == 'never' }} # Set to false by using 'never' event
+      run-tests: 'true' # Set to false to skip tests
     steps:
       - run: echo "Checking if tests should run"
 
@@ -42,16 +42,16 @@ jobs:
           cd backend
           source .venv/bin/activate
           which pytest
-          python -m pytest
+          python -m pytest --maxfail=2
         env:
-          TEST_EMAIL_ACCOUNT: test@example.com
-          TEST_GOOGLE_CLIENT_ID: test-client-id.apps.googleusercontent.com
-          TEST_GOOGLE_CLIENT_SECRET: test-client-secret-123456
-          TEST_MONGO_URI: mongodb://localhost:27017/test_db
-          TEST_OPENAI_API_KEY: sk-test-key-123456789
-          TEST_DEEPSEEK_API_KEY: sk-test-deepseek-key
-          TEST_GEMINI_API_KEY: test-gemini-api-key
-          TEST_SUMMARIZER_PROVIDER: openai
+          TEST_EMAIL_ACCOUNT: ${{ secrets.TEST_EMAIL_ACCOUNT }}
+          TEST_GOOGLE_CLIENT_ID: ${{ secrets.TEST_GOOGLE_CLIENT_ID }}
+          TEST_GOOGLE_CLIENT_SECRET: ${{ secrets.TEST_GOOGLE_CLIENT_SECRET }}
+          TEST_MONGO_URI: ${{ secrets.TEST_MONGO_URI }}
+          TEST_OPENAI_API_KEY: ${{ secrets.TEST_OPENAI_API_KEY }}
+          TEST_DEEPSEEK_API_KEY: ${{ secrets.TEST_DEEPSEEK_API_KEY }}
+          TEST_GOOGLE_API_KEY: ${{ secrets.TEST_GEMINI_API_KEY }}
+          TEST_SUMMARIZER_PROVIDER: ${{ secrets.TEST_SUMMARIZER_PROVIDER || 'openai' }}
 
   # Add a placeholder job that will always run when tests are disabled
   test-skipped:
@@ -159,4 +159,11 @@ jobs:
           echo "Docker image build completed successfully."
           echo "Deployment to production is handled by Render automatically."
           echo "No additional deployment steps needed in GitHub Actions."
+      
+      - name: Trigger Render Deployment
+        if: env.RENDER_DEPLOY_HOOK_URL != ''
+        run: |
+          curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+        env:
+          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
 

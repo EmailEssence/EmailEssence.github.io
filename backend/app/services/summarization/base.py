@@ -62,7 +62,8 @@ class AdaptiveSummarizer(ABC, Generic[T]):
         self,
         email_id: str,
         summary_text: str,
-        keywords: List[str]
+        keywords: List[str],
+        google_id: str
     ) -> SummarySchema:
         """Create a SummarySchema from processing results."""
         
@@ -76,7 +77,8 @@ class AdaptiveSummarizer(ABC, Generic[T]):
             summary_text=summary_text,
             keywords=keywords,
             generated_at=datetime.now(timezone.utc),
-            model_info=model_info  # Make sure this is always passed
+            model_info=model_info,  # Make sure this is always passed
+            google_id=google_id
         )
 
     async def process_single(self, email: T) -> SummarySchema:
@@ -92,7 +94,7 @@ class AdaptiveSummarizer(ABC, Generic[T]):
                 self._backend.generate_summary(content, self.model_config),
                 timeout=self.timeout
             )
-            return self.create_summary(email.email_id, summary_text, keywords)
+            return self.create_summary(email.email_id, summary_text, keywords, email.google_id)
             
         except asyncio.TimeoutError:
             self._logger.error(f"Timeout processing email: {email.email_id}")
@@ -130,7 +132,7 @@ class AdaptiveSummarizer(ABC, Generic[T]):
             summaries = []
             for email, (summary_text, keywords) in zip(emails, results):
                 email_id = email.email_id
-                summary = self.create_summary(email_id, summary_text, keywords)
+                summary = self.create_summary(email_id, summary_text, keywords, email.google_id)
                 summaries.append(summary)
             
             return summaries
