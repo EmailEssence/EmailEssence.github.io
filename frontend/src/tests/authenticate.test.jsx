@@ -1,5 +1,6 @@
 import {
   authenticate,
+  checkAuthStatus,
   handleAuthenticate,
 } from "../authentication/authenticate";
 import {
@@ -12,6 +13,8 @@ import {
   beforeEach,
 } from "vitest";
 
+// ToDo: Test handleOAuthCallback
+
 beforeAll(() => {
   delete window.location;
   window.location = { href: "" };
@@ -21,15 +24,14 @@ afterAll(() => {
   window.location = originalLocation;
 });
 const originalLocation = window.location;
+beforeEach(() => {
+  vi.clearAllMocks();
+  vi.mock("../emails/emailHandler", () => ({
+    baseUrl: "https://example.com",
+    retrieveUserData: vi.fn(),
+  }));
+});
 describe("No Error", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    vi.mock("../emails/emailHandler", () => ({
-      baseUrl: "https://example.com",
-      retrieveUserData: vi.fn(),
-    }));
-  });
-
   it("redirects to correct login URL", async () => {
     const baseUrl = "https://example.com"; // Mock baseUrl
     const expectedRedirectUri = `${window.location.origin}/loading`;
@@ -49,6 +51,18 @@ describe("No Error", () => {
     await handleAuthenticate(token);
     expect(localStorage.getItem("auth_token")).toBe(token);
   });
+
+  it("returns true auth status on authenticated user", async () => {
+    globalThis.fetch = vi.fn(() =>
+      Promise.resolve({
+        json: () => Promise.resolve({ is_authenticated: true }),
+      })
+    );
+    const token = "validToken";
+    const result = await checkAuthStatus(token);
+    expect(fetch).toHaveBeenCalledWith(expect.any(Request));
+    expect(result).toBe(true);
+  });
 });
 
 describe("With Error", () => {
@@ -62,5 +76,17 @@ describe("With Error", () => {
 
     await handleAuthenticate(token);
     expect(window.location.href).toBe("/error");
+  });
+  it("returns false when user is not authenticated", async () => {
+    // Mock fetch to return a response with is_authenticated: false
+    globalThis.fetch = vi.fn(() =>
+      Promise.resolve({
+        json: () => Promise.resolve({ is_authenticated: false }),
+      })
+    );
+    const token = "invalidToken";
+    const result = await checkAuthStatus(token);
+    expect(fetch).toHaveBeenCalledWith(expect.any(Request));
+    expect(result).toBe(false);
   });
 });
