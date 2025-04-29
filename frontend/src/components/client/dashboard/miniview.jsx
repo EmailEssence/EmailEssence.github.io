@@ -1,74 +1,10 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-/* eslint-disable react/prop-types */
+import PropTypes from "prop-types";
 import { useEffect, useRef, useState } from "react";
-import FullScreenIcon from "../../assets/FullScreenIcon";
-import InboxIcon from "../../assets/InboxArrow";
-import ViewIcon from "../../assets/ViewIcon";
-import { emailsPerPage } from "../../assets/constants";
-import { getTop5 } from "../../emails/emailParse";
+import FullScreenIcon from "../../../assets/FullScreenIcon";
+import InboxIcon from "../../../assets/InboxArrow";
+import { emailsPerPage } from "../../../assets/constants";
 import "./miniview.css";
-import "./weightedEmailList.css";
-
-const getSenderName = (sender) => {
-  return sender.slice(0, sender.indexOf("<"));
-};
-
-export default function Dashboard({
-  emailList,
-  handlePageChange,
-  setCurEmail,
-}) {
-  return (
-    <div className="dashboard">
-      <WeightedEmailList
-        emailList={emailList}
-        setCurEmail={setCurEmail}
-        handlePageChange={handlePageChange}
-      />
-      <MiniViewPanel
-        emailList={emailList}
-        handlePageChange={handlePageChange}
-        setCurEmail={setCurEmail}
-      />
-    </div>
-  );
-}
-
-function WeightedEmailList({ emailList, setCurEmail, handlePageChange }) {
-  const emails = () => {
-    const WEList = getTop5(emailList);
-    const returnBlock = [];
-    for (let i = 0; i < WEList.length; i++) {
-      returnBlock.push(
-        <WEListEmail
-          key={WEList[i].email_id}
-          email={WEList[i]}
-          setCurEmail={setCurEmail}
-          handlePageChange={handlePageChange}
-        />
-      );
-    }
-    return returnBlock;
-  };
-  return <div className="weighted-email-list-container">{emails()}</div>;
-}
-
-function WEListEmail({ email, setCurEmail, handlePageChange }) {
-  return (
-    <div className="welist-email-container">
-      <div className="summary">{email.summary_text}</div>
-      <div
-        className="email-link"
-        onClick={() => {
-          setCurEmail(email);
-          handlePageChange("inbox");
-        }}
-      >
-        <ViewIcon />
-      </div>
-    </div>
-  );
-}
 
 function MiniViewPanel({ emailList, handlePageChange, setCurEmail }) {
   return (
@@ -95,7 +31,7 @@ function MiniViewHead({ handlePageChange }) {
       <div
         className="expand-button"
         role="button"
-        onClick={() => handlePageChange("inbox")}
+        onClick={() => handlePageChange("/client/inbox")}
       >
         <FullScreenIcon />
       </div>
@@ -155,7 +91,7 @@ function MiniViewEmail({ email, setCurEmail, handlePageChange }) {
       className="miniview-email-container"
       onClick={() => {
         setCurEmail(email);
-        handlePageChange("inbox");
+        handlePageChange("/client/inbox");
       }}
     >
       <div className="from">{getSenderName(email.sender)}</div>
@@ -166,3 +102,33 @@ function MiniViewEmail({ email, setCurEmail, handlePageChange }) {
     </div>
   );
 }
+
+const commonPropTypesDashboard = {
+  handlePageChange: PropTypes.func,
+  setCurEmail: PropTypes.func,
+};
+
+MiniViewPanel.propTypes = {
+  ...commonPropTypesDashboard,
+  emailList: PropTypes.array,
+};
+
+MiniViewHead.propTypes = {
+  handlePageChange: PropTypes.func,
+};
+
+MiniViewBody.propTypes = {
+  ...commonPropTypesDashboard,
+  emailList: PropTypes.array,
+};
+
+MiniViewEmail.propTypes = {
+  ...commonPropTypesDashboard,
+  email: PropTypes.object,
+};
+
+const getSenderName = (sender) => {
+  return sender.slice(0, sender.indexOf("<"));
+};
+
+export default MiniViewPanel;

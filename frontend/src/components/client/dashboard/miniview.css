@@ -1,11 +1,4 @@
-@import url("../../main.css");
-.dashboard {
-  padding: 3vh 1vw;
-  display: flex;
-  gap: 1.5%;
-  align-items: flex-start;
-  background-color: var(--color-background2);
-}
+@import url("../../../main.css");
 
 .dashboard .mini-view {
   border-radius: 4px;
@@ -55,7 +48,7 @@
 }
 
 .dashboard .body-container {
-  padding: 0.5rem 0.5rem;
+  padding: calc(0.2rem + 0.3vw);
   display: grid;
   grid-template-rows: 1fr;
   height: calc(94vh - 4rem);
@@ -65,16 +58,18 @@
 }
 
 .dashboard .miniview-email-container {
+  --padding-outer: calc(0.3rem + 0.6vw);
+  --padding-inner: calc(0.1rem + 0.3vw);
   border-radius: 4px;
   font-size: calc(0.4rem + 0.55vw);
   text-align: left;
   display: flex;
-  gap: 0.5rem;
+  gap: calc(0.1rem + 0.5vw);
   border: 1px solid var(--color-border);
 }
 
 .dashboard .from {
-  padding: 0.5rem 0 0.5rem 1rem;
+  padding: 0.5rem 0 0.5rem var(--padding-outer);
   flex: 0 0 10vw;
   overflow: hidden;
 }
@@ -85,6 +80,6 @@
 }
 
 .dashboard .subject {
-  padding: 0.5rem 1rem 0.5rem 0.5rem;
+  padding: 0.5rem var(--padding-outer) 0.5rem var(--padding-inner);
   flex: 1;
 }
