@@ -1,7 +1,6 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
-import Inbox from "../components/client/inbox/inbox";
-import EmailDisplay from "../components/client/inbox/emailDisplay";
+import Inbox from "../components/inbox/inbox";
 
 const mockEmailList = [
   {
@@ -26,16 +25,15 @@ const mockEmailList = [
   },
 ];
 
-const mockSetCurEmail = vi.fn(console.log("Hello words"));
+const mockSetCurEmail = vi.fn();
 
 describe("Inbox Component", () => {
   it("renders Inbox component", () => {
     render(
       <Inbox
-        displaySummaries={true}
         emailList={mockEmailList}
-        curEmail={mockEmailList[0]}
         setCurEmail={mockSetCurEmail}
+        curEmail={mockEmailList[0]}
       />
     );
     expect(screen.getByText("Inbox")).toBeInTheDocument();
@@ -44,10 +42,9 @@ describe("Inbox Component", () => {
   it("renders EmailEntry components", () => {
     render(
       <Inbox
-        displaySummaries={true}
         emailList={mockEmailList}
-        curEmail={mockEmailList[0]}
         setCurEmail={mockSetCurEmail}
+        curEmail={mockEmailList[0]}
       />
     );
     const subjects = screen.getAllByText("Subject 1");
@@ -58,57 +55,34 @@ describe("Inbox Component", () => {
   it("calls setCurEmail when an EmailEntry is clicked", () => {
     render(
       <Inbox
-        displaySummaries={true}
         emailList={mockEmailList}
-        curEmail={mockEmailList[0]}
         setCurEmail={mockSetCurEmail}
+        curEmail={mockEmailList[0]}
       />
     );
     fireEvent.click(screen.getByText("Subject 2"));
     expect(mockSetCurEmail).toHaveBeenCalledWith(mockEmailList[1]);
   });
 
-  it("renders ReaderView component", () => {
+  it("renders EmailDisplay component", () => {
     render(
       <Inbox
-        displaySummaries={true}
         emailList={mockEmailList}
-        curEmail={mockEmailList[0]}
         setCurEmail={mockSetCurEmail}
+        curEmail={mockEmailList[0]}
       />
     );
     expect(screen.getByText("Body 1")).toBeInTheDocument();
   });
-});
 
-describe("Email Display Component", () => {
-  it("renders EmailDisplay component", () => {
-    render(<EmailDisplay curEmail={mockEmailList[0]} />);
+  it("renders ReaderView component", () => {
+    render(
+      <Inbox
+        emailList={mockEmailList}
+        setCurEmail={mockSetCurEmail}
+        curEmail={mockEmailList[0]}
+      />
+    );
     expect(screen.getByText("Body 1")).toBeInTheDocument();
-  });
-
-  it("renders ReaderView", () => {
-    render(<EmailDisplay curEmail={mockEmailList[0]} />);
-    const svgElement = screen.getByText(
-      (content, element) => element.tagName.toLowerCase() === "svg"
-    ); // Get Element Role Name "svg"
-    expect(svgElement).toBeInTheDocument();
-  });
-
-  it("renders ReaderView PopUp", () => {
-    // Create a mock portal in the test DOM
-    const portal = document.createElement("div");
-    portal.setAttribute("id", "portal");
-    document.body.appendChild(portal);
-
-    render(<EmailDisplay curEmail={mockEmailList[0]} />);
-
-    const button = screen.getByTestId("reader-view-button");
-    fireEvent.click(button);
-
-    expect(screen.getByText("Click To Close")).toBeInTheDocument();
-
-    // Clean up the portal after the test
-    document.body.removeChild(portal);
   });
 });

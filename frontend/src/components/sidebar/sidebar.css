@@ -1,4 +1,4 @@
-@import url("../../../main.css");
+@import url("../../main.css");
 
 :root {
   text-align: center;
@@ -15,9 +15,9 @@
   height: 100vh;
   display: grid;
   text-align: left;
-  grid-template-rows: var(--sidebar-icon-height) var(--sidebar-icon-height) var(
+  grid-template-rows: var(--sidebar-icon-height) var(--sidebar-icon-height) 1fr var(
       --sidebar-icon-height
-    ) 1fr var(--sidebar-icon-height);
+    );
   width: var(--sidebar-width);
 }
 

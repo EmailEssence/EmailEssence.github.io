@@ -1,7 +1,8 @@
+/* eslint-disable react/prop-types */
 import styles from "./login.module.css";
-import PropTypes from "prop-types";
+// import Logo from "../../assets/Logo";
 
-const Login = ({ handleGoogleClick }) => {
+export const Login = ({ handleGoogleClick }) => {
   return (
     <div className={styles.page}>
       <div className={styles.formBox}>
@@ -18,9 +19,3 @@ const Login = ({ handleGoogleClick }) => {
     </div>
   );
 };
-
-Login.propTypes = {
-  handleGoogleClick: PropTypes.func,
-};
-
-export default Login;

@@ -1,6 +1,6 @@
 import { /*fireEvent,*/ render, screen } from "@testing-library/react";
 import { describe, expect, test } from "vitest";
-import Login from "../components/login/login";
+import { Login } from "../components/login/login";
 
 // Unit Tests: Test individual functions, components, and utilities.
 // Integration Tests: Test component interactions(e.g., props, state changes).

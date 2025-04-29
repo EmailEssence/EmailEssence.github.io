@@ -10,32 +10,10 @@ Currently, two official plugins are available:
 make sure to install vite-js: `npm install @vitejs/plugin-react`
 and to run to server: `npm run dev`
 
-## Requirements:
-
-npm 11.2.0
-
-node v22.13.1
-
-## Initialization:
-
-#### CD to frontend from root
-
-`cd frontend`
-
-#### Install all dependencies
-
-`npm install`
-
 ## Dependencies:
 
 ### Readability.js
 
 ```bash
 npm install @mozilla/readability
-```
-
-### User-Event
-
-```bash
-npm install --save-dev @testing-library/user-event
 ```

@@ -1,56 +1,9 @@
-import { fetchUserPreferences } from "../components/client/settings/settings";
-
-export const baseUrl = "https://ee-backend-w86t.onrender.com";
-export let emails = [];
-export let userPreferences = {
-  isChecked: true,
-  emailFetchInterval: 120,
-  theme: "light",
-};
-
-export const fetchNewEmails = async () => {
-  try {
-    const requestedEmails = await fetchEmails(100);
-    if (requestedEmails.length > 0) {
-      const newEmails = getNewEmails(requestedEmails, emails); // O(n^2) operation
-      if (newEmails.length > 0) {
-        emails = [...emails, ...newEmails];
-        window.location.hash = "#newEmails";
-      }
-    }
-  } catch (error) {
-    console.error(`Error fetching new emails: ${error}`);
-  }
-};
-
-function getNewEmails(requestedEmails, allEmails) {
-  return requestedEmails.filter((reqEmail) => {
-    let exists = false;
-    for (const email of allEmails) {
-      if (email.email_id === reqEmail.email_id) exists = true;
-    }
-    return !exists;
-  });
-}
-
-export const retrieveUserData = async () => {
-  try {
-    emails = await fetchEmails(100);
-    const user_id = null; // Get user ID
-    if (user_id) getUserPreferences(user_id);
-  } catch (error) {
-    console.error(error);
-  }
-};
-
-const getUserPreferences = async (user_id) => {
-  try {
-    const preferences = await fetchUserPreferences(user_id);
-    userPreferences = preferences;
-  } catch (error) {
-    console.error(error);
-  }
-};
+import ems from "./retrieve_emails_response.json" with { type: 'json' };
+import sums from "./summarize_email_response.json" with { type: 'json' };
+export const isDevMode = false;
+export const baseUrl = isDevMode
+  ? "http://localhost:8000"
+  : "https://ee-backend-w86t.onrender.com";
 
 async function getEmails(extension) {
   const option = {
@@ -61,10 +14,7 @@ async function getEmails(extension) {
     },
   };
   try {
-    const req = new Request(
-      `${baseUrl}/emails/?skip=0&limit=${extension}&unread_only=false&sort_by=received_at&sort_order=desc&refresh=true`,
-      option
-    );
+    const req = new Request(`${baseUrl}/emails/?skip=0&limit=${extension}&unread_only=false&sort_by=received_at&sort_order=desc&refresh=true`, option);
     const response = await fetch(req);
     if (!response.ok) {
       throw new Error(`Failed to retrieve emails: ${response.statusText}`);
@@ -86,11 +36,8 @@ async function getSummaries(emailIds) {
   };
   try {
     const queryParams = new URLSearchParams();
-    emailIds.forEach((id) => queryParams.append("ids", id));
-    const req = new Request(
-      `${baseUrl}/summaries/batch?${queryParams}`,
-      option
-    );
+    emailIds.forEach(id => queryParams.append('ids', id));
+    const req = new Request(`${baseUrl}/summaries/batch?${queryParams}`, option);
     const response = await fetch(req);
     if (!response.ok) {
       throw new Error(`Failed to retrieve summaries: ${response.statusText}`);
@@ -120,19 +67,18 @@ function parseDate(date) {
 export default async function fetchEmails(numRequested) {
   try {
     // Fetch both emails and summaries concurrently
-    const newEmails = await getEmails(numRequested);
-    const ids = newEmails.emails.map((email) => {
+    const emails = await getEmails(numRequested);
+    const ids = emails.emails.map((email) => {
       return email.email_id;
     });
     const summaries = await getSummaries(ids);
-    summaries.reverse(); // link summaries to respected email
     // Validate array responses
-    if (!Array.isArray(newEmails.emails)) {
-      console.error("Invalid emails response:", newEmails);
+    if (!Array.isArray(emails.emails)) {
+      console.error("Invalid emails response:", emails);
       return [];
     }
     // Handle case where summaries length doesn't match emails
-    const processedEmails = newEmails.emails.map((email, index) => {
+    const processedEmails = emails.emails.map((email, index) => {
       const summary = summaries[index] || { summary_text: "", keywords: [] };
 
       return {
@@ -142,7 +88,6 @@ export default async function fetchEmails(numRequested) {
         received_at: parseDate(email.received_at),
       };
     });
-
     return processedEmails;
   } catch (error) {
     console.error("Email processing error:", error);
@@ -165,3 +110,19 @@ export function getTop5(emails) {
 // "is_read" has the email been read
 // "summary_text" summary of the email
 // "keywords": [] keywords used to describe email
+
+// Dev Function
+export function fetchDev() {
+  const [emails, summaries] = [ems, sums];
+  const processedEmails = emails.map((email, index) => {
+    const summary = summaries[index] || { summary_text: "", keywords: [] };
+
+    return {
+      ...email,
+      summary_text: summary.summary_text || "",
+      keywords: summary.keywords || [],
+      received_at: parseDate(email.received_at),
+    };
+  });
+  return processedEmails;
+}

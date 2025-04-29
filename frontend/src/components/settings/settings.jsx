@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { baseUrl } from '../../../emails/emailParse';
+import { baseUrl } from '../../emails/emailParse';
 import "./settings.css";
 
 export function Settings ({

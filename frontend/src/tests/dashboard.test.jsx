@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
-import Dashboard from "../components/client/dashboard/dashboard";
+import Dashboard from "../components/dashboard/dashboard";
 
 const mockEmailList = [
   {
@@ -87,7 +87,7 @@ describe("Dashboard Component", () => {
       />
     );
     fireEvent.click(screen.getByRole("button"));
-    expect(mockHandlePageChange).toHaveBeenCalledWith("/client/inbox");
+    expect(mockHandlePageChange).toHaveBeenCalledWith("inbox");
   });
 
   it("calls setCurEmail and handlePageChange when MiniViewEmail is clicked", () => {
@@ -100,6 +100,6 @@ describe("Dashboard Component", () => {
     );
     fireEvent.click(screen.getByText("Subject 1"));
     expect(mockSetCurEmail).toHaveBeenCalledWith(mockEmailList[0]);
-    expect(mockHandlePageChange).toHaveBeenCalledWith("/client/inbox");
+    expect(mockHandlePageChange).toHaveBeenCalledWith("inbox");
   });
 });
