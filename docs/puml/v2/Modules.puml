@@ -1,17 +1,35 @@
 @startuml
+title Email Essence Sequence Diagram
 skinparam sequenceMessageAlign center
 skinparam responseMessageBelowArrow true
 skinparam maxMessageSize 250
 skinparam style strictuml
 skinparam padding 8
 skinparam roundcorner 10
+skinparam ArrowThickness 3
+
+' Font settings
+skinparam defaultFontSize 18
+skinparam defaultFontName Helvetica
+skinparam defaultTextAlignment center
 
 ' Define custom colors to match Architecture.puml
 skinparam sequence {
     ArrowColor #bf0618
+    ArrowFontSize 20
     ResponseColor #32CD32
     GroupBackgroundColor #FFEBD6
     GroupBodyBackgroundColor #FFF8EF
+    
+    ' Sequence specific font settings
+    ParticipantFontSize 20
+    ParticipantFontStyle plain
+    GroupFontSize 20
+    GroupFontStyle bold
+    MessageFontSize 16
+    MessageFontStyle bold
+    TitleFontSize 20
+    TitleFontStyle bold
 }
 
 actor User as Instance
@@ -37,56 +55,56 @@ box "External Services" #F0E68C
 end box
 
 == Authentication & Profile ==
-Instance -> Auth: Login
+Instance [#bf0618]-> Auth: Login
 activate Auth
-Auth -> AuthUserAPI: OAuth Request
-AuthUserAPI -> AuthUserService: Process Auth
-AuthUserService -> Google: OAuth Flow
-Google --> AuthUserService: Tokens
-AuthUserService -> MongoDB: Store Auth Data
-AuthUserService -> MongoDB: Create/Get User
-MongoDB --> AuthUserService: User Profile
-AuthUserService --> AuthUserAPI: Auth Complete
-AuthUserAPI --> Auth: Login Success
+Auth [#bf0618]-> AuthUserAPI: OAuth Request
+AuthUserAPI [#FFA500]-> AuthUserService: Process Auth
+AuthUserService [#FFA500]-> Google: OAuth Flow
+Google [#32CD32]-> AuthUserService: Tokens
+AuthUserService [#FFA500]-> MongoDB: Store Auth Data
+AuthUserService [#FFA500]-> MongoDB: Create/Get User
+MongoDB [#32CD32]-> AuthUserService: User Profile
+AuthUserService [#32CD32]-> AuthUserAPI: Auth Complete
+AuthUserAPI [#32CD32]-> Auth: Login Success
 deactivate Auth
-Auth --> Instance: Authenticated
+Auth [#32CD32]-> Instance: Authenticated
 
 == Email & Summary Operations ==
-Instance -> EmailHandler: Request Content
+Instance [#bf0618]-> EmailHandler: Request Content
 activate EmailHandler
-EmailHandler -> EmailAPI: Fetch Data
-EmailAPI -> EmailService: Process Request
-EmailService -> AuthUserService: Validate Token
-AuthUserService --> EmailService: Token Valid
+EmailHandler [#bf0618]-> EmailAPI: Fetch Data
+EmailAPI [#FFA500]-> EmailService: Process Request
+EmailService [#FFA500]-> AuthUserService: Validate Token
+AuthUserService [#32CD32]-> EmailService: Token Valid
 
 group Email Retrieval
-    EmailService -> Google: IMAP Connection
-    Google --> EmailService: Messages
-    EmailService -> MongoDB: Store Emails
+    EmailService [#FFA500]-> Google: IMAP Connection
+    Google [#32CD32]-> EmailService: Messages
+    EmailService [#FFA500]-> MongoDB: Store Emails
 end
 
 group Summary Generation [If Requested]
-    EmailService -> OpenAIAPI: Generate Summary
-    OpenAIAPI --> EmailService: Summary
-    EmailService -> MongoDB: Cache Summary
+    EmailService [#FFA500]-> OpenAIAPI: Generate Summary
+    OpenAIAPI [#32CD32]-> EmailService: Summary
+    EmailService [#FFA500]-> MongoDB: Cache Summary
 end
 
-MongoDB --> EmailService: Storage Status
-EmailService --> EmailAPI: Processed Data
-EmailAPI --> EmailHandler: Content Ready
+MongoDB [#32CD32]-> EmailService: Storage Status
+EmailService [#32CD32]-> EmailAPI: Processed Data
+EmailAPI [#32CD32]-> EmailHandler: Content Ready
 deactivate EmailHandler
-EmailHandler --> Instance: Display Content
+EmailHandler [#32CD32]-> Instance: Display Content
 
 == User Preferences ==
-Instance -> ClientUI: Update Settings
+Instance [#bf0618]-> ClientUI: Update Settings
 activate ClientUI
-ClientUI -> AuthUserAPI: Update Request
-AuthUserAPI -> AuthUserService: Process Update
-AuthUserService -> MongoDB: Store Settings
-MongoDB --> AuthUserService: Update Status
-AuthUserService --> AuthUserAPI: Settings Updated
-AuthUserAPI --> ClientUI: Changes Saved
+ClientUI [#bf0618]-> AuthUserAPI: Update Request
+AuthUserAPI [#FFA500]-> AuthUserService: Process Update
+AuthUserService [#FFA500]-> MongoDB: Store Settings
+MongoDB [#32CD32]-> AuthUserService: Update Status
+AuthUserService [#32CD32]-> AuthUserAPI: Settings Updated
+AuthUserAPI [#32CD32]-> ClientUI: Changes Saved
 deactivate ClientUI
-ClientUI --> Instance: Settings Applied
+ClientUI [#32CD32]-> Instance: Settings Applied
 
 @enduml 
