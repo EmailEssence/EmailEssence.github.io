@@ -1,0 +1,138 @@
+@startuml
+title Email Essence Architecture
+
+' Use modern style
+skinparam componentStyle rectangle
+skinparam monochrome false
+skinparam shadowing false
+skinparam linetype ortho
+skinparam padding 8
+skinparam roundCorner 10
+
+' Define arrow styles for the legend
+legend right
+|<back:#bf0618><color:#FFFFFF>   </color></back>| User Interactions |
+|<back:#FFA500><color:#FFFFFF>   </color></back>| Internal Operations |
+|<back:#32CD32><color:#FFFFFF>   </color></back>| Data Flow |
+endlegend
+
+' First, define the global boundary
+package "Email Essence" {
+  
+  ' Presentation Layer
+  package "Frontend" #FFB6C1 {
+    ' Client Components
+    component "Client Interface" as ClientUI #FF69B4 {
+      portin "Dashboard" as DashboardPort
+      portin "Inbox" as InboxPort
+      portin "Settings" as SettingsPort
+    }
+    
+    ' Auth Components
+    component "Authentication" as Auth #FF69B4 {
+      portin "Login" as LoginPort
+      portin "Error" as ErrorPort
+    }
+    
+    ' Email Components
+    component "Email Handler" as EmailHandler #FF69B4 {
+      portin "Fetch" as FetchPort
+      portin "Display" as DisplayPort
+    }
+  }
+
+  ' Middleware Layer
+  package "API Layer" #98FB98 {
+    component "FastAPI Core" as FastAPI #228B22 {
+      port "CORS" as CORSPort
+      port "Health" as HealthPort
+    }
+    
+    ' Route Components
+    component "Routes" as Routes #228B22 {
+      component "Auth API" as AuthAPI
+      component "User API" as UserAPI {
+        port "Profile" as ProfilePort
+        port "Preferences" as PrefsPort
+      }
+      component "Email API" as EmailAPI
+      component "Summary API" as SummaryAPI
+    }
+  }
+
+  ' Service Layer
+  package "Services" #87CEEB {
+    ' Core Services
+    component "Core Services" as CoreServices #4169E1 {
+      component "Summary Service" as SummaryService {
+        port "OpenAI" as OpenAIPort
+        port "Abstract" as AbstractPort
+      }
+      component "User Service" as UserService
+    }
+    
+    ' Integration Services
+    component "External Services" as ExternalServices #4169E1 {
+      component "Email Service" as EmailService {
+        port "IMAP" as IMAPPort
+        port "Parser" as ParserPort
+      }
+      component "Auth Service" as AuthService {
+        port "OAuth" as OAuthPort
+        port "Token" as TokenPort
+      }
+    }
+  }
+
+  ' Repository Layer
+  database "Data Layer" #DDA0DD {
+    database "Core Data" as CoreData #9932CC {
+      component "User Repository" as UserRepo
+      component "Summary Repository" as SummaryRepo
+    }
+    database "Integration Data" as IntegrationData #9932CC {
+      component "Email Repository" as EmailRepo
+      component "Token Repository" as TokenRepo
+    }
+  }
+
+  ' External Systems
+  cloud "External Services" #F0E68C {
+    interface "MongoDB" as MongoDB
+    interface "OpenAI API" as OpenAIAPI
+    interface "Gmail IMAP" as GmailIMAP
+    interface "Google OAuth2" as GoogleOAuth
+  }
+}
+
+' Authentication Flow
+Auth <-[#bf0618]-> AuthAPI : "OAuth Flow"
+AuthAPI <-[#FFA500]-> AuthService
+AuthService <-[#FFA500]-> GoogleOAuth : "Authentication"
+AuthService <-[#32CD32]-> TokenRepo : "Token Management"
+
+' User Profile & Preferences Flow
+Auth <-[#bf0618]-> UserAPI : "Profile Request"
+UserAPI <-[#FFA500]-> UserService : "User Operations"
+UserService <-[#32CD32]-> UserRepo : "User Data"
+ClientUI <-[#bf0618]-> UserAPI : "Preferences"
+
+' Email Operations Flow
+EmailHandler <-[#bf0618]-> EmailAPI : "Email Requests"
+EmailAPI <-[#FFA500]-> EmailService
+EmailService <-[#FFA500]-> GmailIMAP : "IMAP Connection"
+EmailService <-[#32CD32]-> EmailRepo : "Email Storage"
+
+' Summary Generation Flow
+EmailHandler <-[#bf0618]-> SummaryAPI : "Summary Requests"
+SummaryAPI <-[#FFA500]-> SummaryService
+SummaryService <-[#FFA500]-> OpenAIAPI : "AI Processing"
+SummaryService <-[#32CD32]-> SummaryRepo : "Summary Storage"
+
+' Data Persistence
+UserRepo <-[#32CD32]-> MongoDB : "User Data"
+TokenRepo <-[#32CD32]-> MongoDB : "Token Data"
+EmailRepo <-[#32CD32]-> MongoDB : "Email Data"
+SummaryRepo <-[#32CD32]-> MongoDB : "Summary Data"
+
+@enduml 

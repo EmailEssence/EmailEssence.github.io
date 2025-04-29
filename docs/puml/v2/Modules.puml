@@ -1,0 +1,92 @@
+@startuml
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+skinparam maxMessageSize 250
+skinparam style strictuml
+skinparam padding 8
+skinparam roundcorner 10
+
+' Define custom colors to match Architecture.puml
+skinparam sequence {
+    ArrowColor #bf0618
+    ResponseColor #32CD32
+    GroupBackgroundColor #FFEBD6
+    GroupBodyBackgroundColor #FFF8EF
+}
+
+actor User as Instance
+box "Frontend Layer" #FFB6C1
+    participant "Client UI" as ClientUI #FF69B4
+    participant "Auth Handler" as Auth #FF69B4
+    participant "Email Handler" as EmailHandler #FF69B4
+end box
+
+box "Backend Layer" #98FB98
+    participant "FastAPI\nCore" as FastAPI #228B22
+    participant "Auth & User\nAPI" as AuthUserAPI #228B22
+    participant "Email & Summary\nAPI" as EmailAPI #228B22
+    participant "Auth & User\nService" as AuthUserService #4169E1
+    participant "Email & Summary\nService" as EmailService #4169E1
+end box
+
+database "MongoDB" as MongoDB #CD853F
+
+box "External Services" #F0E68C
+    participant "Google\nServices" as Google
+    participant "OpenAI\nAPI" as OpenAIAPI
+end box
+
+== Authentication & Profile ==
+Instance -> Auth: Login
+activate Auth
+Auth -> AuthUserAPI: OAuth Request
+AuthUserAPI -> AuthUserService: Process Auth
+AuthUserService -> Google: OAuth Flow
+Google --> AuthUserService: Tokens
+AuthUserService -> MongoDB: Store Auth Data
+AuthUserService -> MongoDB: Create/Get User
+MongoDB --> AuthUserService: User Profile
+AuthUserService --> AuthUserAPI: Auth Complete
+AuthUserAPI --> Auth: Login Success
+deactivate Auth
+Auth --> Instance: Authenticated
+
+== Email & Summary Operations ==
+Instance -> EmailHandler: Request Content
+activate EmailHandler
+EmailHandler -> EmailAPI: Fetch Data
+EmailAPI -> EmailService: Process Request
+EmailService -> AuthUserService: Validate Token
+AuthUserService --> EmailService: Token Valid
+
+group Email Retrieval
+    EmailService -> Google: IMAP Connection
+    Google --> EmailService: Messages
+    EmailService -> MongoDB: Store Emails
+end
+
+group Summary Generation [If Requested]
+    EmailService -> OpenAIAPI: Generate Summary
+    OpenAIAPI --> EmailService: Summary
+    EmailService -> MongoDB: Cache Summary
+end
+
+MongoDB --> EmailService: Storage Status
+EmailService --> EmailAPI: Processed Data
+EmailAPI --> EmailHandler: Content Ready
+deactivate EmailHandler
+EmailHandler --> Instance: Display Content
+
+== User Preferences ==
+Instance -> ClientUI: Update Settings
+activate ClientUI
+ClientUI -> AuthUserAPI: Update Request
+AuthUserAPI -> AuthUserService: Process Update
+AuthUserService -> MongoDB: Store Settings
+MongoDB --> AuthUserService: Update Status
+AuthUserService --> AuthUserAPI: Settings Updated
+AuthUserAPI --> ClientUI: Changes Saved
+deactivate ClientUI
+ClientUI --> Instance: Settings Applied
+
+@enduml 
