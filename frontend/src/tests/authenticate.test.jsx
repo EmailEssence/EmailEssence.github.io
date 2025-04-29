@@ -1,4 +1,7 @@
-import { authenticate } from "../authentication/authenticate";
+import {
+  authenticate,
+  handleAuthenticate,
+} from "../authentication/authenticate";
 import {
   describe,
   it,
@@ -9,6 +12,14 @@ import {
   beforeEach,
 } from "vitest";
 
+beforeAll(() => {
+  delete window.location;
+  window.location = { href: "" };
+});
+
+afterAll(() => {
+  window.location = originalLocation;
+});
 const originalLocation = window.location;
 describe("No Error", () => {
   beforeEach(() => {
@@ -17,15 +28,6 @@ describe("No Error", () => {
       baseUrl: "https://example.com",
       retrieveUserData: vi.fn(),
     }));
-  });
-
-  beforeAll(() => {
-    delete window.location;
-    window.location = { href: "" };
-  });
-
-  afterAll(() => {
-    window.location = originalLocation;
   });
 
   it("redirects to correct login URL", async () => {
@@ -38,17 +40,27 @@ describe("No Error", () => {
     expect(window.location.href).toBe(expectedUrl);
   });
 
-  vi.mock("../authentication/authenticate", async () => {
-    const originalModule = await vi.importActual(
-      "../authentication/authenticate"
-    );
-    return {
-      ...originalModule,
-      checkAuthStatus: vi.fn(),
-      handleAuthenticate: vi.fn(),
-      handleAuthError: vi.fn(),
-    };
+  it("handles authentication", async () => {
+    const token = "testToken";
+    vi.mock("../authenticate/authenticate", () => ({
+      retrieveUserData: vi.fn(),
+    }));
+
+    await handleAuthenticate(token);
+    expect(localStorage.getItem("auth_token")).toBe(token);
   });
 });
 
-// describe("With Error", () => {});
+describe("With Error", () => {
+  it("handle authentication Error", async () => {
+    const token = "testToken";
+    vi.mocked(
+      await import("../emails/emailHandler")
+    ).retrieveUserData.mockImplementation(() => {
+      throw new Error("Error");
+    });
+
+    await handleAuthenticate(token);
+    expect(window.location.href).toBe("/error");
+  });
+});
