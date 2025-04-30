@@ -28,18 +28,17 @@ EmailEssence is a sophisticated email management solution that leverages artific
 ### Frontend
 - React - Modern UI framework
 - Remix - Full-stack web framework
-- Electron - Desktop application framework
-- JavaScript - Type-safe development
+- Electron - Desktop application framework (soon)
+- JavaScript - ES2022+ features, async/await, modules, and modern syntax
 
 ### Backend
 - Python - Core backend services
 - FastAPI - High-performance API framework
 - MongoDB - Flexible document database
-- Redis - High-performance caching
 - OpenRouter - AI-powered email processing
 
 ### Infrastructure
-- Express.js - Web server and middleware
+- Express.js - Web server and middleware (soon?)
 - OAuth 2.0 - Secure authentication
 - IMAP - Email protocol support
 
@@ -49,7 +48,6 @@ EmailEssence is a sophisticated email management solution that leverages artific
 - Node.js (v18 or higher)
 - Python (v3.12 or higher)
 - MongoDB
-- Redis
 - UV Package Manager (for Python dependency management)
 
 ### Installation
