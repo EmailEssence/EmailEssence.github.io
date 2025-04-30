@@ -117,6 +117,20 @@ describe("EmailFetchInterval Component", () => {
     expect(slider).toHaveAttribute("min", "5");
     expect(slider).toHaveAttribute("max", "600");
   });
+
+  test("test EmailFetchInterval slider changes its value", () => {
+    const mockSetEmailFetchInterval = vi.fn();
+    render(
+      <EmailFetchInterval
+        emailFetchInterval={60}
+        onSetEmailFetchInterval={mockSetEmailFetchInterval}
+      />
+    );
+
+    const slider = screen.getByRole("slider");
+    fireEvent.change(slider, { target: { value: "120" } });
+    expect(mockSetEmailFetchInterval).toHaveBeenCalledWith("120");
+  });
 });
 
 // ------------------------ Theme Component Tests ------------------------
