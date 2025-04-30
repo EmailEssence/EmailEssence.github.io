@@ -1,4 +1,5 @@
 import styles from "./login.module.css";
+import Logo from "../../assets/Logo";
 import PropTypes from "prop-types";
 
 const Login = ({ handleGoogleClick }) => {
@@ -7,7 +8,7 @@ const Login = ({ handleGoogleClick }) => {
       <div className={styles.formBox}>
         <div className={styles.loginDiv}>
           <div className={styles.loginIcon}>
-            <img src="./src/assets/oldAssets/Logo.svg" alt="Logo Icon" />
+            <Logo />
           </div>
           <p className={styles.title}>Welcome Back</p>
           <button onClick={handleGoogleClick} className={styles.googleButton}>
