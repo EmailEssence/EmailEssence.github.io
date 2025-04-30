@@ -272,10 +272,35 @@ describe("Theme Component", () => {
         handleSetTheme={vi.fn()}
       />
     );
-
     expect(document.body.classList.contains("dark-mode")).toBe(false);
   });
 
+  //---------------------------------- handleThemeChange Tests ------------------------
+  describe("handleThemeChange", () => {
+    test("adds dark-mode class when theme is set to dark", () => {
+      render(<Theme theme="light" onSetTheme={mockSetTheme} />);
+
+      const darkButton = screen.getByText("Dark");
+      fireEvent.click(darkButton);
+
+      expect(document.body.classList.contains("dark-mode")).toBe(true);
+    });
+
+    test("removes dark-mode class when theme is set to light", () => {
+      render(<Theme theme="dark" onSetTheme={mockSetTheme} />);
+
+      const lightButton = screen.getByText("Light");
+      fireEvent.click(lightButton);
+
+      expect(document.body.classList.contains("dark-mode")).toBe(false);
+    });
+  });
+
+  //useSystemTheme Tests
+
+  //fetchUserProfile Tests
+  //fetchUserPreferences Tests
+  //updateUserPreferences Tests
 
 });
 
