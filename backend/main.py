@@ -62,6 +62,9 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
+        "https://emailessence.github.io", # Github Pages
+        "https://email.madigan.app", # Personal domain
+        "https://ee-backend-w86t.onrender.com", # Backend Render deployment
         "http://localhost:8000",  # Backend default
         "http://localhost:3000",  # Common React dev server
         "http://localhost:5173",  # Vite default
@@ -69,8 +72,6 @@ app.add_middleware(
         "http://127.0.0.1:3000",  # React with IP
         "http://127.0.0.1:5173",  # Vite with IP
         "http://127.0.0.1:4200",  # Angular with IP
-        "https://emailessence.github.io",
-        "https://ee-backend-w86t.onrender.com",  # Your backend deployment URL
     ],
     allow_credentials=True,
     allow_methods=["*"],  # Allows all methods
