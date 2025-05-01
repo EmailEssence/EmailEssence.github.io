@@ -13,16 +13,26 @@ from fastapi import FastAPI
 from app.tests.constants import (
     mock_email_message,
     mock_email_schema,
-    mock_summary,
-    mock_db,
-    mock_db_cursor,
-    mock_empty_db_cursor,
+    mock_summary_schema,
+    mock_user,
+    mock_token_data,
     mock_imap_client,
-    mock_credentials,
     mock_threadpool,
     mock_fetch_emails,
     mock_empty_fetch_emails,
     mock_error_fetch_emails
+)
+
+from app.tests.database_mock import (
+    mock_db,
+    mock_email_repository,
+    mock_summary_repository,
+    mock_user_repository,
+    mock_token_repository,
+    mock_email_collection,
+    mock_summary_collection,
+    mock_user_collection,
+    mock_token_collection
 )
 
 # Base application fixture

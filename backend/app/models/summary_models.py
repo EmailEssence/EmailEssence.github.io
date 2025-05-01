@@ -3,6 +3,10 @@ from datetime import datetime, timezone
 from typing import List, Optional, Dict
 
 class SummarySchema(BaseModel):
+    """
+    Schema for email summaries.
+    """
+    google_id: str  # Google User ID for consistent user identification
     email_id: str
     summary_text: str
     keywords: List[str]

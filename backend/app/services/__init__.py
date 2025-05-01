@@ -1,14 +1,41 @@
-from .auth_service import create_authorization_url, get_tokens_from_code
-from .email_service import EmailService
-from .summarization import OpenAIEmailSummarizer, ProcessingStrategy
-from .summary_service import SummaryService
+"""
+Services module initialization.
 
-# Export key types and implementations
+This module provides access to all service implementations used throughout the application.
+All service-related functionality should be imported from here.
+"""
+
+from typing import Type, Dict, Any
+
+# Import all services
+from .auth_service import AuthService
+from .email_service import EmailService
+from .user_service import UserService
+from .summarization import (
+    SummaryService,
+    OpenAIEmailSummarizer,
+    GeminiEmailSummarizer,
+    ProcessingStrategy,
+    get_summarizer
+)
+
+# Define base service type
+ServiceType = Type[Any]
+
+# Export all services and types
 __all__ = [
+    # Base
+    'ServiceType',
+    
+    # Core Services
     'EmailService',
+    'AuthService',
+    'UserService',
     'SummaryService',
-    'create_authorization_url',
-    'get_tokens_from_code',
+    
+    # Summarization
     'OpenAIEmailSummarizer',
-    'ProcessingStrategy'
+    'GeminiEmailSummarizer',
+    'ProcessingStrategy',
+    'get_summarizer'
 ]
