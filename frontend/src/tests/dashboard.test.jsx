@@ -10,7 +10,7 @@ for (let i = 1; i < 50; i++) {
     sender: "sender1@example.com",
     received_at: [2025, 2, 17],
     subject: `Subject ${i}`,
-    summary_text: `Summary ${i}`,
+    summary_text: i == 3 ? "" : `Summary ${i}`,
     body: `Body ${i}`,
     recipients: `recipient${i}@example.com`,
     is_read: false,
