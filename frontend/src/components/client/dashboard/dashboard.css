@@ -43,6 +43,12 @@
   height: calc(1.5rem + 1.5vw);
 }
 
+.dashboard .loading {
+  border-radius: 0.2rem;
+  height: calc(1.5rem + 1.5vw);
+  background-color: var(--color-background2);
+}
+
 .dashboard .email-link:hover {
   background-color: var(--color-background2);
 }
