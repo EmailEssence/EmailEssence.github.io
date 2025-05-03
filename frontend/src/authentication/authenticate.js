@@ -1,12 +1,8 @@
-import { baseUrl, retrieveUserData } from "../emails/emailParse";
+import { baseUrl, retrieveUserData } from "../emails/emailHandler";
 export const authenticate = async () => {
   // Check for auth hash and render OAuthCallback if present
-  try {
-    const redirect_uri = `${window.location.origin}/loading`;
-    window.location.href = `${baseUrl}/auth/login?redirect_uri=${redirect_uri}`;
-  } catch (error) {
-    console.error("Login Error", error);
-  }
+  const redirect_uri = `${window.location.origin}/loading`;
+  window.location.href = `${baseUrl}/auth/login?redirect_uri=${redirect_uri}`;
 };
 
 // When Reach loading component call this function

@@ -1,5 +1,5 @@
 import ViewIcon from "../../../assets/ViewIcon";
-import { getTop5 } from "../../../emails/emailParse";
+import { getTop5 } from "../../../emails/emailHandler";
 import MiniViewPanel from "./miniview";
 import PropTypes from "prop-types";
 import "./dashboard.css";
@@ -46,6 +46,7 @@ function WEListEmail({ email, setCurEmail, handlePageChange }) {
       <div className="summary">{email.summary_text}</div>
       <div
         className="email-link"
+        data-testid={`WEListEmail${email.email_id}`}
         onClick={() => {
           setCurEmail(email);
           handlePageChange("/client/inbox");

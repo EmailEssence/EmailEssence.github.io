@@ -117,6 +117,20 @@ describe("EmailFetchInterval Component", () => {
     expect(slider).toHaveAttribute("min", "5");
     expect(slider).toHaveAttribute("max", "600");
   });
+
+  test("test EmailFetchInterval slider changes its value", () => {
+    const mockSetEmailFetchInterval = vi.fn();
+    render(
+      <EmailFetchInterval
+        emailFetchInterval={60}
+        onSetEmailFetchInterval={mockSetEmailFetchInterval}
+      />
+    );
+
+    const slider = screen.getByRole("slider");
+    fireEvent.change(slider, { target: { value: "120" } });
+    expect(mockSetEmailFetchInterval).toHaveBeenCalledWith("120");
+  });
 });
 
 // ------------------------ Theme Component Tests ------------------------
@@ -220,4 +234,73 @@ describe("Theme Component", () => {
     expect(lightButton).not.toHaveClass("selected");
     expect(systemButton).not.toHaveClass("selected");
   });
+
+  test("dark mode for when system theme is dark", () => {
+    render(
+      <Settings
+        isChecked={true}
+        handleToggleSummariesInInbox={vi.fn()}
+        emailFetchInterval={30}
+        handleSetEmailFetchInterval={vi.fn()}
+        theme="system"
+        handleSetTheme={vi.fn()}
+      />
+    );
+
+    expect(document.body.classList.contains("dark-mode")).toBe(true);
+  });
+
+  test("removes dark mode class for when system theme is light", () => {
+    window.matchMedia = vi.fn().mockImplementation((query) => ({
+      matches: query === "(prefers-color-scheme: light)",
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    }));
+
+    render(
+      <Settings
+        isChecked={true}
+        handleToggleSummariesInInbox={vi.fn()}
+        emailFetchInterval={30}
+        handleSetEmailFetchInterval={vi.fn()}
+        theme="system"
+        handleSetTheme={vi.fn()}
+      />
+    );
+    expect(document.body.classList.contains("dark-mode")).toBe(false);
+  });
+
+  //---------------------------------- handleThemeChange Tests ------------------------
+  describe("handleThemeChange", () => {
+    test("adds dark-mode class when theme is set to dark", () => {
+      render(<Theme theme="light" onSetTheme={mockSetTheme} />);
+
+      const darkButton = screen.getByText("Dark");
+      fireEvent.click(darkButton);
+
+      expect(document.body.classList.contains("dark-mode")).toBe(true);
+    });
+
+    test("removes dark-mode class when theme is set to light", () => {
+      render(<Theme theme="dark" onSetTheme={mockSetTheme} />);
+
+      const lightButton = screen.getByText("Light");
+      fireEvent.click(lightButton);
+
+      expect(document.body.classList.contains("dark-mode")).toBe(false);
+    });
+  });
+
+  //useSystemTheme Tests
+
+  //fetchUserProfile Tests
+  //fetchUserPreferences Tests
+  //updateUserPreferences Tests
+
 });
+

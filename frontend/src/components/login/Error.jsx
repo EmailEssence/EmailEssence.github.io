@@ -1,4 +1,5 @@
 import styles from "./Error.module.css";
+import Logo from "../../assets/Logo";
 
 function Error() {
   const errorMessage = localStorage.getItem("error_message") || "Unknown error";
@@ -7,8 +8,8 @@ function Error() {
     <div className={styles.page}>
       <div className={styles.formBox}>
         <div className={styles.errorDiv}>
-          <div className={styles.errorIcon}>
-            <img src="./src/assets/oldAssets/Logo.svg" alt="error Icon" />
+          <div className={styles.errorIcon} data-testid="error-logo">
+            <Logo />
           </div>
           <h1 className={styles.errorTitle}>Authentication Error</h1>
           <p className={styles.errorDescription}>
@@ -18,7 +19,9 @@ function Error() {
           <button
             className={styles.retryButton}
             onClick={() => (window.location.href = "/login")}
-          > Retry Login
+          >
+            {" "}
+            Retry Login
           </button>
         </div>
       </div>

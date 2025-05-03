@@ -23,9 +23,8 @@ describe("Error Component", () => {
 
     test("renders the Error icon", () =>{
         render(<Error />);
-        const errorIcon = screen.getByAltText("error Icon");
+        const errorIcon = screen.getByTestId("error-logo");
         expect(errorIcon).toBeInTheDocument();
-        expect(errorIcon).toHaveAttribute("src", "./src/assets/oldAssets/Logo.svg");
     });
 
     test("navigates to the login page when the button is clicked", () => {

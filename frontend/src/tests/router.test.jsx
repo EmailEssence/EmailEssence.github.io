@@ -5,7 +5,7 @@ import RouterComponent, { AppRouter } from "../components/router/Router";
 
 beforeEach(() => {
   vi.clearAllMocks();
-  vi.mock("../emails/emailParse", async () => {
+  vi.mock("../emails/emailHandler", async () => {
     const mockEmail1 = [
       {
         user_id: 1,
@@ -37,7 +37,7 @@ beforeEach(() => {
         keywords: ["Mock", "Test"],
       },
     ];
-    const original = await vi.importActual("../emails/emailParse");
+    const original = await vi.importActual("../emails/emailHandler");
     return {
       ...original,
       emails: [...mockEmail1, ...mockEmail2],
@@ -64,7 +64,7 @@ describe("Router Component", () => {
 
   it("Renders Into Client", () => {
     render(
-      <MemoryRouter initialEntries={["/client/dashboard#newEmails"]}>
+      <MemoryRouter initialEntries={["/client/dashboard"]}>
         <AppRouter />
       </MemoryRouter>
     );
