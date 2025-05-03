@@ -21,6 +21,15 @@ function Inbox({ displaySummaries, emailList, setCurEmail, curEmail }) {
 }
 
 function EmailEntry({ displaySummary, email, onClick, selected }) {
+  const summary = () => {
+    let returnBlock;
+    if (email.summary_text.length > 0) {
+      returnBlock = <div className="summary">{email.summary_text}</div>;
+    } else {
+      returnBlock = <div className="summary loading"></div>;
+    }
+    return returnBlock;
+  };
   const date = getDate(email.received_at);
   return (
     <div
@@ -40,7 +49,7 @@ function EmailEntry({ displaySummary, email, onClick, selected }) {
       <div className="median-container">
         <div className="median"></div>
       </div>
-      {displaySummary && <div className="summary">{email.summary_text}</div>}
+      {displaySummary && summary()}
     </div>
   );
 }

@@ -43,7 +43,6 @@ function WeightedEmailList({ emailList, setCurEmail, handlePageChange }) {
 function WEListEmail({ email, setCurEmail, handlePageChange }) {
   const summary = () => {
     let returnBlock;
-    console.log(email.summary_text.length);
     if (email.summary_text.length > 0) {
       returnBlock = <div className="summary">{email.summary_text}</div>;
     } else {
