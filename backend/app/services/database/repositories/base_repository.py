@@ -173,6 +173,60 @@ class BaseRepository(Generic[T]):
         except Exception as e:
             raise
 
+    async def insert_many(self, models: List[T]) -> List[str]:
+        """
+        Insert multiple documents.
+        
+        Args:
+            models: List of model instances to insert
+            
+        Returns:
+            List[str]: IDs of the inserted documents
+        """
+        if not models:
+            return []
+            
+        try:
+            documents = [self._to_document(model) for model in models]
+            result = await self._get_collection().insert_many(documents)
+            return [str(id) for id in result.inserted_ids]
+        except Exception as e:
+            raise
+
+    async def bulk_write(self, operations: List[Dict[str, Any]]) -> Any:
+        """
+        Execute multiple update operations in bulk.
+        
+        Args:
+            operations: List of operations, each containing:
+                - filter: Query to select documents
+                - update: Update to apply
+                - upsert: Whether to create documents if they don't exist
+            
+        Returns:
+            Any: Result of the bulk write operation
+        """
+        if not operations:
+            return None
+            
+        try:
+            # Convert operations to PyMongo bulk operations
+            bulk_ops = []
+            for op in operations:
+                bulk_ops.append(
+                    UpdateOne(
+                        filter=op['filter'],
+                        update={'$set': op['update']},
+                        upsert=op.get('upsert', False)
+                    )
+                )
+                
+            # Execute bulk write
+            result = await self._get_collection().bulk_write(bulk_ops)
+            return result
+        except Exception as e:
+            raise
+
     async def update_one(
         self, 
         query: Dict[str, Any], 

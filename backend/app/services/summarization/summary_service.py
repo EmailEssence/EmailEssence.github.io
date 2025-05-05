@@ -10,7 +10,7 @@ from fastapi import Depends
 from bson import ObjectId
 
 from app.models import EmailSchema, SummarySchema
-from app.services.database.summary_repository import SummaryRepository
+from app.services.database.repositories.summary_repository import SummaryRepository
 from app.services.database.factories import get_summary_repository, get_email_service
 from app.services.summarization.base import AdaptiveSummarizer
 from app.services.summarization import (
@@ -314,7 +314,7 @@ class SummaryService:
                 operations.append(
                     {
                         "filter": {"email_id": summary.email_id, "google_id": google_id},
-                        "update": {"$set": summary_dict},
+                        "update": summary_dict,
                         "upsert": True
                     }
                 )
@@ -353,7 +353,7 @@ class SummaryService:
             query = query or {}
             if google_id:
                 query["google_id"] = google_id
-            return await self.summary_repository.count(query)
+            return await self.summary_repository.count_documents(query)
         except Exception as e:
             logger.error(f"Failed to count summaries: {e}")
             raise HTTPException(status_code=500, detail=str(e))
@@ -381,7 +381,12 @@ class SummaryService:
             results = await self.summary_repository.find_many(query, limit=len(email_ids))
             
             # Convert to SummarySchema objects
-            summaries = [SummarySchema.from_dict(doc) for doc in results]
+            summaries = []
+            for doc in results:
+                if isinstance(doc, SummarySchema):
+                    summaries.append(doc)
+                else:
+                    summaries.append(SummarySchema(**doc))
             
             # Log how many were found
             logger.debug(f"Found {len(summaries)} summaries out of {len(email_ids)} requested for user {google_id}")
@@ -443,4 +448,116 @@ class SummaryService:
             
         except Exception as e:
             logger.error(f"Failed to get or create summary for email {email_id}: {e}")
-            raise HTTPException(status_code=500, detail=str(e)) 
+            raise HTTPException(status_code=500, detail=str(e))
+    
+    async def get_or_create_summaries_batch(
+        self,
+        email_ids: List[str],
+        summarizer: AdaptiveSummarizer[EmailSchema],
+        google_id: str,
+        batch_size: int = 50  # Process in smaller batches to avoid timeouts
+    ) -> Dict[str, List[SummarySchema]]:
+        """
+        Get or create summaries for multiple email IDs in batch.
+        
+        Args:
+            email_ids: List of email IDs to process
+            summarizer: The summarizer implementation to use
+            google_id: Google ID of the user requesting the summaries
+            batch_size: Maximum number of emails to process in a single batch
+            
+        Returns:
+            Dict[str, List[SummarySchema]]: Dictionary containing:
+                - 'summaries': List of successfully processed summaries
+                - 'missing_emails': List of email IDs that couldn't be found
+                - 'failed_summaries': List of email IDs that failed to generate summaries
+        """
+        if not email_ids:
+            return {
+                'summaries': [],
+                'missing_emails': [],
+                'failed_summaries': []
+            }
+            
+        try:
+            # Process in smaller batches to avoid timeouts
+            all_summaries = []
+            all_missing_emails = []
+            all_failed_summaries = []
+            
+            # Split email_ids into batches
+            for i in range(0, len(email_ids), batch_size):
+                batch_ids = email_ids[i:i + batch_size]
+                
+                try:
+                    # First get all existing summaries for this batch
+                    existing_summaries = await self.get_summaries_by_ids(batch_ids, google_id)
+                    existing_email_ids = {summary.email_id for summary in existing_summaries}
+                    
+                    # Find which emails need new summaries
+                    missing_email_ids = set(batch_ids) - existing_email_ids
+                    
+                    if missing_email_ids:
+                        # Get email data for missing summaries
+                        missing_emails = []
+                        failed_emails = []
+                        
+                        for email_id in missing_email_ids:
+                            try:
+                                email = await self.email_service.get_email(email_id, google_id)
+                                if email:
+                                    missing_emails.append(email)
+                                else:
+                                    failed_emails.append(email_id)
+                                    logger.warning(f"Email {email_id} not found for user {google_id}")
+                            except Exception as e:
+                                failed_emails.append(email_id)
+                                logger.warning(f"Error fetching email {email_id}: {e}")
+                        
+                        if missing_emails:
+                            # Generate summaries for missing emails
+                            try:
+                                new_summaries = await summarizer.summarize(
+                                    missing_emails,
+                                    strategy=ProcessingStrategy.ADAPTIVE
+                                )
+                                
+                                # Save new summaries
+                                if new_summaries:
+                                    await self.save_summaries_batch(new_summaries, google_id)
+                                    all_summaries.extend(new_summaries)
+                            except Exception as e:
+                                logger.error(f"Failed to generate summaries for batch: {e}")
+                                all_failed_summaries.extend([email.email_id for email in missing_emails])
+                                continue
+                        
+                        all_missing_emails.extend(failed_emails)
+                    
+                    # Add existing summaries to results
+                    all_summaries.extend(existing_summaries)
+                    
+                except Exception as e:
+                    logger.error(f"Error processing batch {i//batch_size + 1}: {e}")
+                    # Mark all emails in this batch as failed
+                    all_failed_summaries.extend(batch_ids)
+                    continue
+            
+            # Log final results
+            logger.info(
+                f"Batch summary results for user {google_id}: "
+                f"{len(all_summaries)} successful, {len(all_missing_emails)} missing emails, "
+                f"{len(all_failed_summaries)} failed summaries"
+            )
+            
+            return {
+                'summaries': all_summaries,
+                'missing_emails': all_missing_emails,
+                'failed_summaries': all_failed_summaries
+            }
+            
+        except Exception as e:
+            logger.error(f"Failed to process batch summaries: {e}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Failed to process summaries: {str(e)}"
+            ) 
