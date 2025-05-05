@@ -2,7 +2,7 @@
 Unit tests for UserRepository.
 """
 import pytest
-from app.services.database.user_repository import UserRepository
+from app.services.database import UserRepository
 from app.models.user_models import UserSchema, PreferencesSchema
 from app.tests.database_mock import mock_user_collection, mock_user_repository
 from app.tests.constants import mock_user

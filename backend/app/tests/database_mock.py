@@ -16,10 +16,12 @@ from app.models.email_models import EmailSchema
 from app.models.user_models import UserSchema
 from app.models.summary_models import SummarySchema
 from app.models.auth_models import TokenData
-from app.services.database.email_repository import EmailRepository
-from app.services.database.user_repository import UserRepository
-from app.services.database.summary_repository import SummaryRepository
-from app.services.database.token_repository import TokenRepository
+from app.services.database import (
+    EmailRepository,
+    UserRepository,
+    SummaryRepository,
+    TokenRepository
+)
 
 from .constants import EMAIL_DATA, USER_DATA, TOKEN_DATA, SUMMARY_DATA
 
@@ -76,6 +78,7 @@ class MockCollection:
         # Async operations
         self.find_one = AsyncMock(return_value=None)
         self.insert_one = AsyncMock(return_value=MagicMock())
+        self.insert_many = AsyncMock(return_value=MagicMock())
         self.update_one = AsyncMock(return_value=MagicMock())
         self.delete_one = AsyncMock(return_value=MagicMock())
         self.count_documents = AsyncMock(return_value=len(self.test_data))
@@ -83,12 +86,16 @@ class MockCollection:
         self.find_one_and_update = AsyncMock()
         self.find_one_and_delete = AsyncMock()
         self.aggregate = AsyncMock()
+        self.bulk_write = AsyncMock(return_value=MagicMock())
         
         # Set returns for common operations
         self.insert_one.return_value.inserted_id = "mock_id"
         self.update_one.return_value.modified_count = 1
         self.update_one.return_value.upserted_id = None
         self.delete_one.return_value.deleted_count = 1
+        self.insert_many.return_value.inserted_ids = ["mock_id_1", "mock_id_2"]
+        self.bulk_write.return_value.upserted_count = 2
+        self.bulk_write.return_value.modified_count = 3
         
         # Setup for find methods
         self._setup_find()
