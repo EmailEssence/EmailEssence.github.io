@@ -17,7 +17,6 @@ from app.models.email_models import EmailSchema, EmailResponse, ReaderViewRespon
 from app.models.user_models import UserSchema
 from app.routers.user_router import get_current_user
 from app.services.database.factories import get_email_repository, get_email_service
-from app.services.database.email_repository import EmailRepository
 from app.services.email_service import EmailService
 
 router = APIRouter()

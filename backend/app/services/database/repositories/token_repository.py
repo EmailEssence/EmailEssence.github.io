@@ -7,7 +7,7 @@ from motor.motor_asyncio import AsyncIOMotorCollection
 from bson import ObjectId
 
 from app.models.auth_models import TokenData
-from app.services.database.base_repository import BaseRepository
+from app.services.database.repositories.base_repository import BaseRepository
 from app.services.database.interfaces import ITokenRepository
 
 class TokenRepository(BaseRepository[TokenData], ITokenRepository):

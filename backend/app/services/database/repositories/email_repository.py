@@ -7,7 +7,7 @@ from motor.motor_asyncio import AsyncIOMotorCollection
 from bson import ObjectId
 
 from app.models.email_models import EmailSchema
-from app.services.database.base_repository import BaseRepository
+from app.services.database.repositories.base_repository import BaseRepository
 from app.services.database.interfaces import IEmailRepository
 
 class EmailRepository(BaseRepository[EmailSchema], IEmailRepository):

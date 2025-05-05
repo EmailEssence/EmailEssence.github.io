@@ -7,10 +7,10 @@ from typing import Optional
 import logging
 
 from app.services.database.connection import instance
-from app.services.database.email_repository import EmailRepository
-from app.services.database.user_repository import UserRepository
-from app.services.database.token_repository import TokenRepository
-from app.services.database.summary_repository import SummaryRepository
+from app.services.database.repositories.email_repository import EmailRepository
+from app.services.database.repositories.user_repository import UserRepository
+from app.services.database.repositories.token_repository import TokenRepository
+from app.services.database.repositories.summary_repository import SummaryRepository
 
 @lru_cache()
 def get_email_repository() -> EmailRepository:

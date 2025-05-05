@@ -5,6 +5,7 @@ Database connection management.
 from typing import AsyncGenerator
 from motor.motor_asyncio import AsyncIOMotorClient
 import logging
+from pymongo.errors import ConnectionFailure, ServerSelectionTimeoutError
 
 from app.utils.config import get_settings
 
@@ -32,12 +33,32 @@ class DatabaseConnection:
         if self._client is None:
             try:
                 settings = get_settings()
-                self._client = AsyncIOMotorClient(settings.mongo_uri)
+                
+                # Configure connection options
+                connection_options = {
+                    "serverSelectionTimeoutMS": 5000,  # 5 second timeout
+                    "connectTimeoutMS": 10000,        # 10 second connection timeout
+                    "retryWrites": True,              # Enable retryable writes
+                    "retryReads": True,               # Enable retryable reads
+                }
+                
+                self._client = AsyncIOMotorClient(
+                    settings.mongo_uri,
+                    **connection_options
+                )
                 self._db = self._client.email_essence
                 
-                # Verify connection
-                await self._client.admin.command('ping')
-                logger.info("✅ MongoDB connection established successfully")
+                # Verify connection with timeout
+                try:
+                    logger.info("🔍 Attempting to connect to MongoDB...")
+                    await self._client.admin.command('ping')
+                    logger.info("✅ MongoDB connection established successfully")
+                except ServerSelectionTimeoutError:
+                    logger.error("❌ MongoDB server selection timeout - server not available")
+                    raise
+                except ConnectionFailure:
+                    logger.error("❌ MongoDB connection failure - could not connect to server")
+                    raise
                 
                 # Log available collections
                 collections = await self._db.list_collection_names()
@@ -45,6 +66,11 @@ class DatabaseConnection:
                 
             except Exception as e:
                 logger.error(f"❌ Failed to connect to MongoDB: {e}")
+                # Clean up on failure
+                if self._client:
+                    self._client.close()
+                    self._client = None
+                    self._db = None
                 raise
 
     async def shutdown(self):

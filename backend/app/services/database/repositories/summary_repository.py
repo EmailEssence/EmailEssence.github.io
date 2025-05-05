@@ -8,7 +8,7 @@ from bson import ObjectId
 from datetime import datetime
 
 from app.models.summary_models import SummarySchema
-from app.services.database.base_repository import BaseRepository
+from app.services.database.repositories.base_repository import BaseRepository
 from app.services.database.interfaces import ISummaryRepository
 
 class SummaryRepository(BaseRepository[SummarySchema], ISummaryRepository):

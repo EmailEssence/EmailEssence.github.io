@@ -3,7 +3,7 @@ Unit tests for SummaryRepository.
 """
 import pytest
 from datetime import datetime, timezone
-from app.services.database.summary_repository import SummaryRepository
+from app.services.database import SummaryRepository
 from app.models.summary_models import SummarySchema
 from app.tests.database_mock import mock_summary_collection, mock_summary_repository
 from app.tests.constants import mock_summary_schema
