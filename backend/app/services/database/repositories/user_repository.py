@@ -7,7 +7,7 @@ from motor.motor_asyncio import AsyncIOMotorCollection
 from bson import ObjectId
 
 from app.models.user_models import UserSchema
-from app.services.database.base_repository import BaseRepository
+from app.services.database.repositories.base_repository import BaseRepository
 from app.services.database.interfaces import IUserRepository
 
 class UserRepository(BaseRepository[UserSchema], IUserRepository):
