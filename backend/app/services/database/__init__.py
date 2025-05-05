@@ -11,11 +11,11 @@ from typing import List, Type
 from motor.motor_asyncio import AsyncIOMotorCollection
 
 from .connection import DatabaseConnection
-from .base_repository import BaseRepository
-from .email_repository import EmailRepository
-from .user_repository import UserRepository
-from .token_repository import TokenRepository
-from .summary_repository import SummaryRepository
+from .repositories.base_repository import BaseRepository
+from .repositories.email_repository import EmailRepository
+from .repositories.user_repository import UserRepository
+from .repositories.token_repository import TokenRepository
+from .repositories.summary_repository import SummaryRepository
 from .factories import (
     get_email_repository,
     get_user_repository,
