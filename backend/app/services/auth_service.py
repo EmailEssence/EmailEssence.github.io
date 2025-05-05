@@ -90,9 +90,9 @@ class AuthService:
         
         try:
             # Get the current user's email from the token data
-            token_record = await self.get_token_record(current_user_data['email'])
+            token_record = await self.get_token_record(current_user_data['google_id'])
             if not token_record:
-                logger.warning(f"No token record found for user: {current_user_data['email']}")
+                logger.warning(f"No token record found for user: {current_user_data['google_id']}")
                 raise HTTPException(
                     status_code=status.HTTP_401_UNAUTHORIZED,
                     detail="No valid token record found"
@@ -108,7 +108,7 @@ class AuthService:
             # Allow access if:
             # 1. User is accessing their own data
             # 2. User has admin privileges
-            if current_user['id'] == user_id or current_user.get('is_admin', False):
+            if current_user['google_id'] == user_id or current_user.get('is_admin', False):
                 logger.debug(f"Access granted for user ID: {user_id}")
                 return True
                 
