@@ -26,6 +26,8 @@ class SummarySchema(BaseModel):
         Returns:
             SummarySchema: New instance
         """
+        if isinstance(data, cls):
+            return data
         return cls(**data)
     
     def to_dict(self) -> Dict:
