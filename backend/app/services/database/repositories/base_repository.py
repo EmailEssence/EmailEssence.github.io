@@ -6,6 +6,7 @@ from typing import Dict, Any, Optional, List, Generic, TypeVar, Type
 from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorCollection
 from pydantic import BaseModel
+from pymongo.operations import UpdateOne
 
 from app.services.database.connection import instance
 
