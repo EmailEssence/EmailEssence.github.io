@@ -12,6 +12,7 @@ import Client from "../client/client";
 import Login from "../login/login";
 import Error from "../login/Error";
 import Loading from "../login/Loading";
+import Home from "../login/Home";
 
 function Router() {
   return (
@@ -39,6 +40,7 @@ export function AppRouter() {
   return (
     <Routes>
       <Route path="/" element={<Navigate to="/login" replace />} />
+      <Route path="/home" element={<Home />} />
       <Route
         path="/login"
         element={<Login handleGoogleClick={authenticate} />}
