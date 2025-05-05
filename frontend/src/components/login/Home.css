@@ -1,0 +1,34 @@
+@import url("../../main.css");
+.home {
+  height: 100vh;
+  background-color: var(--grey-3);
+}
+
+.home .container {
+  margin: auto;
+  height: 50vh;
+  width: 50vw;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: var(--grey-2);
+  gap: 2rem;
+}
+
+.home .logo {
+  color: var(--white);
+  background-color: var(--grey);
+  height: calc(calc(3rem + 4vw) + 4vh);
+  width: calc(calc(3rem + 4vw) + 4vh);
+}
+
+.home .about {
+  color: var(--color-text);
+}
+
+.home .login-navigate-button {
+  color: var(--color-text);
+  background-color: var(--grey-3);
+  width: 7rem;
+}
