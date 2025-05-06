@@ -6,10 +6,10 @@ export default function Home() {
   const navigate = useNavigate();
   return (
     <div className="home">
-      <div className="container">
-        <div className="logo">
-          <Logo />
-        </div>
+      <div className="logo-container">
+        <Logo />
+      </div>
+      <div className="nav-container">
         <div className="about">
           Lorem ipsum dolor sit amet consectetur adipisicing elit. Vero officiis
           enim corrupti totam autem ipsam quaerat molestiae reprehenderit quae

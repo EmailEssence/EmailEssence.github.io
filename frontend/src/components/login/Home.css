@@ -1,34 +1,46 @@
 @import url("../../main.css");
 .home {
   height: 100vh;
-  background-color: var(--grey-3);
+  background-color: var(--grey-split);
+  padding: calc(2rem + 1vh) calc(5rem + 4vw);
 }
 
-.home .container {
+.home .logo-container {
   margin: auto;
+  color: var(--white);
+  background-color: var(--grey-split);
+  height: calc(calc(3rem + 7vw) + 7vh);
+  width: calc(calc(3rem + 7vw) + 7vh);
+}
+
+.home .nav-container {
+  box-shadow: 0.5rem 0.5rem 1rem rgba(0, 0, 0, 0.3);
+  border-radius: 0.6rem;
+  padding: calc(2rem + 2vh) calc(1rem + 1vw);
+  margin: calc(2rem + 4vh) auto;
   height: 50vh;
   width: 50vw;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: 1fr 5vh;
   justify-content: center;
   align-items: center;
-  background-color: var(--grey-2);
+  background-color: var(--grey-3);
   gap: 2rem;
-}
-
-.home .logo {
-  color: var(--white);
-  background-color: var(--grey);
-  height: calc(calc(3rem + 4vw) + 4vh);
-  width: calc(calc(3rem + 4vw) + 4vh);
 }
 
 .home .about {
   color: var(--color-text);
+  font-size: calc(calc(0.6rem + 0.3vh) + 0.3vw);
 }
 
 .home .login-navigate-button {
-  color: var(--color-text);
-  background-color: var(--grey-3);
-  width: 7rem;
+  margin: calc(2rem + 3vh) auto;
+  padding: calc(0.5rem + 0.25vw);
+  width: 60%;
+  background-color: #d9d9d9;
+  border: 0.1rem solid black;
+  border-radius: 0.5rem;
+  box-shadow: 0.2rem 0.2rem 0.6rem rgba(0, 0, 0, 0.2);
+  font-size: calc(calc(0.6rem + 0.3vh) + 0.3vw);
+  cursor: pointer;
 }
