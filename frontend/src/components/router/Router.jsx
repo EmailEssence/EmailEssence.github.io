@@ -1,25 +1,12 @@
 import { useEffect, useState } from "react";
-import {
-  BrowserRouter,
-  Navigate,
-  Route,
-  Routes,
-  useLocation,
-} from "react-router";
+import { Navigate, Route, Routes, useLocation } from "react-router";
 import { authenticate } from "../../authentication/authenticate";
 import { emails, userPreferences } from "../../emails/emailHandler";
 import Client from "../client/client";
 import Login from "../login/login";
 import Error from "../login/Error";
 import Loading from "../login/Loading";
-
-function Router() {
-  return (
-    <BrowserRouter>
-      <AppRouter />
-    </BrowserRouter>
-  );
-}
+import Home from "../login/Home";
 
 export function AppRouter() {
   const [userEmails, setUserEmails] = useState(emails);
@@ -38,7 +25,8 @@ export function AppRouter() {
 
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/login" replace />} />
+      <Route path="/" element={<Navigate to="/home" replace />} />
+      <Route path="/home" element={<Home />} />
       <Route
         path="/login"
         element={<Login handleGoogleClick={authenticate} />}
@@ -61,4 +49,4 @@ export function AppRouter() {
   );
 }
 
-export default Router;
+export default AppRouter;
