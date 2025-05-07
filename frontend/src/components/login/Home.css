@@ -1,46 +1,47 @@
 @import url("../../main.css");
 .home {
   height: 100vh;
-  background-color: var(--grey-split);
+  background-color: var(--white);
   padding: calc(2rem + 1vh) calc(5rem + 4vw);
 }
 
-.home .logo-container {
-  margin: auto;
+.home .nav-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: calc(3rem + 2vh);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 calc(2rem + 1vw);
+  background-color: var(--grey-3);
+  box-shadow: 0 0.2rem 0.5rem rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  font-size: var(--font-size);
+}
+
+.home .nav-container .logo-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: var(--white);
   background-color: var(--grey-split);
-  height: calc(calc(3rem + 7vw) + 7vh);
-  width: calc(calc(3rem + 7vw) + 7vh);
+  height: calc(2.5rem + 1vh);
+  width: calc(2.5rem + 1vh);
+  font-size: calc(1rem + 0.5vw);
 }
 
-.home .nav-container {
-  box-shadow: 0.5rem 0.5rem 1rem rgba(0, 0, 0, 0.3);
-  border-radius: 0.6rem;
-  padding: calc(2rem + 2vh) calc(1rem + 1vw);
-  margin: calc(2rem + 4vh) auto;
-  height: 50vh;
-  width: 50vw;
-  display: grid;
-  grid-template-rows: 1fr 5vh;
-  justify-content: center;
-  align-items: center;
-  background-color: var(--grey-3);
-  gap: 2rem;
-}
-
-.home .about {
+.home .nav-container .nav-item {
   color: var(--color-text);
-  font-size: calc(calc(0.6rem + 0.3vh) + 0.3vw);
+  font-size: calc(0.8rem + 0.3vw);
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+  transition: color 0.3s ease, background-color 0.3s ease;
 }
 
-.home .login-navigate-button {
-  margin: calc(2rem + 3vh) auto;
-  padding: calc(0.5rem + 0.25vw);
-  width: 60%;
-  background-color: #d9d9d9;
-  border: 0.1rem solid black;
-  border-radius: 0.5rem;
-  box-shadow: 0.2rem 0.2rem 0.6rem rgba(0, 0, 0, 0.2);
-  font-size: calc(calc(0.6rem + 0.3vh) + 0.3vw);
-  cursor: pointer;
+.home .nav-container .nav-item:hover {
+  color: var(--primary-color);
+  background-color: rgba(0, 0, 0, 0.1);
 }
+

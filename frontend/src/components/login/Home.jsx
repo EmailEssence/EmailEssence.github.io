@@ -8,7 +8,7 @@ export default function Home() {
     <div className="home">
 
       <div className="nav-container">
-        <div className="logo-container">
+        <div className="logo-container" onClick={() => navigate("/")}>
           <Logo />
         </div>
         <div className="nav-item" onClick={() => navigate("/about")}>
