@@ -4,7 +4,7 @@ import "./main.css";
 import Display from "./components/router/Router";
 
 createRoot(document.getElementById("root")).render(
-  <BrowserRouter basename={"/"}>
+  <BrowserRouter basename={`/${import.meta.env.PUBLIC_URL}`}>
     <Display />
   </BrowserRouter>
 );

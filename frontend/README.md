@@ -39,3 +39,7 @@ npm install @mozilla/readability
 ```bash
 npm install --save-dev @testing-library/user-event
 ```
+
+## URL
+
+`https://email.madigan.app/`

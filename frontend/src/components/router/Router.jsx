@@ -43,7 +43,7 @@ export function AppRouter() {
 
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/home" replace />} />
+      <Route path="" element={<Navigate to="/home" replace />} />
       <Route path="/home" element={<Home />} />
       <Route
         path="/login"
