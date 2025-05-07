@@ -1,4 +1,5 @@
 @import url("../../main.css");
+
 .home {
   height: 100vh;
   background-color: var(--white);
@@ -67,13 +68,13 @@
   margin-top: calc(0.5rem + 0.5vh);
 }
 
-.home .login-navigate-button{
+.home .login-navigate-button {
   background-color: var(--grey);
   color: var(--white);
   margin-top: calc(2rem + 1vh);
   padding: calc(0.3rem + 0.3vh) calc(0.8rem + 0.8vw);
   border-radius: calc(0.3rem + 0.3vh);
-  font-size: var(--font-size);
+  font-size: calc(0.5rem + 1vh);
   cursor: pointer;
 }
 
@@ -81,4 +82,41 @@
   background-color: var(--grey-2);
   color: var(--white);
   transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.home .overview-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: calc(50vh - (3rem + 2vh));
+  text-align: center;
+}
+
+.home .overview h1 {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  text-align: left;
+  font-size: calc(0.5rem + 1vh);
+}
+
+.home .overview-items {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  margin-top: calc(2rem + 2vh);
+  padding: 2 calc(1rem + 1vw);
+  gap: calc(1rem + 1vh);
+}
+
+.home .item1, .item2, .item3 {
+  border: calc(0.1rem + 0.1vh) solid var(--grey-2);
+  border-radius: calc(0.3rem + 0.3vh);
+  padding: calc(0.5rem + 0.5vh) calc(1rem + 1vw);
+ 
 }
