@@ -1,0 +1,27 @@
+name: Test Frontend on GitHub Actions
+
+on:
+  push:
+    branches: [frontend, main] # Trigger workflow on pushes to the 'main' branch
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ./frontend # Set the working directory for all 'run' steps
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "lts/*" # Use the latest LTS version of Node.js
+
+      - name: Install dependencies
+        run: npm install # Or yarn install, depending on your projec
+
+      - name: Run tests
+        run: npm test

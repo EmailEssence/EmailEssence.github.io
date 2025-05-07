@@ -1,44 +1,21 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
-import Dashboard from "../components/dashboard/dashboard";
+import Dashboard from "../components/client/dashboard/dashboard";
 
-const mockEmailList = [
-  {
-    email_id: "1",
+const mockEmailList = [];
+
+for (let i = 1; i < 50; i++) {
+  mockEmailList.push({
+    email_id: `${i}`,
     sender: "sender1@example.com",
     received_at: [2025, 2, 17],
-    subject: "Subject 1",
-    summary_text: "Summary 1",
-  },
-  {
-    email_id: "2",
-    sender: "sender2@example.com",
-    received_at: [2025, 2, 17],
-    subject: "Subject 2",
-    summary_text: "Summary 2",
-  },
-  {
-    email_id: "3",
-    sender: "sender3@example.com",
-    received_at: [2025, 2, 17],
-    subject: "Subject 3",
-    summary_text: "Summary 3",
-  },
-  {
-    email_id: "4",
-    sender: "sender4@example.com",
-    received_at: [2025, 2, 17],
-    subject: "Subject 4",
-    summary_text: "Summary 4",
-  },
-  {
-    email_id: "5",
-    sender: "sender5@example.com",
-    received_at: [2025, 2, 17],
-    subject: "Subject 5",
-    summary_text: "Summary 5",
-  },
-];
+    subject: `Subject ${i}`,
+    summary_text: i == 3 ? "" : `Summary ${i}`,
+    body: `Body ${i}`,
+    recipients: `recipient${i}@example.com`,
+    is_read: false,
+  });
+}
 
 const mockHandlePageChange = vi.fn();
 const mockSetCurEmail = vi.fn();
@@ -86,8 +63,9 @@ describe("Dashboard Component", () => {
         setCurEmail={mockSetCurEmail}
       />
     );
+    expect(mockHandlePageChange).not.toHaveBeenCalledWith("/client/inbox");
     fireEvent.click(screen.getByRole("button"));
-    expect(mockHandlePageChange).toHaveBeenCalledWith("inbox");
+    expect(mockHandlePageChange).toHaveBeenCalledWith("/client/inbox");
   });
 
   it("calls setCurEmail and handlePageChange when MiniViewEmail is clicked", () => {
@@ -100,6 +78,19 @@ describe("Dashboard Component", () => {
     );
     fireEvent.click(screen.getByText("Subject 1"));
     expect(mockSetCurEmail).toHaveBeenCalledWith(mockEmailList[0]);
-    expect(mockHandlePageChange).toHaveBeenCalledWith("inbox");
+    expect(mockHandlePageChange).toHaveBeenCalledWith("/client/inbox");
+  });
+
+  it("calls setCurEmail and handlePageChange when WE List Icon is clicked", () => {
+    render(
+      <Dashboard
+        emailList={mockEmailList}
+        handlePageChange={mockHandlePageChange}
+        setCurEmail={mockSetCurEmail}
+      />
+    );
+    fireEvent.click(screen.getByTestId("WEListEmail1"));
+    expect(mockSetCurEmail).toHaveBeenCalledWith(mockEmailList[0]);
+    expect(mockHandlePageChange).toHaveBeenCalledWith("/client/inbox");
   });
 });

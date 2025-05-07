@@ -8,17 +8,18 @@ It provides endpoints for retrieving and updating user information and preferenc
 from fastapi import APIRouter, HTTPException, status, Depends
 from fastapi.security import OAuth2PasswordBearer
 from fastapi.responses import JSONResponse
+from functools import lru_cache
+from typing import Optional, Dict, Any
 
 from google.auth.transport.requests import Request as GoogleRequest
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
-from motor.motor_asyncio import AsyncIOMotorClient
 from starlette.concurrency import run_in_threadpool
 
-from app.models import UserSchema
-from app.services.auth_service import get_tokens_from_code, get_credentials, get_credentials_from_token
-from app.services.user_service import get_or_create_user, get_user_by_id, update_user, delete_user
-from database import db
+from app.models import UserSchema, PreferencesSchema
+from app.services.auth_service import AuthService
+from app.services.user_service import UserService
+from app.services.database.factories import get_user_service, get_auth_service
 
 router = APIRouter()
 
@@ -30,12 +31,16 @@ def debug(message: str):
     """Print debug messages with a consistent format"""
     print(f"[DEBUG] {message}")
 
-async def get_current_user_info(token: str = Depends(oauth2_scheme)):
+async def get_current_user_info(
+    token: str = Depends(oauth2_scheme),
+    auth_service: AuthService = Depends(get_auth_service)
+):
     """
     Validates token and returns user information.
     
     Args:
         token: JWT token from OAuth2 authentication
+        auth_service: Auth service instance
         
     Returns:
         dict: User information and credentials
@@ -46,7 +51,7 @@ async def get_current_user_info(token: str = Depends(oauth2_scheme)):
     debug(f"Validating token for user authentication...")
     
     try:
-        user_data = await get_credentials_from_token(token)
+        user_data = await auth_service.get_credentials_from_token(token)
         debug(f"User authenticated successfully: {user_data.get('user_info', {}).get('email', 'Unknown')}")
         return user_data
     except Exception as e:
@@ -62,12 +67,16 @@ async def get_current_user_info(token: str = Depends(oauth2_scheme)):
     summary="Get current user profile",
     description="Retrieves the authenticated user's profile information or creates a new user record if one doesn't exist"
 )
-async def get_current_user(user_data: dict = Depends(get_current_user_info)):
+async def get_current_user(
+    user_data: dict = Depends(get_current_user_info),
+    user_service: UserService = Depends(get_user_service)
+):
     """
     Retrieve user details or create user if they don't exist.
     
     Args:
         user_data: User information and credentials from token validation
+        user_service: User service instance
         
     Returns:
         UserSchema: User profile information
@@ -79,13 +88,33 @@ async def get_current_user(user_data: dict = Depends(get_current_user_info)):
     
     try:
         user_info = user_data['user_info']
-        credentials = user_data['credentials']
+        user_email = user_info.get('email')
+        google_id = user_info.get('google_id')
         
-        debug(f"Fetching user from database or creating new: {user_info.get('email', 'Unknown')}")
-        user = await get_or_create_user(user_info, credentials)
+        debug(f"Fetching user from database or creating new: {user_email}")
         
+        # Try to get existing user
+        user = await user_service.get_user_by_email(user_email)
         
-        debug(f"User retrieval successful: {user.get('email', 'Unknown')}")
+        # If user doesn't exist, create new user
+        if not user:
+            debug(f"Creating new user: {user_email}")
+            user = await user_service.create_user({
+                "email": user_email,
+                "name": user_info.get("name", ""),
+                "picture": user_info.get("picture", ""),
+                "google_id": google_id
+            })
+        else:
+            debug(f"Found existing user: {user_email}")
+            # Convert UserSchema to dict for checking google_id
+            user_dict = user.dict()
+            # Update google_id if it's missing
+            if not user_dict.get('google_id'):
+                debug(f"Updating missing google_id for user: {user_email}")
+                await user_service.update_user(user_dict['_id'], {"google_id": google_id})
+        
+        debug(f"User retrieval successful: {user_email}")
         return user
     except Exception as e:
         debug(f"[ERROR] Failed to retrieve user: {str(e)}")
@@ -99,12 +128,16 @@ async def get_current_user(user_data: dict = Depends(get_current_user_info)):
     summary="Get user preferences",
     description="Retrieves the authenticated user's preference settings"
 )
-async def get_user_preferences(user_data: dict = Depends(get_current_user_info)):
+async def get_user_preferences(
+    user_data: dict = Depends(get_current_user_info),
+    user_service: UserService = Depends(get_user_service)
+):
     """
     Retrieves the user's preferences from their profile.
     
     Args:
         user_data: User information from token validation
+        user_service: User service instance
         
     Returns:
         dict: User preference settings
@@ -116,17 +149,24 @@ async def get_user_preferences(user_data: dict = Depends(get_current_user_info))
     
     try:
         user_info = user_data['user_info']
+        user_email = user_info.get('email')
         
+        debug(f"Fetching preferences for user: {user_email}")
         
-        debug(f"Fetching preferences for user: {user_info.get('email', 'Unknown')}")
-        user = await db.users.find_one({"google_id": user_info["id"]}, {"preferences": 1, "_id": 0})
-
+        # Get user first to ensure they exist
+        user = await user_service.get_user_by_email(user_email)
         if not user:
-            debug(f"[ERROR] User not found while retrieving preferences: {user_info.get('email', 'Unknown')}")
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-
-        debug(f"Preferences retrieved successfully for user: {user_info.get('email', 'Unknown')}")
-        return {"preferences": user.get("preferences", {})}
+            debug(f"User not found: {user_email}")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+            
+        preferences = user.preferences.dict()
+        debug(f"Preferences retrieved successfully for user: {user_email}")
+        return {"preferences": preferences}
+    except HTTPException:
+        raise
     except Exception as e:
         debug(f"[ERROR] Failed to retrieve user preferences: {str(e)}")
         raise HTTPException(
@@ -140,15 +180,17 @@ async def get_user_preferences(user_data: dict = Depends(get_current_user_info))
     description="Updates the authenticated user's preference settings"
 )
 async def update_preferences(
-    preferences: dict, 
-    user_data: dict = Depends(get_current_user_info)
+    preferences: PreferencesSchema,
+    user_data: dict = Depends(get_current_user_info),
+    user_service: UserService = Depends(get_user_service)
 ):
     """
     Updates the user's preference settings.
     
     Args:
-        preferences: Dictionary of preference settings to update
+        preferences: Preference settings to update
         user_data: User information from token validation
+        user_service: User service instance
         
     Returns:
         dict: Updated user preferences
@@ -156,20 +198,62 @@ async def update_preferences(
     Raises:
         HTTPException: If preference update fails
     """
-    
     debug("Updating user preferences...")
     
     try:
         user_info = user_data['user_info']
+        user_email = user_info.get('email')
         
-        debug(f"Updating preferences for user: {user_info.get('email', 'Unknown')}")
-        await db.users.update_one(
-            {"google_id": user_info["id"]},
-            {"$set": {"preferences": preferences}}
-        )
+        debug(f"Updating preferences for user: {user_email}")
         
-        debug(f"Preferences updated successfully for user: {user_info.get('email', 'Unknown')}")
-        return JSONResponse(content={"message": "Preferences updated successfully"}, status_code=status.HTTP_200_OK)
+        # Get user first to ensure they exist
+        user = await user_service.get_user_by_email(user_email)
+        if not user:
+            debug(f"User not found: {user_email}")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+            
+        debug(f"Found user with ID: {user.google_id}")
+        debug(f"Current user data: {user.dict()}")
+            
+        # Create update data with existing user fields and new preferences
+        update_data = {
+            "google_id": user.google_id,
+            "email": user.email,
+            "name": user.name,
+            "oauth": user.oauth.dict() if hasattr(user, 'oauth') else {},
+            "preferences": preferences.dict()
+        }
+        
+        debug(f"Update data: {update_data}")
+        
+        # Update user with new preferences
+        try:
+            updated_user = await user_service.update_user(
+                user.google_id,
+                update_data
+            )
+        except Exception as e:
+            debug(f"Error updating user: {str(e)}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Failed to update user: {str(e)}"
+            )
+        
+        if not updated_user:
+            debug("Update returned None")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to update preferences"
+            )
+        
+        debug(f"Updated user data: {updated_user.dict()}")
+        debug(f"Preferences updated successfully for user: {user_email}")
+        return {"preferences": updated_user.preferences.dict()}
+    except HTTPException:
+        raise
     except Exception as e:
         debug(f"[ERROR] Failed to update preferences: {str(e)}")
         raise HTTPException(
@@ -177,91 +261,132 @@ async def update_preferences(
             detail=f"Failed to update preferences: {str(e)}"
         )
 
-@router.get(
-    "/{user_id}",
-    response_model=UserSchema,
-    summary="Get user by ID",
-    description="Retrieves user information by user ID"
-)
-async def get_user(user_id: str):
+@router.get("/{user_id}", response_model=UserSchema)
+async def get_user(
+    user_id: str,
+    user_service: UserService = Depends(get_user_service),
+    auth_service: AuthService = Depends(get_auth_service)
+) -> UserSchema:
     """
-    Retrieves a user by their ID.
+    Get a user by ID.
     
     Args:
-        user_id: Unique identifier for the user
+        user_id: The ID of the user to retrieve
+        user_service: Injected UserService instance
+        auth_service: Injected AuthService instance
         
     Returns:
-        UserSchema: User profile information
+        UserSchema: The requested user
         
     Raises:
-        HTTPException: If user not found
+        HTTPException: 404 if user not found
     """
-    debug(f"Retrieving user with ID: {user_id}")
-    
-    user = await get_user_by_id(user_id)
+    user = await user_service.get_user(user_id)
     if not user:
-        debug(f"[ERROR] User not found: {user_id}")
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-    
-    debug(f"User retrieved successfully: {user.get('email', 'Unknown')}")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
     return user
 
-@router.put(
-    "/{user_id}",
-    response_model=UserSchema,
-    summary="Update user",
-    description="Updates user information by user ID"
-)
-async def update_user_info(user_id: str, user_data: dict):
+@router.get("/email/{email}", response_model=UserSchema)
+async def get_user_by_email(
+    email: str,
+    user_service: UserService = Depends(get_user_service)
+) -> UserSchema:
     """
-    Updates a user's information.
+    Get a user by email.
     
     Args:
-        user_id: Unique identifier for the user
-        user_data: User information to update
+        email: The email of the user to retrieve
+        user_service: Injected UserService instance
         
     Returns:
-        UserSchema: Updated user profile
+        UserSchema: The requested user
         
     Raises:
-        HTTPException: If user update fails
+        HTTPException: 404 if user not found
     """
-    debug(f"Updating user: {user_id}")
-    
-    updated_user = await update_user(user_id, user_data)
-    if not updated_user:
-        debug(f"[ERROR] User update failed: {user_id}")
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found or update failed")
-    
-    debug(f"User updated successfully: {user_id}")
-    return updated_user
+    user = await user_service.get_user_by_email(email)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    return user
 
-@router.delete(
-    "/{user_id}",
-    summary="Delete user",
-    description="Deletes a user account by user ID",
-    status_code=status.HTTP_204_NO_CONTENT
-)
-async def delete_user_info(user_id: str):
+@router.post("/", response_model=UserSchema)
+async def create_user(
+    user_data: UserSchema,
+    user_service: UserService = Depends(get_user_service)
+) -> UserSchema:
     """
-    Deletes a user from the system.
+    Create a new user.
     
     Args:
-        user_id: Unique identifier for the user
+        user_data: The user data to create
+        user_service: Injected UserService instance
         
     Returns:
-        None
+        UserSchema: The created user
+    """
+    return await user_service.create_user(user_data)
+
+@router.put("/{user_id}", response_model=UserSchema)
+async def update_user(
+    user_id: str,
+    user_data: UserSchema,
+    user_service: UserService = Depends(get_user_service),
+    auth_service: AuthService = Depends(get_auth_service)
+) -> UserSchema:
+    """
+    Update a user.
+    
+    Args:
+        user_id: The ID of the user to update
+        user_data: The updated user data
+        user_service: Injected UserService instance
+        auth_service: Injected AuthService instance
+        
+    Returns:
+        UserSchema: The updated user
         
     Raises:
-        HTTPException: If user deletion fails
+        HTTPException: 404 if user not found
     """
-    debug(f"Deleting user: {user_id}")
+    user = await user_service.update_user(user_id, user_data)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    return user
+
+@router.delete("/{user_id}")
+async def delete_user(
+    user_id: str,
+    user_service: UserService = Depends(get_user_service),
+    auth_service: AuthService = Depends(get_auth_service)
+) -> dict:
+    """
+    Delete a user.
     
-    success = await delete_user(user_id)
+    Args:
+        user_id: The ID of the user to delete
+        user_service: Injected UserService instance
+        auth_service: Injected AuthService instance
+        
+    Returns:
+        dict: Success message
+        
+    Raises:
+        HTTPException: 404 if user not found
+    """
+    success = await user_service.delete_user(user_id)
     if not success:
-        debug(f"[ERROR] User delete failed: {user_id}")
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found or delete failed")
-    
-    debug(f"User deleted successfully: {user_id}")
-    return JSONResponse(content={"message": "User deleted successfully"}, status_code=status.HTTP_200_OK)
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    return {"message": "User deleted successfully"}
     

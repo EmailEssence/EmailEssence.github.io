@@ -3,6 +3,7 @@ from pydantic_settings import BaseSettings
 from functools import lru_cache
 from enum import Enum
 from typing import Optional
+from pydantic import ConfigDict
 
 class SummarizerProvider(str, Enum):
     OPENAI = "openai" # Currently Best option 
@@ -79,10 +80,7 @@ class Settings(BaseSettings):
     summarizer_batch_threshold: int = 10
     summarizer_prompt_version: PromptVersion = PromptVersion.latest()
     
-
-    class Config:
-        env_file = ".env"
-        use_enum_values = True
+    model_config = ConfigDict(env_file=".env", use_enum_values=True)
         
 @lru_cache()
 def get_settings() -> Settings:

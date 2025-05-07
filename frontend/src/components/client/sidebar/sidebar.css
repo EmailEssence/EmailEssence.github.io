@@ -1,0 +1,62 @@
+@import url("../../../main.css");
+
+:root {
+  text-align: center;
+}
+.sidebar .container {
+  margin: auto;
+  font-size: 1rem;
+  height: var(--sidebar-icon-height);
+  width: var(--sidebar-width);
+}
+
+.sidebar {
+  background-color: var(--color-background-sidebar);
+  height: 100vh;
+  display: grid;
+  text-align: left;
+  grid-template-rows: var(--sidebar-icon-height) var(--sidebar-icon-height) var(
+      --sidebar-icon-height
+    ) 1fr var(--sidebar-icon-height);
+  width: var(--sidebar-width);
+}
+
+.sidebar .icon {
+  height: var(--sidebar-icon-height);
+  color: var(--white);
+  display: grid;
+  grid-template-columns: var(--sidebar-icon-height) 1fr;
+  gap: -5px;
+  align-items: center;
+}
+
+.sidebar .icon > p {
+  font-size: calc(var(--sidebar-icon-height) / 3.3);
+  font-weight: 600;
+}
+
+/* dynamic icon constraints */
+.sidebar .icon > div {
+  height: calc(var(--sidebar-icon-height) - 0.8vw);
+  width: calc(var(--sidebar-icon-height) - 0.8vw);
+  margin: auto;
+}
+
+/* if icon is logo make it bigger */
+.sidebar .icon > .logo {
+  height: calc(var(--sidebar-icon-height) - 0.2vw);
+  width: calc(var(--sidebar-icon-height) - 0.2vw);
+}
+
+/* controls color of icon, and icon text when button is unselected */
+.sidebar .container .icon,
+.sidebar .container .icon p {
+  color: var(--color-icon);
+}
+
+/* controls color of icon, icon text, and background when button is selected */
+.sidebar .container.selected .icon,
+.sidebar .container.selected .icon p {
+  color: var(--color-icon);
+  background-color: var(--color-sidebar-selected);
+}

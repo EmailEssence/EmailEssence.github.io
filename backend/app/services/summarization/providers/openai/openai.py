@@ -152,7 +152,8 @@ class OpenAIEmailSummarizer(AdaptiveSummarizer[EmailSchema]):
         self,
         email_id: str,
         summary_text: str,
-        keywords: List[str]
+        keywords: List[str],
+        google_id: str
     ) -> SummarySchema:
         """Create a SummarySchema from processing results."""
         return SummarySchema(
@@ -160,5 +161,6 @@ class OpenAIEmailSummarizer(AdaptiveSummarizer[EmailSchema]):
             summary_text=summary_text,
             keywords=keywords,
             generated_at=datetime.now(timezone.utc),
-            model_info=self._backend.model_info
+            model_info=self._backend.model_info,
+            google_id=google_id
         )
