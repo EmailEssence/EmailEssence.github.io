@@ -26,7 +26,7 @@ export function Router() {
   return <AppRouter />;
 }
 
-function AppRouter() {
+export function AppRouter() {
   const [userEmails, setUserEmails] = useState(emails);
   const location = useLocation();
   useEffect(() => {
