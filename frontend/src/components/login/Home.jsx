@@ -11,10 +11,9 @@ export default function Home() {
       </div>
       <div className="nav-container">
         <div className="about">
-          Lorem ipsum dolor sit amet consectetur adipisicing elit. Vero officiis
-          enim corrupti totam autem ipsam quaerat molestiae reprehenderit quae
-          ab nihil, accusamus odit eum expedita porro saepe, dolorem perferendis
-          tempore.
+          Cut through email overload with our AI-powered solution that
+          intelligently summarizes and categorizes messages, bringing clarity to
+          your communications.
         </div>
         <div
           className="login-navigate-button"
