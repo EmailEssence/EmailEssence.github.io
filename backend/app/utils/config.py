@@ -8,6 +8,7 @@ from pydantic import ConfigDict
 class SummarizerProvider(str, Enum):
     OPENAI = "openai" # Currently Best option 
     GOOGLE = "gemini"  
+    OPENROUTER = "openrouter"
     # TODO: Add DeepSeek
     LOCAL = "local"
 
@@ -35,6 +36,7 @@ class ProviderModel(str, Enum):
         defaults = {
             SummarizerProvider.OPENAI: cls.GPT_4O_MINI,
             SummarizerProvider.GOOGLE: cls.GEMINI_2_FLASH_LITE,
+            SummarizerProvider.OPENROUTER: cls.CLAUDE_3_OPUS,
             SummarizerProvider.LOCAL: cls.GEMINI_2_FLASH_LITE,  # Fallback to OpenAI
         }
 

@@ -103,15 +103,9 @@ class BasePromptManager(ABC, PromptManager):
 # Core prompt templates
 EMAIL_SUMMARY_SYSTEM_PROMPT = PromptTemplate(
     version=PromptVersion.V2,
-    template="""You are a precise email summarizer that produces JSON output. Your task is to:
+    template="""You are a precise email summarizer. Your task is to:
 1. Create a concise, factual single-sentence summary capturing the key message or request
-2. Extract 3-5 key topics or themes as keywords
-
-Return your analysis in JSON format with the following structure:
-{
-    "summary": "The concise summary sentence",
-    "keywords": ["keyword1", "keyword2", "keyword3"]
-}""",
+2. Extract 3-5 key topics or themes as keywords""",
     metadata={
         "description": "System prompt for email summarization with JSON output",
         "response_format": {"type": "json_object"},
@@ -124,12 +118,10 @@ Return your analysis in JSON format with the following structure:
 
 EMAIL_SUMMARY_USER_PROMPT = PromptTemplate(
     version=PromptVersion.V2,
-    template="""Please analyze this email and provide the summary and keywords in JSON format.
+    template="""Please analyze this email and provide a summary and keywords.
 
 Email Content:
-{content}
-
-Remember to format your response as JSON with 'summary' and 'keywords' fields.""",
+{content}""",
     metadata={
         "description": "User prompt for email summarization with JSON format specification",
         "variables": ["content"]
