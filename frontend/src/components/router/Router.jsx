@@ -1,5 +1,11 @@
 import { useEffect, useState } from "react";
-import { Navigate, Route, Routes, useLocation } from "react-router";
+import {
+  Navigate,
+  Route,
+  Routes,
+  useLocation,
+  BrowserRouter,
+} from "react-router";
 import { authenticate } from "../../authentication/authenticate";
 import { emails, userPreferences } from "../../emails/emailHandler";
 import Client from "../client/client";
@@ -8,7 +14,19 @@ import Error from "../login/Error";
 import Loading from "../login/Loading";
 import Home from "../login/Home";
 
-export function AppRouter() {
+export function Router() {
+  const testing = import.meta.env.MODE === "test";
+  if (testing) {
+    return (
+      <BrowserRouter>
+        <AppRouter />
+      </BrowserRouter>
+    );
+  }
+  return <AppRouter />;
+}
+
+function AppRouter() {
   const [userEmails, setUserEmails] = useState(emails);
   const location = useLocation();
   useEffect(() => {
@@ -49,4 +67,4 @@ export function AppRouter() {
   );
 }
 
-export default AppRouter;
+export default Router;
