@@ -7,7 +7,7 @@
   "scripts": {
     "predeploy": "npm run build",
     "deploy": "gh-pages -d build",
-    "build": "react-scripts build && cp build/index.html build/404.html",
+    "build": "vite build && cp build/index.html build/404.html",
     "dev": "vite --port 3000",
     "lint": "eslint ./src",
     "preview": "vite preview",
