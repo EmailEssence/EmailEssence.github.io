@@ -119,3 +119,14 @@
   border-radius: calc(0.3rem + 0.3vh);
   padding: calc(0.5rem + 0.5vh) calc(1rem + 1vw);
 }
+
+/* ------------------------------------------------------------------------------- */
+
+.home .terms-of-service, .privacy-policy, .contact-us, .about-us {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  margin-top: calc(2rem + 2vh);
+}
