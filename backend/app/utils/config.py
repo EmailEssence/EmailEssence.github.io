@@ -28,6 +28,12 @@ class ProviderModel(str, Enum):
     
     # TODO: Check for updates to flash_lite!
 
+    # OpenRouter Models
+    LLAMA_4_SCOUT = "meta-llama/llama-4-scout:free"
+    LLAMA_4_MAVERICK = "meta-llama/llama-4-maverick:free"
+    GEMMA_3_27B_IT = "google/gemma-3-27b-it:free"
+
+
     # DeepSeek Models TODO: UNIMPLEMENTED
 
     @classmethod
@@ -36,7 +42,7 @@ class ProviderModel(str, Enum):
         defaults = {
             SummarizerProvider.OPENAI: cls.GPT_4O_MINI,
             SummarizerProvider.GOOGLE: cls.GEMINI_2_FLASH_LITE,
-            SummarizerProvider.OPENROUTER: cls.CLAUDE_3_OPUS,
+            SummarizerProvider.OPENROUTER: cls.LLAMA_4_SCOUT,
             SummarizerProvider.LOCAL: cls.GEMINI_2_FLASH_LITE,  # Fallback to OpenAI
         }
 
@@ -75,7 +81,7 @@ class Settings(BaseSettings):
     google_api_key: str | None = None
     deepseek_api_key: str | None = None
     gemini_api_key: str | None = None
-    
+    openrouter_api_key: str | None = None
     # Summarizer settings
     summarizer_provider: SummarizerProvider = SummarizerProvider.default()
     summarizer_model: ProviderModel = ProviderModel.default_for_provider(summarizer_provider)
