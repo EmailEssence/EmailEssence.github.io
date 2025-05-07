@@ -43,36 +43,38 @@ export default function Home() {
       <div className="overview-container">
         <div className="overview">
           <h1>Overview</h1>
-          <div className="box1">
-            {/* insert image */}
-            <h2>Talking Point 1</h2>
-            <p>
-              Lorem nostrud tempor ut eiusmod ipsum irure fugiat sunt consectetur
-              cillum tempor. Nulla non qui veniam amet amet qui ut ad est duis
-              qui enim minim Lorem. Elit ea ea adipisicing nisi et cillum eu
-              proident magna do dolor.
-            </p>
-          </div>
+          <div className="overview-items">
+            <div className="item1">
+              {/* insert image */}
+              <h2>Talking Point 1</h2>
+              <p>
+                Lorem nostrud tempor ut eiusmod ipsum irure fugiat sunt consectetur
+                cillum tempor. Nulla non qui veniam amet amet qui ut ad est duis
+                qui enim minim Lorem. Elit ea ea adipisicing nisi et cillum eu
+                proident magna do dolor.
+              </p>
+            </div>
 
-          <div className="box2">
-            {/* insert image */}
-            <h2>Talking Point 2</h2>
-            <p>
-              Lorem nostrud tempor ut eiusmod ipsum irure fugiat sunt consectetur
-              cillum tempor. Nulla non qui veniam amet amet qui ut ad est duis
-              qui enim minim Lorem. Elit ea ea adipisicing nisi et cillum eu
-              proident magna do dolor.
-            </p>
-          </div>
-          <div className="box2">
-            {/* insert image */}
-            <h2>Talking Point 3</h2>
-            <p>
-              Lorem nostrud tempor ut eiusmod ipsum irure fugiat sunt consectetur
-              cillum tempor. Nulla non qui veniam amet amet qui ut ad est duis
-              qui enim minim Lorem. Elit ea ea adipisicing nisi et cillum eu
-              proident magna do dolor.
-            </p>
+            <div className="item2">
+              {/* insert image */}
+              <h2>Talking Point 2</h2>
+              <p>
+                Lorem nostrud tempor ut eiusmod ipsum irure fugiat sunt consectetur
+                cillum tempor. Nulla non qui veniam amet amet qui ut ad est duis
+                qui enim minim Lorem. Elit ea ea adipisicing nisi et cillum eu
+                proident magna do dolor.
+              </p>
+            </div>
+            <div className="item3">
+              {/* insert image */}
+              <h2>Talking Point 3</h2>
+              <p>
+                Lorem nostrud tempor ut eiusmod ipsum irure fugiat sunt consectetur
+                cillum tempor. Nulla non qui veniam amet amet qui ut ad est duis
+                qui enim minim Lorem. Elit ea ea adipisicing nisi et cillum eu
+                proident magna do dolor.
+              </p>
+            </div>
           </div>
         </div>
       </div>
