@@ -1,11 +1,5 @@
 import { useEffect, useState } from "react";
-import {
-  BrowserRouter,
-  Navigate,
-  Route,
-  Routes,
-  useLocation,
-} from "react-router";
+import { Navigate, Route, Routes, useLocation } from "react-router";
 import { authenticate } from "../../authentication/authenticate";
 import { emails, userPreferences } from "../../emails/emailHandler";
 import Client from "../client/client";
@@ -13,14 +7,6 @@ import Login from "../login/login";
 import Error from "../login/Error";
 import Loading from "../login/Loading";
 import Home from "../login/Home";
-
-function Router() {
-  return (
-    <BrowserRouter>
-      <AppRouter />
-    </BrowserRouter>
-  );
-}
 
 export function AppRouter() {
   const [userEmails, setUserEmails] = useState(emails);
@@ -63,4 +49,4 @@ export function AppRouter() {
   );
 }
 
-export default Router;
+export default AppRouter;
