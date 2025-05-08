@@ -136,6 +136,8 @@ class EmailService:
     # Email Parsing Methods
     # -------------------------------------------------------------------------
     
+    # Deprecated: This method is no longer used
+    # TODO: Remove this method after we're happy with the new sanitization methods
     def _clean_body(self, body: str, is_html: bool = False) -> str:
         """Clean up email body content."""
         body = re.sub(r'\[image:[^\]]*\]', '', body)
