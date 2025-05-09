@@ -3,6 +3,7 @@ import PropTypes from "prop-types";
 import { useEffect, useState } from "react";
 import ReactDom from "react-dom";
 import ReaderViewIcon from "../../../assets/ReaderView";
+import Email from "./Email";
 import "./emailDisplay.css";
 
 function EmailDisplay({
@@ -31,7 +32,9 @@ function EmailDisplay({
       </div>
       <div className="body">
         <div className="content-container">
-          <div className="content">{curEmail.body}</div>
+          <div className="content">
+            <Email content={curEmail.body} />
+          </div>
         </div>
       </div>
     </div>
