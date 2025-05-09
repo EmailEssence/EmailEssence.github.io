@@ -1,11 +1,16 @@
 import PropTypes from "prop-types";
 
-export function Email({ content }) {
-  return <>{content}</>;
+export function Email({ email }) {
+  return (
+    <div
+      className="content"
+      dangerouslySetInnerHTML={{ __html: email.body }}
+    ></div>
+  );
 }
 
 Email.propTypes = {
-  content: PropTypes.string,
+  email: PropTypes.object,
 };
 
 export default Email;

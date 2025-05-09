@@ -32,9 +32,7 @@ function EmailDisplay({
       </div>
       <div className="body">
         <div className="content-container">
-          <div className="content">
-            <Email content={curEmail.body} />
-          </div>
+          <Email email={curEmail} />
         </div>
       </div>
     </div>
