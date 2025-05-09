@@ -7,6 +7,12 @@ from starlette.concurrency import run_in_threadpool
 from contextlib import asynccontextmanager
 import logging
 
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+# Reduce verbosity of httpx and httpcore
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("httpcore").setLevel(logging.WARNING)
+
 from app.routers import emails_router, summaries_router, auth_router, user_router
 from app.services.database.connection import DatabaseConnection
 from app.models import EmailSchema, SummarySchema, UserSchema
@@ -147,17 +153,22 @@ async def health_check():
         # Use httpx for async HTTP requests
         import httpx
         
+        logger.info("Checking Google API connectivity...")
         # Check Google OAuth discovery document - this doesn't require authentication
         # and verifies we can reach Google's servers
         async with httpx.AsyncClient(timeout=5.0) as client:
+            logger.debug("Making request to Google OAuth discovery endpoint")
             response = await client.get('https://accounts.google.com/.well-known/openid-configuration')
             
             if response.status_code == 200:
+                logger.info("✅ Google API connectivity check successful")
                 health_status["components"]["google_api"] = "connected"
             else:
+                logger.error(f"❌ Google API connectivity check failed with status {response.status_code}")
                 health_status["components"]["google_api"] = f"error: HTTP {response.status_code}"
                 health_status["status"] = "unhealthy"
     except Exception as e:
+        logger.error(f"❌ Google API connectivity check failed with error: {str(e)}")
         health_status["components"]["google_api"] = f"error: {str(e)}"
         health_status["status"] = "unhealthy"
     

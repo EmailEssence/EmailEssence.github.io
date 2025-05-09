@@ -1,5 +1,11 @@
 import { useEffect, useState } from "react";
-import { Navigate, Route, Routes, useLocation } from "react-router";
+import {
+  Navigate,
+  Route,
+  Routes,
+  useLocation,
+  BrowserRouter,
+} from "react-router";
 import { authenticate } from "../../authentication/authenticate";
 import { emails, userPreferences } from "../../emails/emailHandler";
 import Client from "../client/client";
@@ -11,6 +17,18 @@ import Loading from "../login/Loading";
 import Login from "../login/login";
 import PrivacyPolicy from "../login/privacy";
 import TermsOfService from "../login/terms";
+
+export function Router() {
+  const testing = import.meta.env.MODE === "test";
+  if (testing) {
+    return (
+      <BrowserRouter>
+        <AppRouter />
+      </BrowserRouter>
+    );
+  }
+  return <AppRouter />;
+}
 
 export function AppRouter() {
   const [userEmails, setUserEmails] = useState(emails);
@@ -29,7 +47,7 @@ export function AppRouter() {
 
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/home" replace />} />
+      <Route path="" element={<Navigate to="/home" replace />} />
       <Route path="/home" element={<Home />} />
       <Route path="/about" element={<About />} />
       <Route path="/contact" element={<Contact />} />
@@ -57,4 +75,4 @@ export function AppRouter() {
   );
 }
 
-export default AppRouter;
+export default Router;

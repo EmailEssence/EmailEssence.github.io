@@ -331,14 +331,14 @@ async def auth_status(
     try:
         # Extract user info from the token
         user_data = await auth_service.get_credentials_from_token(token)
-        user_email = user_data['email']
+        user_email = user_data['google_id']
         
-        debug(f"User email extracted from token: {user_email}")
+        debug(f"User google_id extracted from token: {google_id}")
         
         # Get detailed credentials from the database using that email
         try:
             # Get the token record directly from the database instead of using get_credentials
-            token_record = await auth_service.get_token_record(user_email)
+            token_record = await auth_service.get_token_record(google_id)
             
             if not token_record:
                 return AuthStatusResponse(

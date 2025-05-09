@@ -2,7 +2,7 @@
 Unit tests for TokenRepository.
 """
 import pytest
-from app.services.database.token_repository import TokenRepository
+from app.services.database import TokenRepository
 from app.models.auth_models import TokenData
 from app.tests.database_mock import mock_token_collection, mock_token_repository
 from app.tests.constants import mock_token_data

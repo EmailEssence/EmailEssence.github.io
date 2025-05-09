@@ -50,7 +50,11 @@ beforeEach(() => {
 describe("Router Component", () => {
   it("Renders Router Component", () => {
     render(<RouterComponent />);
-    expect(screen.getByText("Login with Google")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Cut through email overload with our AI-powered solution that intelligently summarizes and categorizes messages, bringing clarity to your communications."
+      )
+    ).toBeInTheDocument();
   });
 
   it("Renders Loading Route", () => {
