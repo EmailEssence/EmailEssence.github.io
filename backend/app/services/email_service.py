@@ -233,38 +233,73 @@ class EmailService:
 
     def _extract_email_body(self, email_message: email.message.Message) -> Tuple[str, bool]:
         """
-        Extract email body with fallback content type handling.
+        Extract body content from email message and determine if it's HTML.
         
+        Args:
+            email_message: The email message to extract body from
+            
         Returns:
-            Tuple[str, bool]: (body content, is_html flag)
+            Tuple containing (body_content, is_html_flag)
         """
+        # Default values
         body = ""
         is_html = False
-        content_type_preference = ['text/plain', 'text/html']
+        html_part = None
+        text_part = None
         
-        def decode_part(part):
-            try:
-                charset = part.get_content_charset() or 'utf-8'
-                return part.get_payload(decode=True).decode(charset, errors='replace')
-            except Exception as e:
-                self._log_operation('error', f"Error decoding {part.get_content_type()} part: {e}")
-                return ""
-        
+        # Check if the message is multipart
         if email_message.is_multipart():
-            for preferred_type in content_type_preference:
-                for part in email_message.walk():
-                    if (part.get_content_type() == preferred_type and 
-                        'attachment' not in str(part.get('Content-Disposition'))):
-                        content = decode_part(part)
-                        if content:
-                            body = content
-                            is_html = preferred_type == 'text/html'
-                            return body, is_html
-        else:
-            body = decode_part(email_message)
-            content_type = email_message.get_content_type()
-            is_html = content_type == 'text/html'
+            # First pass: identify all content parts
+            for part in email_message.walk():
+                content_type = part.get_content_type()
+                content_disposition = str(part.get("Content-Disposition", ""))
+                
+                # Skip attachments
+                if "attachment" in content_disposition:
+                    continue
+                    
+                # Find HTML content
+                if content_type == "text/html":
+                    html_part = part
+                    
+                # Find plain text content
+                if content_type == "text/plain":
+                    text_part = part
             
+            # Prefer HTML content when available
+            if html_part:
+                try:
+                    body = html_part.get_payload(decode=True).decode(errors="replace")
+                    is_html = True
+                except Exception as e:
+                    self._log_operation('error', f"Error decoding HTML part: {e}")
+                    # Fall back to text part if available
+                    if text_part:
+                        body = text_part.get_payload(decode=True).decode(errors="replace")
+            elif text_part:
+                # Use plain text if no HTML is found
+                body = text_part.get_payload(decode=True).decode(errors="replace")
+        else:
+            # Not multipart - get content type and decode accordingly
+            content_type = email_message.get_content_type()
+            try:
+                body = email_message.get_payload(decode=True).decode(errors="replace")
+                is_html = content_type == "text/html"
+            except Exception as e:
+                self._log_operation('error', f"Error decoding non-multipart message: {e}")
+                body = email_message.get_payload(decode=False)
+                # Try to detect HTML if content-type wasn't reliable
+                is_html = bool(re.search(r'<(?:html|body|div|p|h[1-6])[^>]*>', body, re.IGNORECASE))
+        
+        # Validate HTML detection with regex if needed
+        if is_html and not bool(re.search(r'<(?:html|body|div|p|h[1-6])[^>]*>', body, re.IGNORECASE)):
+            self._log_operation('warning', "Content marked as HTML but no HTML tags found, validating...")
+            is_html = False  # Reset if no HTML tags found
+        
+        # Apply minimal sanitization for HTML content
+        if is_html:
+            body = self._minimal_email_sanitization(body)
+        
         return body, is_html
 
     def _parse_email_message(self, uid: int, email_message: email.message.Message, 
