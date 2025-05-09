@@ -1,4 +1,5 @@
 import { fetchUserPreferences } from "../components/client/settings/settings";
+import DOMPurify from "dompurify";
 
 export const baseUrl = "https://ee-backend-w86t.onrender.com";
 export let emails = [];
@@ -137,6 +138,7 @@ export default async function fetchEmails(numRequested) {
 
       return {
         ...email,
+        body: DOMPurify.sanitize(email.body),
         summary_text: summary.summary_text || "",
         keywords: summary.keywords || [],
         received_at: parseDate(email.received_at),
