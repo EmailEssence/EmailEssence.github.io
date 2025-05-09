@@ -4,6 +4,7 @@ import "./Home.css";
 
 export default function Home() {
   const homeRef = useRef(null);
+  const overviewRef = useRef(null);
   const aboutRef = useRef(null);
   const contactRef = useRef(null);
   const privacyRef = useRef(null);
@@ -21,6 +22,9 @@ export default function Home() {
       <div className="nav-container">
         <div className="logo-container" onClick={() => scrollToSection(homeRef)}>
           <Logo />
+        </div>
+        <div className="nav-item" onClick={() => scrollToSection(overviewRef)}>
+          Overview 
         </div>
         <div className="nav-item" onClick={() => scrollToSection(aboutRef)}>
           About Us
@@ -51,7 +55,7 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="overview-container">
+      <div ref={overviewRef} className="overview-container">
         <div className="overview">
           <h1>Overview</h1>
           <div className="overview-items">
