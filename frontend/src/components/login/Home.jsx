@@ -1,34 +1,45 @@
-import { useNavigate } from "react-router";
+import { useRef } from "react";
 import Logo from "../../assets/Logo";
 import "./Home.css";
 
 export default function Home() {
-  const navigate = useNavigate();
+  const homeRef = useRef(null);
+  const aboutRef = useRef(null);
+  const contactRef = useRef(null);
+  const privacyRef = useRef(null);
+  const termsRef = useRef(null);
+  const loginRef = useRef(null);
+
+  const scrollToSection = (ref) => {
+    if (ref.current) {
+      ref.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }
   return (
     <div className="home">
 
       <div className="nav-container">
-        <div className="logo-container" onClick={() => navigate("/")}>
+        <div className="logo-container" onClick={() => scrollToSection(homeRef)}>
           <Logo />
         </div>
-        <div className="nav-item" onClick={() => navigate("/about")}>
+        <div className="nav-item" onClick={() => scrollToSection(aboutRef)}>
           About Us
         </div>
-        <div className="nav-item" onClick={() => navigate("/contact")}>
+        <div className="nav-item" onClick={() => scrollToSection(contactRef)}>
           Contact Us
         </div>
-        <div className="nav-item" onClick={() => navigate("/privacy")}>
+        <div className="nav-item" onClick={() => scrollToSection(privacyRef)}>
           Privacy Policy
         </div>
-        <div className="nav-item" onClick={() => navigate("/terms")}>
+        <div className="nav-item" onClick={() => scrollToSection(termsRef)}>
           Terms of Service
         </div>
-        <div className="nav-item" onClick={() => navigate("/login")}>
+        <div className="nav-item" onClick={() => scrollToSection(loginRef)}>
           Sign In
         </div>
       </div>
 
-      <div className="title-container">
+      <div ref={homeRef} className="title-container">
         <h1 className="title">Welcome to EmailEssence</h1>
         <h2 className="subtitle">Sign in now to connect to your AI-Powered Email Assistant</h2>
         {/* insert snapshot of ui */}
@@ -78,6 +89,17 @@ export default function Home() {
           </div>
         </div>
       </div>
+
+      <div ref={aboutRef} className="about-us">
+        <h1>About Us</h1>
+        <p>
+          We are a team of passionate developers dedicated to creating
+          innovative solutions that enhance productivity and streamline
+          communication. Our AI email assistant is designed to help you manage
+          your inbox more efficiently, allowing you to focus on what matters
+          most.
+        </p>
+      </div>
     </div>
-  )
+  );
 }
