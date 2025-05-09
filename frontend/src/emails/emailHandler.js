@@ -135,10 +135,14 @@ export default async function fetchEmails(numRequested) {
     // Handle case where summaries length doesn't match emails
     const processedEmails = newEmails.emails.map((email, index) => {
       const summary = summaries[index] || { summary_text: "", keywords: [] };
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(email.body, "text/html");
+      const hasInnerHTML = doc.body.children.length > 0;
 
       return {
         ...email,
-        body: DOMPurify.sanitize(email.body),
+        body: hasInnerHTML ? DOMPurify.sanitize(email.body) : email.body,
+        hasInnerHTML: hasInnerHTML,
         summary_text: summary.summary_text || "",
         keywords: summary.keywords || [],
         received_at: parseDate(email.received_at),
@@ -184,3 +188,4 @@ export async function markEmailAsRead(emailId) {
 // "is_read" has the email been read
 // "summary_text" summary of the email
 // "keywords": [] keywords used to describe email
+// "hasInnerHTML" boolean saying wether to display email as HTML
