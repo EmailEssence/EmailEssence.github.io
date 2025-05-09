@@ -1,15 +1,14 @@
 import { useEffect, useState } from "react";
 import {
+  BrowserRouter,
   Navigate,
   Route,
   Routes,
   useLocation,
-  BrowserRouter,
 } from "react-router";
 import { authenticate } from "../../authentication/authenticate";
 import { emails, userPreferences } from "../../emails/emailHandler";
 import Client from "../client/client";
-import About from "../login/about";
 import Contact from "../login/contact";
 import Error from "../login/Error";
 import Home from "../login/Home";
@@ -49,7 +48,6 @@ export function AppRouter() {
     <Routes>
       <Route path="" element={<Navigate to="/home" replace />} />
       <Route path="/home" element={<Home />} />
-      <Route path="/about" element={<About />} />
       <Route path="/contact" element={<Contact />} />
       <Route path="/privacy" element={<PrivacyPolicy />} />
       <Route path="/terms" element={<TermsOfService />} />
