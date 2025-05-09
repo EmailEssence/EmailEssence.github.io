@@ -9,7 +9,6 @@ import {
 import { authenticate } from "../../authentication/authenticate";
 import { emails, userPreferences } from "../../emails/emailHandler";
 import Client from "../client/client";
-import Contact from "../login/contact";
 import Error from "../login/Error";
 import Home from "../login/Home";
 import Loading from "../login/Loading";
@@ -48,7 +47,6 @@ export function AppRouter() {
     <Routes>
       <Route path="" element={<Navigate to="/home" replace />} />
       <Route path="/home" element={<Home />} />
-      <Route path="/contact" element={<Contact />} />
       <Route path="/privacy" element={<PrivacyPolicy />} />
       <Route path="/terms" element={<TermsOfService />} />
       <Route

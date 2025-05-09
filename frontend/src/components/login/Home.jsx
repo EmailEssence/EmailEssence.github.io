@@ -24,7 +24,7 @@ export default function Home() {
           <Logo />
         </div>
         <div className="nav-item" onClick={() => scrollToSection(overviewRef)}>
-          Overview 
+          Overview
         </div>
         <div className="nav-item" onClick={() => scrollToSection(aboutRef)}>
           About Us
@@ -103,6 +103,11 @@ export default function Home() {
           your inbox more efficiently, allowing you to focus on what matters
           most.
         </p>
+      </div>
+
+      <div ref={contactRef} className="contact-us">
+        <h1>Contact Us</h1>
+        <p>If you have any questions, feel free to reach out!</p>
       </div>
     </div>
   );
