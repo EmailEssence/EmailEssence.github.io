@@ -31,7 +31,7 @@ export default function Contact() {
                 </div>
             </div>
 
-            <div>
+            <div className="contact-us">
                 <h1>Contact Us</h1>
                 <p>Feel free to reach out to us for any inquiries.</p>
             </div>
