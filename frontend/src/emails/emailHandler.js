@@ -1,6 +1,7 @@
 import { fetchUserPreferences } from "../components/client/settings/settings";
 import DOMPurify from "dompurify";
-
+// TODO : env variable for baseUrl
+// export const baseUrl = "http://127.0.0.1:8000";
 export const baseUrl = "https://ee-backend-w86t.onrender.com";
 export let emails = [];
 export let userPreferences = {
