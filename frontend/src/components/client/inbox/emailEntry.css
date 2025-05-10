@@ -5,11 +5,11 @@
   overflow: hidden;
   text-overflow: ellipsis;
   width: 100%;
-  height: 4rem;
+  height: 4.5rem;
   display: grid;
-  grid-template-rows: 1.25rem 2.75rem;
+  grid-template-rows: 1.25rem 2.75rem 0.5rem;
   grid-template-columns: calc(1rem + 0.4vw) calc(3rem + 9vw) 8px 1fr;
-  flex: 0, 0, 4rem;
+  flex: 0;
 }
 
 .entry.selected {
@@ -43,7 +43,7 @@
 /* use space [1, 1] */
 .entry .title {
   overflow: ellipse;
-  padding: 0, 0.1vw;
+  padding: 0 0.1vw;
   text-align: left;
   grid-row: 2 / 2;
   grid-column: 2 / 2;
@@ -65,8 +65,8 @@
 }
 
 /* use space [2, 0] and [2, 1] */
-.median-container {
-  grid-row: 1 / -1;
+.entry .median-container {
+  grid-row: 1 / 3;
   grid-column: 3 / 3;
   /* set median spacing */
   padding: 4px 3px;
@@ -143,8 +143,16 @@
   font-size: calc(0.45rem + 0.2vw);
 }
 
-.median-container > .median {
+.entry .median {
+  border-radius: 1px;
   height: 100%;
   width: 100%;
   background-color: var(--color-background2);
+}
+
+.entry .email-median-container {
+  height: 100%;
+  grid-column: 1 / -1;
+  grid-row: 3 / -1;
+  padding: 3px 2.5rem;
 }

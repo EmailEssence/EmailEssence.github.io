@@ -50,6 +50,9 @@ function EmailEntry({ displaySummary, email, onClick, selected }) {
         <div className="median"></div>
       </div>
       {displaySummary && summary()}
+      <div className="email-median-container">
+        <div className="median"></div>
+      </div>
     </div>
   );
 }
