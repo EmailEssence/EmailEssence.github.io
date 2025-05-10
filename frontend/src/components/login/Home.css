@@ -130,3 +130,37 @@
   text-align: center;
   margin-top: calc(2rem + 2vh);
 }
+
+/*-----------------------------------footer----------------------------------------*/
+.footer-container {
+  background-color: var(--grey-4);
+  color: var(--black);
+  text-align: center;
+  padding: calc(2rem + 1vh);
+  width: 100vw;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  box-shadow: 0 -0.2rem 0.5rem rgba(0, 0, 0, 0.2);
+}
+
+.footer-container .footer-item {
+  display: inline-block;
+  margin: 0 calc(0.5rem + 0.5vw);
+  font-size: calc(0.8rem + 0.3vw);
+  cursor: pointer;
+  color: var(--primary-color);
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.footer-container .footer-item:hover {
+  color: var(--grey-2);
+  text-decoration: underline;
+}
+
+.footer-container p {
+  margin-top: calc(1rem + 0.5vh);
+  font-size: calc(0.7rem + 0.2vw);
+  color: var(--grey-light);
+}

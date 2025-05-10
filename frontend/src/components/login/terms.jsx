@@ -190,6 +190,7 @@ export default function TermsOfService() {
         <div className="footer-item" onClick={() => navigate("/contact")}>
           Contact Us
         </div>
+        <p>&copy; 2024 EmailEssence. All rights reserved.</p>
       </footer>
     </div>
   );
