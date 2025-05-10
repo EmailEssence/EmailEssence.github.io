@@ -32,15 +32,20 @@ export default function Home() {
         </div>
       </div>
 
-      <div ref={homeRef} className="title-container">
-        <h1 className="title">Welcome to EmailEssence</h1>
-        <h2 className="subtitle">Sign in now to connect to your AI-Powered Email Assistant</h2>
-        {/* insert snapshot of ui */}
-        <div
-          className="login-navigate-button"
-          onClick={() => navigate("/login")}
-        >
-          Sign In
+      <div className="background-container">
+        <div className="background-img"></div>
+        <div ref={homeRef} className="title-container">
+          <h1 className="title">Welcome to EmailEssence</h1>
+          <h2 className="subtitle">Redefining Email Management</h2>
+          <h2 className="subtitle">An intelligent solution designed to enhance how we manage our inbox</h2>
+          <h2 className="subtitle">Sign in now to connect to your AI-Powered Email Assistant</h2>
+          {/* insert snapshot of ui */}
+          <div
+            className="login-navigate-button"
+            onClick={() => navigate("/login")}
+          >
+            Sign In
+          </div>
         </div>
       </div>
 
@@ -110,7 +115,7 @@ export default function Home() {
       </footer>
 
     </div>
-    
+
 
   );
 }
