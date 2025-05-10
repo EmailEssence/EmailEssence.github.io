@@ -1,15 +1,13 @@
 import { useRef } from "react";
+import { useNavigate } from "react-router";
 import Logo from "../../assets/Logo";
 import "./Home.css";
 
 export default function Home() {
+  const navigate = useNavigate();
   const homeRef = useRef(null);
   const overviewRef = useRef(null);
   const aboutRef = useRef(null);
-  const contactRef = useRef(null);
-  const privacyRef = useRef(null);
-  const termsRef = useRef(null);
-  const loginRef = useRef(null);
 
   const scrollToSection = (ref) => {
     if (ref.current) {
@@ -29,16 +27,7 @@ export default function Home() {
         <div className="nav-item" onClick={() => scrollToSection(aboutRef)}>
           About Us
         </div>
-        <div className="nav-item" onClick={() => scrollToSection(contactRef)}>
-          Contact Us
-        </div>
-        <div className="nav-item" onClick={() => scrollToSection(privacyRef)}>
-          Privacy Policy
-        </div>
-        <div className="nav-item" onClick={() => scrollToSection(termsRef)}>
-          Terms of Service
-        </div>
-        <div className="nav-item" onClick={() => scrollToSection(loginRef)}>
+        <div className="nav-item" onClick={() => navigate("/login")}>
           Sign In
         </div>
       </div>
@@ -94,6 +83,8 @@ export default function Home() {
         </div>
       </div>
 
+      {/* create a features section */}
+
       <div ref={aboutRef} className="about-us">
         <h1>About Us</h1>
         <p>
@@ -105,10 +96,20 @@ export default function Home() {
         </p>
       </div>
 
-      <div ref={contactRef} className="contact-us">
-        <h1>Contact Us</h1>
-        <p>If you have any questions, feel free to reach out!</p>
-      </div>
+      <footer className="footer-container">
+        <div className="footer-item" onClick={() => navigate("/privacy")}>
+          Privacy Policy
+        </div>
+        <div className="footer-item" onClick={() => navigate("/terms")}>
+          Terms of Service
+        </div>
+        <div className="footer-item" onClick={() => navigate("/contact")}>
+          Contact Us
+        </div>
+      </footer>
+
     </div>
+    
+
   );
 }
