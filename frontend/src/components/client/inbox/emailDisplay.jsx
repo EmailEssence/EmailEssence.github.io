@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import ReactDom from "react-dom";
 import ReaderViewIcon from "../../../assets/ReaderView";
 import Email from "./Email";
+import { getReaderView } from "../../../emails/emailHandler";
 import "./emailDisplay.css";
 
 function EmailDisplay({
@@ -43,10 +44,11 @@ function ReaderView({ curEmail }) {
   const [text, setText] = useState("Loading ...");
   const [displaying, setDisplaying] = useState(false);
 
-  function displayReaderView() {
+  async function displayReaderView() {
     if (!displaying) {
+      const readerViewText = await getReaderView(curEmail.email_id);
       const parser = new DOMParser();
-      const doc = parser.parseFromString(curEmail.body, "text/html");
+      const doc = parser.parseFromString(readerViewText, "text/html");
       const article = new Readability(doc).parse();
       setText(article.textContent);
     }
