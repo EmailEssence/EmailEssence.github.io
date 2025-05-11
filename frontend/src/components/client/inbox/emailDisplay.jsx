@@ -87,7 +87,7 @@ function ReaderView({ curEmail }) {
 function PopUp({ isLoading, handleClose, children }) {
   return ReactDom.createPortal(
     isLoading ? (
-      <div className="loading-reader-view">
+      <div className="loading-reader-view" onClick={handleClose}>
         <div className="loading-icon"></div>
       </div>
     ) : (
