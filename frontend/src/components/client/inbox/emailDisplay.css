@@ -136,15 +136,48 @@
   animation-delay: 0s;
 }
 
+.loading-reader-view {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  opacity: 0.5;
+  padding: 45vh 0;
+}
+
+.loading-reader-view .loading-icon {
+  margin: auto;
+  width: 10vw;
+  aspect-ratio: 2;
+  --_g: no-repeat radial-gradient(circle closest-side, #000 90%, #0000);
+  background: var(--_g) 0% 50%, var(--_g) 50% 50%, var(--_g) 100% 50%;
+  background-size: calc(100% / 3) 50%;
+  animation: l3 1s infinite linear;
+}
+@keyframes l3 {
+  20% {
+    background-position: 0% 0%, 50% 50%, 100% 50%;
+  }
+  40% {
+    background-position: 0% 100%, 50% 0%, 100% 50%;
+  }
+  60% {
+    background-position: 0% 50%, 50% 100%, 100% 0%;
+  }
+  80% {
+    background-position: 0% 50%, 50% 50%, 100% 100%;
+  }
+}
+
 @keyframes fade-in-background {
   from {
-    opacity: 0;
-    transform: translateY(100vh);
+    opacity: 0.5;
   }
 
   to {
     opacity: 1;
-    transform: translateY(0);
   }
 }
 

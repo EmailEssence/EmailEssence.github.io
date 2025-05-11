@@ -45,6 +45,7 @@ function ReaderView({ curEmail }) {
   const [displaying, setDisplaying] = useState(false);
 
   async function displayReaderView() {
+    setDisplaying(!displaying);
     if (!displaying) {
       const readerViewText = await getReaderView(curEmail.email_id);
       const parser = new DOMParser();
@@ -52,7 +53,6 @@ function ReaderView({ curEmail }) {
       const article = new Readability(doc).parse();
       setText(article.textContent);
     }
-    setDisplaying(!displaying);
   }
 
   useEffect(() => {
@@ -69,28 +69,38 @@ function ReaderView({ curEmail }) {
       >
         <ReaderViewIcon />
       </div>
-      <PopUp isOpen={displaying} handleClose={displayReaderView}>
-        <div className="title">{curEmail.subject}</div>
-        <div className="from">{getSenderName(curEmail.sender)}</div>
-        <div className="date">{formatDate(curEmail.received_at)}</div>
-        <div className="body">{text}</div>
-      </PopUp>
+      {displaying && (
+        <PopUp
+          isLoading={text === "Loading..."}
+          handleClose={displayReaderView}
+        >
+          <div className="title">{curEmail.subject}</div>
+          <div className="from">{getSenderName(curEmail.sender)}</div>
+          <div className="date">{formatDate(curEmail.received_at)}</div>
+          <div className="body">{text}</div>
+        </PopUp>
+      )}
     </div>
   );
 }
 
-function PopUp({ isOpen, handleClose, children }) {
-  if (!isOpen) return null;
+function PopUp({ isLoading, handleClose, children }) {
   return ReactDom.createPortal(
-    <>
-      <div className="overlay-background" />
-      <div className="pop-up-container">
-        {children}
-        <div className="button" onClick={handleClose}>
-          Click To Close
-        </div>
+    isLoading ? (
+      <div className="loading-reader-view">
+        <div className="loading-icon"></div>
       </div>
-    </>,
+    ) : (
+      <>
+        <div className="overlay-background" />
+        <div className="pop-up-container">
+          {children}
+          <div className="button" onClick={handleClose}>
+            Click To Close
+          </div>
+        </div>
+      </>
+    ),
     document.getElementById("portal")
   );
 }

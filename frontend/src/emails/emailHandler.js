@@ -95,7 +95,7 @@ export async function getReaderView(emailId) {
     throw new Error(`Failed to retrieve ReaderView: ${response.statusText}`);
   }
   const email = await response.json();
-  console.log(`Returning: \n ${email.reader_content}`);
+  // console.log(`Returning: \n ${email.reader_content}`);
   return email.reader_content;
 }
 
