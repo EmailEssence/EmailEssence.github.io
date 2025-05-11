@@ -70,7 +70,10 @@ function ReaderView({ curEmail }) {
         <ReaderViewIcon />
       </div>
       <PopUp isOpen={displaying} handleClose={displayReaderView}>
-        <div>{text}</div>
+        <div className="title">{curEmail.subject}</div>
+        <div className="from">{getSenderName(curEmail.sender)}</div>
+        <div className="date">{formatDate(curEmail.received_at)}</div>
+        <div className="body">{text}</div>
       </PopUp>
     </div>
   );
@@ -94,6 +97,10 @@ function PopUp({ isOpen, handleClose, children }) {
 
 const formatDate = (date) => {
   return `${date[1]}/${date[2]}/${date[0]}`;
+};
+
+const getSenderName = (sender) => {
+  return sender.slice(0, sender.indexOf("<"));
 };
 
 EmailDisplay.propTypes = {
