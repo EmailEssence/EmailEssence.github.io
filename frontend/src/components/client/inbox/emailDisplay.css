@@ -105,6 +105,10 @@
   background-color: var(--color-background);
   border-radius: 0.25rem;
   padding: calc(0.5rem + 1vw);
+  animation-name: fade-in-container;
+  animation-timing-function: ease-in-out;
+  animation-duration: 1s;
+  animation-delay: 0s;
 }
 
 .pop-up-container > .button {
@@ -126,4 +130,32 @@
   right: 0;
   bottom: 0;
   background-color: rgba(0, 0, 0, 0.5);
+  animation-name: fade-in-background;
+  animation-timing-function: ease-in-out;
+  animation-duration: 1s;
+  animation-delay: 0s;
+}
+
+@keyframes fade-in-background {
+  from {
+    opacity: 0;
+    transform: translateY(100vh);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in-container {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 100vh);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
 }
