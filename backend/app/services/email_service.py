@@ -470,6 +470,7 @@ class EmailService:
                 return None
                 
             email_data["is_read"] = True
+            # TODO: SMTP update? 
             await self.email_repository.update_by_email_and_google_id(email_id, google_id, email_data)
             return self._ensure_email_schema(email_data)
         except Exception as e:
