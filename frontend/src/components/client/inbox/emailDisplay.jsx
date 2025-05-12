@@ -75,8 +75,11 @@ function ReaderView({ curEmail }) {
           handleClose={displayReaderView}
         >
           <div className="title">{curEmail.subject}</div>
-          <div className="from">{getSenderName(curEmail.sender)}</div>
+          <div className="from">{`From: ${getSenderName(
+            curEmail.sender
+          )}`}</div>
           <div className="date">{formatDate(curEmail.received_at)}</div>
+          <div className="gap"></div>
           <div className="body">{text}</div>
         </PopUp>
       )}
@@ -94,7 +97,7 @@ function PopUp({ isLoading, handleClose, children }) {
       <>
         <div className="overlay-background" />
         <div className="pop-up-container">
-          {children}
+          <div className="content">{children}</div>
           <div className="button" onClick={handleClose}>
             Click To Close
           </div>

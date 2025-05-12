@@ -98,9 +98,6 @@
   position: fixed;
   top: 50%;
   left: 50%;
-  overflow: auto;
-  overflow-y: scroll;
-  word-wrap: break-word;
   transform: translate(-50%, -50%);
   background-color: var(--color-background);
   border-radius: 0.25rem;
@@ -109,6 +106,30 @@
   animation-timing-function: ease-in-out;
   animation-duration: 1s;
   animation-delay: 0s;
+}
+
+.pop-up-container > .content {
+  text-align: left;
+  overflow: auto;
+  overflow-y: scroll;
+  word-wrap: break-word;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.content > .gap {
+  min-height: 2px;
+  background-color: var(--grey-3);
+}
+
+.content > .title {
+  font-size: calc(1rem + 0.3vw);
+  font-weight: 600;
+}
+
+.content > .from .content > .date .content > .body {
+  font-size: calc(0.6rem + 0.3vw);
 }
 
 .pop-up-container > .button {
