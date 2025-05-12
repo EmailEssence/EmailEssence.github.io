@@ -78,6 +78,27 @@ async function getEmails(extension) {
   }
 }
 
+export async function getReaderView(emailId) {
+  const option = {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
+      "Content-Type": "application/json",
+    },
+  };
+  const request = new Request(
+    `${baseUrl}/emails/${emailId}/reader-view`,
+    option
+  );
+  const response = await fetch(request);
+  if (!response.ok) {
+    throw new Error(`Failed to retrieve ReaderView: ${response.statusText}`);
+  }
+  const email = await response.json();
+  // console.log(`Returning: \n ${email.reader_content}`);
+  return email.reader_content;
+}
+
 async function getSummaries(emailIds) {
   const option = {
     method: "GET",
