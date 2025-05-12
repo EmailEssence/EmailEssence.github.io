@@ -16,8 +16,12 @@
   background-color: var(--color-selected-background);
 }
 
-.entry.selected .median {
+.entry.selected .median-container .median {
   background-color: var(--color-median);
+}
+
+.entry.selected .email-median-container {
+  background-color: var(--color-background);
 }
 
 .no-summary.entry {
@@ -130,5 +134,5 @@
   height: 100%;
   grid-column: 1 / -1;
   grid-row: 3 / -1;
-  padding: 3px 2.5rem;
+  padding: 6px 2.5rem 0 2.5rem;
 }
