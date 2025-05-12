@@ -147,6 +147,7 @@ export default async function fetchEmails(numRequested) {
     const ids = newEmails.emails.map((email) => {
       return email.email_id;
     });
+    // remove and replace with per page summary loading
     const summaries = await getSummaries(ids);
     summaries.reverse(); // link summaries to respected email
     // Validate array responses
@@ -179,6 +180,7 @@ export default async function fetchEmails(numRequested) {
 }
 
 export function getTop5(emails) {
+  // get the summaries for the 5 too (external call)
   return emails.length > 5 ? emails.slice(0, 5) : emails;
 }
 

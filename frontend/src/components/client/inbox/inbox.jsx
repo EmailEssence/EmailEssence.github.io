@@ -67,6 +67,7 @@ function InboxEmailList({ displaySummaries, emailList, curEmail, onClick }) {
   const hasUnloadedEmails = maxEmails < emailList.length;
 
   const handleScroll = () => {
+    // add external summary call
     const fullyScrolled =
       Math.abs(
         ref.current.scrollHeight -
