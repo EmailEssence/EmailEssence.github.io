@@ -144,20 +144,16 @@ export default async function fetchEmails(numRequested) {
   try {
     // Fetch both emails and summaries concurrently
     const newEmails = await getEmails(numRequested);
-    const ids = newEmails.emails.map((email) => {
-      return email.email_id;
-    });
     // remove and replace with per page summary loading
-    const summaries = await getSummaries(ids);
-    summaries.reverse(); // link summaries to respected email
+    // const summaries = await getSummaries(ids);
+    // summaries.reverse(); // link summaries to respected email
     // Validate array responses
     if (!Array.isArray(newEmails.emails)) {
       console.error("Invalid emails response:", newEmails);
       return [];
     }
     // Handle case where summaries length doesn't match emails
-    const processedEmails = newEmails.emails.map((email, index) => {
-      const summary = summaries[index] || { summary_text: "", keywords: [] };
+    const processedEmails = newEmails.emails.map((email) => {
       const parser = new DOMParser();
       const doc = parser.parseFromString(email.body, "text/html");
       const hasInnerHTML = doc.body.children.length > 0;
@@ -166,8 +162,8 @@ export default async function fetchEmails(numRequested) {
         ...email,
         body: hasInnerHTML ? DOMPurify.sanitize(email.body) : email.body,
         hasInnerHTML: hasInnerHTML,
-        summary_text: summary.summary_text || "",
-        keywords: summary.keywords || [],
+        summary_text: "",
+        keywords: [],
         received_at: parseDate(email.received_at),
       };
     });
@@ -179,9 +175,27 @@ export default async function fetchEmails(numRequested) {
   }
 }
 
-export function getTop5(emails) {
+export function getTop5(emailList) {
   // get the summaries for the 5 too (external call)
-  return emails.length > 5 ? emails.slice(0, 5) : emails;
+  addSummaries(emailList.length > 5 ? emailList.slice(0, 5) : emailList);
+  return emailList.length > 5 ? emailList.slice(0, 5) : emailList;
+}
+
+export async function addSummaries(emailList) {
+  const ids = emailList.map((emailList) => {
+    return emailList.email_id;
+  });
+  const summaries = await getSummaries(ids);
+  summaries.reverse(); // link summaries to respected email
+  for (let i = 0; i < emailList.length; i++) {
+    const index = emails.indexOf(emailList[i]);
+    emails[index] = {
+      ...emails[index],
+      summary_text: summaries[i].summary_text || "",
+      keywords: summaries[i].keywords || [],
+    };
+  }
+  if (emailList.length > 0) window.location.hash = "#newEmails";
 }
 
 export async function markEmailAsRead(emailId) {
