@@ -5,17 +5,72 @@ import { emailsPerPage } from "../../../assets/constants";
 import EmailDisplay from "./emailDisplay";
 import "./emailEntry.css";
 import "./emailList.css";
+import { baseUrl } from "../../../emails/emailHandler"; // shared API URL base
 
 function Inbox({ displaySummaries, emailList, setCurEmail, curEmail }) {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filteredEmails, setFilteredEmails] = useState(emailList);
+  const token = localStorage.getItem("auth_token");
+
+  // sync filtered list when inbox updates
+  useEffect(() => {
+    setFilteredEmails(emailList);
+  }, [emailList]);
+
+  // handle keyword search input and call backend
+  const handleSearch = async (e) => {
+    const keyword = e.target.value;
+    setSearchTerm(keyword);
+
+    if (keyword.trim() === "") {
+      setFilteredEmails(emailList);
+      return;
+    }
+
+    try {
+      const res = await fetch(`${baseUrl}/emails/search?keyword=${keyword}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setFilteredEmails(data);
+      } else {
+        console.error("Search failed", res.status);
+      }
+    } catch (err) {
+      console.error("Search error", err);
+    }
+  };
+
   return (
     <div className="inbox-display">
+      {/* Search bar for filtering emails using summary keywords */}
+      <div style={{ padding: "10px" }}>
+        <input
+          type="text"
+          placeholder="Search by keyword..."
+          value={searchTerm}
+          onChange={handleSearch}
+          style={{
+            width: "100%",
+            padding: "8px",
+            fontSize: "14px",
+            border: "1px solid #ccc",
+            borderRadius: "4px",
+          }}
+        />
+      </div>
+
+      {/* Display email list filtered by searchTerm */}
       <InboxEmailList
         displaySummaries={displaySummaries}
-        emailList={emailList}
+        emailList={filteredEmails}
         curEmail={curEmail}
         onClick={setCurEmail}
       />
-      <EmailDisplay key={curEmail} curEmail={curEmail} />
+      <EmailDisplay key={curEmail?.email_id || "none"} curEmail={curEmail} />
     </div>
   );
 }
