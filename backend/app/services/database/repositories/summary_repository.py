@@ -59,6 +59,27 @@ class SummaryRepository(BaseRepository[SummarySchema], ISummaryRepository):
         """
         return await self.find_many({"google_id": google_id})
 
+    async def find_email_ids_by_keyword(self, google_id: str, keyword: str) -> List[str]:
+        """
+        Search for emails using summary keywords.
+
+        Args:
+            google_id: Google ID of the user.
+            keyword: Keyword to search in the summary keywords.
+            limit: Maximum number of emails to return.
+
+        Returns:
+            List[EmailSchema]: List of emails whose summaries match the keyword.
+        """
+        
+        query = {
+            "google_id": google_id,
+            "keywords": {"$regex": keyword, "$options": "i"}
+        }
+        results = await self.find_many(query, projection={"email_id": 1})
+        return [r["email_id"] for r in results]
+
+
     async def update_by_email_id(
         self, 
         email_id: str, 
