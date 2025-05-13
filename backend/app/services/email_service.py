@@ -362,20 +362,33 @@ class EmailService:
             limit: Maximum number of emails to return.
 
         Returns:
-            List[EmailSchema]: List of emails whose summaries match the keyword.
+            List[EmailSchema]: List of emails whose summaries match the keyword and then enriched with corresponding summary.
         """
         logger.info(f"[Keyword Search] google_id={google_id}, keyword='{keyword}'")
         
         try:
+            #Find all email_ids from summaries that match the keyword for the given user
             email_ids = await self.summary_repository.find_email_ids_by_keyword(google_id, keyword)
             if not email_ids:
                 return []
-            query = {
-                "google_id": google_id,
-                "email_id": {"$in": [str(eid) for eid in email_ids]}
-            }
-            results = await self.email_repository.find_many(query, limit=limit)
-            return [self._ensure_email_schema(e) for e in results]
+
+            #Query emails from the email repository using those email_ids
+            query = {"google_id": google_id, "email_id": {"$in": [str(eid) for eid in email_ids]}}
+            emails = await self.email_repository.find_many(query, limit=limit)
+
+            # Retrieve matching summary records to extract summary_text
+            summaries = await self.summary_repository.find_many(query)
+            summary_map = {s.email_id: getattr(s, "summary_text", "") for s in summaries}
+
+            # Enrich email records with their corresponding summaries
+            enriched = []
+            for e in emails:
+                base = e if isinstance(e, dict) else e.model_dump()
+                base["summary_text"] = summary_map.get(base["email_id"], "")
+                enriched.append(base)
+
+            return enriched
+
         except Exception as e:
             self._handle_email_error(e, "search by keyword", None, google_id)
     # -------------------------------------------------------------------------
