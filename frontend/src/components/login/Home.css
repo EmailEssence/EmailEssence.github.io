@@ -24,8 +24,8 @@ body {
   justify-content: space-between;
   align-items: center;
   padding: 0 calc(2rem + 1vw);
-  background-color: var(--grey-3);
-  box-shadow: 0 0.2rem 0.5rem rgba(0, 0, 0, 0.2);
+  background-color: var(--white);
+  /* box-shadow: 0 0.2rem 0.5rem rgba(0, 0, 0, 0.2); */
   z-index: 1000;
   font-size: var(--font-size);
 }
@@ -59,6 +59,7 @@ body {
   width: 100vw;
   height: calc(50vh - (3rem + 2vh));
   overflow: hidden;
+  box-shadow: 0 0.2rem 0.5rem rgba(0, 0, 0, 0.2);
 }
 
 .background-img {
@@ -163,7 +164,7 @@ body {
   align-items: center;
   justify-content: center;
   text-align: center;
-  margin-top: calc(2rem + 2vh);
+  margin: calc(2rem + 2vh);
 }
 
 /*-----------------------------------footer----------------------------------------*/
@@ -175,7 +176,7 @@ body {
   width: 100vw;
   bottom: 0;
   left: 0;
-  box-shadow: 0 -0.2rem 0.5rem rgba(0, 0, 0, 0.2);
+  margin-top: auto;
 }
 
 .footer-container .footer-item {
