@@ -57,29 +57,25 @@ export default function Home() {
               {/* insert image */}
               <h2>AI Email Summarization</h2>
               <p>
-                Leverages AI to generate concise summaries of lengthy emails,
-                focusing on relevance and clarity.
+                Automatically transforms long, cluttered emails into clear and
+                concise summaries — helping users focus on what truly matters.
               </p>
             </div>
-
             <div className="item2">
               {/* insert image */}
               <h2>Reader View</h2>
               <p>
-                Lorem nostrud tempor ut eiusmod ipsum irure fugiat sunt consectetur
-                cillum tempor. Nulla non qui veniam amet amet qui ut ad est duis
-                qui enim minim Lorem. Elit ea ea adipisicing nisi et cillum eu
-                proident magna do dolor.
+                Offers a distraction-free reading experience by stripping away
+                unnecessary formatting and emphasizing the core message of each email.
               </p>
             </div>
             <div className="item3">
               {/* insert image */}
-              <h2>Simple User Centric Design</h2>
+              <h2>User-Centric Design</h2>
               <p>
-                Lorem nostrud tempor ut eiusmod ipsum irure fugiat sunt consectetur
-                cillum tempor. Nulla non qui veniam amet amet qui ut ad est duis
-                qui enim minim Lorem. Elit ea ea adipisicing nisi et cillum eu
-                proident magna do dolor.
+                Built with simplicity and accessibility in mind — from intuitive
+                navigation to clean layouts that streamline email interaction
+                for every user.
               </p>
             </div>
           </div>

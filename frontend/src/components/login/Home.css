@@ -148,9 +148,10 @@ body {
 .home .item1,
 .item2,
 .item3 {
-  border: calc(0.1rem + 0.1vh) solid var(--grey-2);
   border-radius: calc(0.3rem + 0.3vh);
   padding: calc(0.5rem + 0.5vh) calc(1rem + 1vw);
+  background-color: var(--grey-4);
+  box-shadow: 0 0.2rem 0.5rem rgba(0, 0, 0, 0.2);
 }
 
 /* ------------------------------------------------------------------------------- */
