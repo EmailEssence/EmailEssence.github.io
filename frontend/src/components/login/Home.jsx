@@ -55,18 +55,16 @@ export default function Home() {
           <div className="overview-items">
             <div className="item1">
               {/* insert image */}
-              <h2>Talking Point 1</h2>
+              <h2>AI Email Summarization</h2>
               <p>
-                Lorem nostrud tempor ut eiusmod ipsum irure fugiat sunt consectetur
-                cillum tempor. Nulla non qui veniam amet amet qui ut ad est duis
-                qui enim minim Lorem. Elit ea ea adipisicing nisi et cillum eu
-                proident magna do dolor.
+                Leverages AI to generate concise summaries of lengthy emails,
+                focusing on relevance and clarity.
               </p>
             </div>
 
             <div className="item2">
               {/* insert image */}
-              <h2>Talking Point 2</h2>
+              <h2>Reader View</h2>
               <p>
                 Lorem nostrud tempor ut eiusmod ipsum irure fugiat sunt consectetur
                 cillum tempor. Nulla non qui veniam amet amet qui ut ad est duis
@@ -76,7 +74,7 @@ export default function Home() {
             </div>
             <div className="item3">
               {/* insert image */}
-              <h2>Talking Point 3</h2>
+              <h2>Simple User Centric Design</h2>
               <p>
                 Lorem nostrud tempor ut eiusmod ipsum irure fugiat sunt consectetur
                 cillum tempor. Nulla non qui veniam amet amet qui ut ad est duis
@@ -99,6 +97,7 @@ export default function Home() {
           your inbox more efficiently, allowing you to focus on what matters
           most.
         </p>
+        {/* insert image of all team members */}
       </div>
 
       <footer className="footer-container">
