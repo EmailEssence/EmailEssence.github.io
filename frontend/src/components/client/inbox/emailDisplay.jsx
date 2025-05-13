@@ -91,7 +91,7 @@ function PopUp({ isLoading, handleClose, children }) {
   return ReactDom.createPortal(
     isLoading ? (
       <div className="loading-reader-view" onClick={handleClose}>
-        <div className="loading-icon"></div>
+        <div className="loading-icon" data-testid="loading"></div>
       </div>
     ) : (
       <>
