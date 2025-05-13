@@ -27,6 +27,8 @@ function Inbox({ displaySummaries, emailList, setCurEmail, curEmail }) {
       return;
     }
 
+    console.log("Searching for:", keyword);
+    console.log("Using token:", token);
     try {
       const res = await fetch(`${baseUrl}/emails/search?keyword=${keyword}`, {
         headers: {

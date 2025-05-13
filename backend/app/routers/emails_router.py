@@ -34,6 +34,26 @@ logging.getLogger('pymongo').setLevel(logging.WARNING)
 # Create module-specific logger
 logger = logging.getLogger(__name__)
 
+@router.get("/search")
+async def search_emails_by_keyword(
+    keyword: str,
+    email_service: EmailService = Depends(get_email_service),
+    user: UserSchema = Depends(get_current_user)
+):
+    """
+    Search emails using extracted summary keywords.
+    
+    Args:
+        keyword: Keyword to search for
+        email_service: Injected email service
+        user: Current user (from token)
+
+    Returns:
+        List of matched emails based on summary keywords
+    """
+    logger.info(f"Search endpoint hit with keyword: {keyword}")
+    return await email_service.search_emails_by_keyword(user.google_id, keyword)
+
 @router.get(
     "/", 
     response_model=EmailResponse,

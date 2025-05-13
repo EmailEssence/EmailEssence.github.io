@@ -364,11 +364,16 @@ class EmailService:
         Returns:
             List[EmailSchema]: List of emails whose summaries match the keyword.
         """
+        logger.info(f"[Keyword Search] google_id={google_id}, keyword='{keyword}'")
+        
         try:
             email_ids = await self.summary_repository.find_email_ids_by_keyword(google_id, keyword)
             if not email_ids:
                 return []
-            query = {"google_id": google_id, "email_id": {"$in": email_ids}}
+            query = {
+                "google_id": google_id,
+                "email_id": {"$in": [str(eid) for eid in email_ids]}
+            }
             results = await self.email_repository.find_many(query, limit=limit)
             return [self._ensure_email_schema(e) for e in results]
         except Exception as e:

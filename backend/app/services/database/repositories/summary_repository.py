@@ -121,7 +121,8 @@ class SummaryRepository(BaseRepository[SummarySchema], ISummaryRepository):
         query: Dict[str, Any], 
         limit: int = 100, 
         skip: int = 0, 
-        sort: List[tuple] = None
+        sort: List[tuple] = None,
+        projection: Optional[Dict[str, int]] = None
     ) -> List[SummarySchema]:
         """
         Find multiple summaries matching the query.
@@ -142,4 +143,4 @@ class SummaryRepository(BaseRepository[SummarySchema], ISummaryRepository):
                     if isinstance(value, datetime):
                         query["generated_at"][op] = value
         
-        return await super().find_many(query, limit, skip, sort) 
+        return await super().find_many(query, limit, skip, sort, projection=projection) 
