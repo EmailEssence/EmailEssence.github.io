@@ -76,8 +76,9 @@ class SummaryRepository(BaseRepository[SummarySchema], ISummaryRepository):
             "google_id": google_id,
             "keywords": {"$regex": keyword, "$options": "i"}
         }
-        results = await self.find_many(query, projection={"email_id": 1})
-        return [r["email_id"] for r in results]
+        raw_results = await self._get_collection().find(query, {"email_id": 1}).to_list(length=100)
+
+        return [doc["email_id"] for doc in raw_results if "email_id" in doc]
 
 
     async def update_by_email_id(

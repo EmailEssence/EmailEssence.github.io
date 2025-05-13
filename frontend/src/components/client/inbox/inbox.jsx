@@ -18,33 +18,30 @@ function Inbox({ displaySummaries, emailList, setCurEmail, curEmail }) {
   }, [emailList]);
 
   // handle keyword search input and call backend
-  const handleSearch = async (e) => {
-    const keyword = e.target.value;
-    setSearchTerm(keyword);
+const handleSearchKeyDown = async (e) => {
+  if (e.key !== "Enter") return;
 
-    if (keyword.trim() === "") {
-      setFilteredEmails(emailList);
-      return;
-    }
+  if (searchTerm.trim() === "") {
+    setFilteredEmails(emailList);
+    return;
+  }
 
-    console.log("Searching for:", keyword);
-    console.log("Using token:", token);
-    try {
-      const res = await fetch(`${baseUrl}/emails/search?keyword=${keyword}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setFilteredEmails(data);
-      } else {
-        console.error("Search failed", res.status);
-      }
-    } catch (err) {
-      console.error("Search error", err);
+  try {
+    const res = await fetch(`${baseUrl}/emails/search?keyword=${searchTerm}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    if (res.ok) {
+      const data = await res.json();
+      setFilteredEmails(Array.isArray(data) ? data : []);
+    } else {
+      console.error("Search failed", res.status);
     }
-  };
+  } catch (err) {
+    console.error("Search error", err);
+  }
+};
 
   return (
     <div className="inbox-display">
@@ -54,15 +51,16 @@ function Inbox({ displaySummaries, emailList, setCurEmail, curEmail }) {
           type="text"
           placeholder="Search by keyword..."
           value={searchTerm}
-          onChange={handleSearch}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          onKeyDown={handleSearchKeyDown}
           style={{
             width: "100%",
             padding: "8px",
             fontSize: "14px",
             border: "1px solid #ccc",
             borderRadius: "4px",
-          }}
-        />
+        }}
+/>
       </div>
 
       {/* Display email list filtered by searchTerm */}
