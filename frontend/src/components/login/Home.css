@@ -19,7 +19,7 @@ body {
   top: 0;
   left: 0;
   width: 100%;
-  height: calc(3rem + 2vh);
+  height: calc(3rem + 3vh)+calc(4rem+3vh);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -45,13 +45,13 @@ body {
   color: var(--color-text);
   font-size: calc(0.8rem + 0.3vw);
   cursor: pointer;
-  padding: 0.5rem 1rem;
+  padding: 0.9rem 3rem;
   transition: color 0.3s ease, background-color 0.3s ease;
+  border-bottom: 2px solid transparent;
 }
 
 .home .nav-item:hover {
-  color: var(--primary-color);
-  background-color: rgba(0, 0, 0, 0.1);
+  border-bottom: 2px solid var(--grey);
 }
 
 .background-container {
@@ -102,7 +102,7 @@ body {
   background-color: var(--grey);
   color: var(--white);
   margin-top: calc(2rem + 1vh);
-  padding: calc(0.3rem + 0.3vh) calc(0.8rem + 0.8vw);
+  padding: calc(0.3rem + 0.3vh) calc(0.3rem + 0.8vw);
   border-radius: calc(0.3rem + 0.3vh);
   font-size: calc(0.5rem + 1vh);
   cursor: pointer;
@@ -187,6 +187,7 @@ body {
   color: var(--primary-color);
   text-decoration: none;
   transition: color 0.3s ease;
+  font-size: calc(0.2rem + 1vh);
 }
 
 .footer-container .footer-item:hover {
@@ -196,6 +197,6 @@ body {
 
 .footer-container p {
   margin-top: calc(1rem + 0.5vh);
-  font-size: calc(0.7rem + 0.2vw);
+  font-size: calc(0.2rem + 1vh);
   color: var(--grey-light);
 }
