@@ -31,15 +31,14 @@ export function AppRouter() {
   const location = useLocation();
   useEffect(() => {
     if (location.hash.includes("#newEmails")) {
-      if (userEmails.length < emails.length) setUserEmails(emails);
+      setUserEmails(emails);
       window.history.replaceState(
         null,
         "",
         window.location.pathname + window.location.search
       ); // Remove the hash
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [location.hash]);
+  }, [location]);
 
   return (
     <Routes>

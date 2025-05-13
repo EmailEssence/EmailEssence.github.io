@@ -175,27 +175,41 @@ export default async function fetchEmails(numRequested) {
   }
 }
 
+export function getPageSummaries(emailList) {
+  const toGetSummaries = emailList.filter(
+    (email) => email.summary_text.length === 0
+  );
+  if (toGetSummaries.length > 0) addSummaries(toGetSummaries);
+}
+
 export function getTop5(emailList) {
-  // get the summaries for the 5 too (external call)
-  addSummaries(emailList.length > 5 ? emailList.slice(0, 5) : emailList);
+  let toGetSummaries = emailList.length > 5 ? emailList.slice(0, 5) : emailList;
+  toGetSummaries = toGetSummaries.filter(
+    (email) => email.summary_text.length === 0
+  );
+  if (toGetSummaries.length > 0) addSummaries(toGetSummaries);
   return emailList.length > 5 ? emailList.slice(0, 5) : emailList;
 }
 
-export async function addSummaries(emailList) {
+async function addSummaries(emailList) {
   const ids = emailList.map((emailList) => {
     return emailList.email_id;
   });
-  const summaries = await getSummaries(ids);
-  summaries.reverse(); // link summaries to respected email
-  for (let i = 0; i < emailList.length; i++) {
-    const index = emails.indexOf(emailList[i]);
-    emails[index] = {
-      ...emails[index],
-      summary_text: summaries[i].summary_text || "",
-      keywords: summaries[i].keywords || [],
-    };
+  try {
+    const summaries = await getSummaries(ids);
+    summaries.reverse(); // link summaries to respected email
+    for (let i = 0; i < emailList.length; i++) {
+      const index = emails.indexOf(emailList[i]);
+      emails[index] = {
+        ...emails[index],
+        summary_text: summaries[i].summary_text || "",
+        keywords: summaries[i].keywords || [],
+      };
+    }
+    if (emailList.length > 0) window.location.hash = "#newEmails";
+  } catch (error) {
+    console.error("Summaries adding error:", error);
   }
-  if (emailList.length > 0) window.location.hash = "#newEmails";
 }
 
 export async function markEmailAsRead(emailId) {
