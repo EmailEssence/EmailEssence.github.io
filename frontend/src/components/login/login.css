@@ -2,6 +2,7 @@
   background-color: #1e1e1e;
   color: #d9d9d9;
   height: 100vh;
+  width: 100vw;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -35,7 +36,7 @@
 }
 
 .loginIcon img {
-  width: 100%; 
+  width: 100%;
   height: auto;
 }
 

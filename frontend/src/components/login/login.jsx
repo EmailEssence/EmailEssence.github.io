@@ -1,17 +1,18 @@
-import styles from "./login.module.css";
+import "./login.css";
 import Logo from "../../assets/Logo";
 import PropTypes from "prop-types";
 
 const Login = ({ handleGoogleClick }) => {
   return (
-    <div className={styles.page}>
-      <div className={styles.formBox}>
-        <div className={styles.loginDiv}>
-          <div className={styles.loginIcon}>
+    // <div className="customcolor"></div>
+    <div className="page">
+      <div className="formBox">
+        <div className="loginDiv">
+          <div className="loginIcon">
             <Logo />
           </div>
-          <p className={styles.title}>Welcome Back</p>
-          <button onClick={handleGoogleClick} className={styles.googleButton}>
+          <p className="title">Welcome Back</p>
+          <button onClick={handleGoogleClick} className="googleButton">
             Login with Google
           </button>
         </div>
