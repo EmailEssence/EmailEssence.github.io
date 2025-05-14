@@ -184,11 +184,6 @@ body {
 }
 
 /* ------------------------------------------------------------------------------- */
-.about-us {
-  border-top: 3px solid var(--grey-2);
-
-}
-
 .home .terms-of-service,
 .privacy-policy,
 .contact-us,
@@ -199,6 +194,17 @@ body {
   justify-content: center;
   text-align: center;
   margin: calc(2rem + 2vh);
+}
+
+.about-us {
+  border-top: 3px solid var(--grey-2);
+}
+
+.privacy-policy,
+.terms-of-service, .contact-us {
+  padding-top: calc(3rem + 3vh);
+  border-top: 3px solid var(--grey-2);
+  min-height: 80vh;
 }
 
 /*-----------------------------------footer----------------------------------------*/
