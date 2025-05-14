@@ -1,5 +1,7 @@
 import { fetchUserPreferences } from "../components/client/settings/settings";
-
+import DOMPurify from "dompurify";
+// TODO : env variable for baseUrl
+// export const baseUrl = "http://127.0.0.1:8000";
 export const baseUrl = "https://ee-backend-w86t.onrender.com";
 export let emails = [];
 export let userPreferences = {
@@ -76,6 +78,27 @@ async function getEmails(extension) {
   }
 }
 
+export async function getReaderView(emailId) {
+  const option = {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
+      "Content-Type": "application/json",
+    },
+  };
+  const request = new Request(
+    `${baseUrl}/emails/${emailId}/reader-view`,
+    option
+  );
+  const response = await fetch(request);
+  if (!response.ok) {
+    throw new Error(`Failed to retrieve ReaderView: ${response.statusText}`);
+  }
+  const email = await response.json();
+  // console.log(`Returning: \n ${email.reader_content}`);
+  return email.reader_content;
+}
+
 async function getSummaries(emailIds) {
   const option = {
     method: "GET",
@@ -121,24 +144,26 @@ export default async function fetchEmails(numRequested) {
   try {
     // Fetch both emails and summaries concurrently
     const newEmails = await getEmails(numRequested);
-    const ids = newEmails.emails.map((email) => {
-      return email.email_id;
-    });
-    const summaries = await getSummaries(ids);
-    summaries.reverse(); // link summaries to respected email
+    // remove and replace with per page summary loading
+    // const summaries = await getSummaries(ids);
+    // summaries.reverse(); // link summaries to respected email
     // Validate array responses
     if (!Array.isArray(newEmails.emails)) {
       console.error("Invalid emails response:", newEmails);
       return [];
     }
     // Handle case where summaries length doesn't match emails
-    const processedEmails = newEmails.emails.map((email, index) => {
-      const summary = summaries[index] || { summary_text: "", keywords: [] };
+    const processedEmails = newEmails.emails.map((email) => {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(email.body, "text/html");
+      const hasInnerHTML = doc.body.children.length > 0;
 
       return {
         ...email,
-        summary_text: summary.summary_text || "",
-        keywords: summary.keywords || [],
+        body: hasInnerHTML ? DOMPurify.sanitize(email.body) : email.body,
+        hasInnerHTML: hasInnerHTML,
+        summary_text: "",
+        keywords: [],
         received_at: parseDate(email.received_at),
       };
     });
@@ -150,8 +175,41 @@ export default async function fetchEmails(numRequested) {
   }
 }
 
-export function getTop5(emails) {
-  return emails.length > 5 ? emails.slice(0, 5) : emails;
+export function getPageSummaries(emailList) {
+  const toGetSummaries = emailList.filter(
+    (email) => email.summary_text.length === 0
+  );
+  if (toGetSummaries.length > 0) addSummaries(toGetSummaries);
+}
+
+export function getTop5(emailList) {
+  let toGetSummaries = emailList.length > 5 ? emailList.slice(0, 5) : emailList;
+  toGetSummaries = toGetSummaries.filter(
+    (email) => email.summary_text.length === 0
+  );
+  if (toGetSummaries.length > 0) addSummaries(toGetSummaries);
+  return emailList.length > 5 ? emailList.slice(0, 5) : emailList;
+}
+
+async function addSummaries(emailList) {
+  const ids = emailList.map((emailList) => {
+    return emailList.email_id;
+  });
+  try {
+    const summaries = await getSummaries(ids);
+    summaries.reverse(); // link summaries to respected email
+    for (let i = 0; i < emailList.length; i++) {
+      const index = emails.indexOf(emailList[i]);
+      emails[index] = {
+        ...emails[index],
+        summary_text: summaries[i].summary_text || "",
+        keywords: summaries[i].keywords || [],
+      };
+    }
+    if (emailList.length > 0) window.location.hash = "#newEmails";
+  } catch (error) {
+    console.error("Summaries adding error:", error);
+  }
 }
 
 export async function markEmailAsRead(emailId) {
@@ -182,3 +240,4 @@ export async function markEmailAsRead(emailId) {
 // "is_read" has the email been read
 // "summary_text" summary of the email
 // "keywords": [] keywords used to describe email
+// "hasInnerHTML" boolean saying wether to display email as HTML

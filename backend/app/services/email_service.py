@@ -136,12 +136,90 @@ class EmailService:
     # Email Parsing Methods
     # -------------------------------------------------------------------------
     
+    # Deprecated: This method is no longer used
+    # TODO: Remove this method after we're happy with the new sanitization methods
     def _clean_body(self, body: str, is_html: bool = False) -> str:
         """Clean up email body content."""
         body = re.sub(r'\[image:[^\]]*\]', '', body)
         body = re.sub(r'(\r\n|\r|\n)+', '\n', body)
         body = body.strip()
         return body
+
+    # -------------------------------------------------------------------------
+    # Email Security & Privacy Methods
+    # -------------------------------------------------------------------------
+    
+    def _remove_scripts(self, html_content: str) -> str:
+        """Remove script tags and their contents for security."""
+        # Remove script tags and their contents
+        html_content = re.sub(r'<script[^>]*>.*?</script>', '', html_content, flags=re.DOTALL)
+        
+        # Remove on* event handlers (onclick, onload, etc.)
+        html_content = re.sub(r'(<[^>]*) on\w+="[^"]*"([^>]*>)', r'\1\2', html_content)
+        html_content = re.sub(r'(<[^>]*) on\w+=\'[^\']*\'([^>]*>)', r'\1\2', html_content)
+        
+        # Remove javascript: URLs
+        html_content = re.sub(r'(<[^>]*\s+(?:href|src|action)=[\'\"])javascript:.*?([\'\"][^>]*>)', 
+                              r'\1#\2', html_content, flags=re.IGNORECASE|re.DOTALL)
+        
+        # TODO: Research and add more event handlers to the list based on current trends
+        return html_content
+    
+    def _remove_tracking_pixels(self, html_content: str) -> str:
+        """Remove tracking pixels while preserving normal images."""
+        # Remove 1x1 pixel images (common tracking pixels)
+        html_content = re.sub(r'<img[^>]*(?:width=["\']?1["\']?[^>]*height=["\']?1["\']?|'
+                            r'height=["\']?1["\']?[^>]*width=["\']?1["\']?)[^>]*>', 
+                            '', html_content, flags=re.IGNORECASE)
+        
+        # Remove images from common tracking domains
+        # TODO: Research and add more tracking domains to the list
+        tracking_domains = [
+            r'track\.', r'pixel\.', r'analytics\.', r'beacon\.', 
+            r'tracker\.', r'metrics\.', r'telemetry\.', r'logger\.'
+        ]
+        for domain in tracking_domains:
+            html_content = re.sub(
+                fr'<img[^>]*src=["\']https?://[^"\']*{domain}[^"\']*["\'][^>]*>', 
+                '', html_content, flags=re.IGNORECASE
+            )
+        
+        return html_content
+    
+    def _minimal_email_sanitization(self, html_content: str) -> str:
+        """
+        Minimally sanitize email content while preserving formatting.
+        Removes scripts and tracking elements but maintains styles and layout.
+        """
+        if not html_content:
+            return html_content
+            
+        # First remove scripts for security
+        html_content = self._remove_scripts(html_content)
+        
+        # Then remove tracking pixels
+        html_content = self._remove_tracking_pixels(html_content)
+        
+        return html_content
+    
+    def _full_email_sanitization(self, html_content: str) -> str:
+        """
+        More aggressive cleaning for reader view.
+        Removes tracking pixels, scripts, styles and other formatting to focus on content.
+        """
+        if not html_content:
+            return html_content
+            
+        # Start with minimal sanitization
+        html_content = self._minimal_email_sanitization(html_content)
+        
+        # Additionally remove style tags for reader view
+        html_content = re.sub(r'<style[^>]*>.*?</style>', '', html_content, flags=re.DOTALL)
+        
+        # Remove inline styles
+        html_content = re.sub(r'(<[^>]*) style=["\'][^"\']*["\']([^>]*>)', r'\1\2', html_content)
+        
+        return html_content
 
     def _decode_email_field(self, field_value: Optional[str], default: str = '') -> str:
         """Safely decode email header fields with proper encoding handling."""
@@ -153,42 +231,106 @@ class EmailService:
             decoded = decoded.decode(encoding or 'utf-8', errors='ignore')
         return decoded
 
-    def _extract_email_body(self, email_message: email.message.Message) -> str:
-        """Extract email body with fallback content type handling."""
-        body = ""
-        content_type_preference = ['text/plain', 'text/html']
+    def _extract_email_body(self, email_message: email.message.Message) -> Tuple[str, bool]:
+        """
+        Extract body content from email message and determine if it's HTML.
         
-        def decode_part(part):
-            try:
-                charset = part.get_content_charset() or 'utf-8'
-                return part.get_payload(decode=True).decode(charset, errors='replace')
-            except Exception as e:
-                self._log_operation('error', f"Error decoding {part.get_content_type()} part: {e}")
-                return ""
-        
-        if email_message.is_multipart():
-            for preferred_type in content_type_preference:
-                for part in email_message.walk():
-                    if (part.get_content_type() == preferred_type and 
-                        'attachment' not in str(part.get('Content-Disposition'))):
-                        content = decode_part(part)
-                        if content:
-                            body = content
-                            is_html = preferred_type == 'text/html'
-                            return self._clean_body(body, is_html)
-        else:
-            body = decode_part(email_message)
+        Args:
+            email_message: The email message to extract body from
             
-        return self._clean_body(body)
+        Returns:
+            Tuple containing (body_content, is_html_flag)
+        """
+        # Default values
+        body = ""
+        is_html = False
+        html_part = None
+        text_part = None
+        
+        # Check if the message is multipart
+        if email_message.is_multipart():
+            # First pass: identify all content parts
+            for part in email_message.walk():
+                content_type = part.get_content_type()
+                content_disposition = str(part.get("Content-Disposition", ""))
+                
+                # Skip attachments
+                if "attachment" in content_disposition:
+                    continue
+                    
+                # Find HTML content
+                if content_type == "text/html":
+                    html_part = part
+                    
+                # Find plain text content
+                if content_type == "text/plain":
+                    text_part = part
+            
+            # Prefer HTML content when available
+            if html_part:
+                try:
+                    body = html_part.get_payload(decode=True).decode(errors="replace")
+                    is_html = True
+                except Exception as e:
+                    self._log_operation('error', f"Error decoding HTML part: {e}")
+                    # Fall back to text part if available
+                    if text_part:
+                        body = text_part.get_payload(decode=True).decode(errors="replace")
+            elif text_part:
+                # Use plain text if no HTML is found
+                body = text_part.get_payload(decode=True).decode(errors="replace")
+        else:
+            # Not multipart - get content type and decode accordingly
+            content_type = email_message.get_content_type()
+            try:
+                body = email_message.get_payload(decode=True).decode(errors="replace")
+                is_html = content_type == "text/html"
+            except Exception as e:
+                self._log_operation('error', f"Error decoding non-multipart message: {e}")
+                body = email_message.get_payload(decode=False)
+                # Try to detect HTML if content-type wasn't reliable
+                is_html = bool(re.search(r'<(?:html|body|div|p|h[1-6])[^>]*>', body, re.IGNORECASE))
+        
+        # Validate HTML detection with regex if needed
+        if is_html and not bool(re.search(r'<(?:html|body|div|p|h[1-6])[^>]*>', body, re.IGNORECASE)):
+            self._log_operation('warning', "Content marked as HTML but no HTML tags found, validating...")
+            is_html = False  # Reset if no HTML tags found
+        
+        # Apply minimal sanitization for HTML content
+        if is_html:
+            body = self._minimal_email_sanitization(body)
+        
+        return body, is_html
 
     def _parse_email_message(self, uid: int, email_message: email.message.Message, 
-                           body: str, received_date: datetime, google_id: str = 'default') -> dict:
+                           google_id: str = 'default') -> dict:
         """Parse email message into schema-compliant format."""
+        # Extract body content and determine if it's HTML
+        body, is_html = self._extract_email_body(email_message)
+        
+        # Minimally sanitize HTML content if present
+        if is_html:
+            body = self._minimal_email_sanitization(body)
+        
+        # Process headers
         subject = self._decode_email_field(email_message.get('Subject'))
         from_ = self._decode_email_field(email_message.get('From'))
         
         to_field = self._decode_email_field(email_message.get('To'))
         recipients = [addr.strip() for addr in to_field.split(',')] if to_field else []
+        
+        # Get received date
+        received_date = email_message.get('Date')
+        if received_date:
+            try:
+                # Try to parse the date from the header
+                import email.utils
+                received_date = email.utils.parsedate_to_datetime(received_date)
+            except Exception:
+                # Fall back to current time if parsing fails
+                received_date = datetime.now()
+        else:
+            received_date = datetime.now()
 
         return {
             'google_id': google_id,
@@ -197,6 +339,7 @@ class EmailService:
             'recipients': recipients,
             'subject': subject,
             'body': body,
+            'is_html': is_html, # TODO: Remove this field or add to the schema? Leaning towards keeping it to communicate the type of body content
             'received_at': received_date,
             'category': 'uncategorized',
             'is_read': False
@@ -251,8 +394,6 @@ class EmailService:
                     email_data = self._parse_email_message(
                         uid=uid,
                         email_message=email_message,
-                        body=body,
-                        received_date=received_date,
                         google_id=google_id
                     )
                     
@@ -329,6 +470,7 @@ class EmailService:
                 return None
                 
             email_data["is_read"] = True
+            # TODO: SMTP update? 
             await self.email_repository.update_by_email_and_google_id(email_id, google_id, email_data)
             return self._ensure_email_schema(email_data)
         except Exception as e:
@@ -354,6 +496,80 @@ class EmailService:
     # Content Processing Methods
     # -------------------------------------------------------------------------
     
+    def _convert_html_to_readable_text(self, html_content: str) -> str:
+        """Convert HTML to readable plain text, optimized for reader view."""
+        # First apply full sanitization
+        html_content = self._full_email_sanitization(html_content)
+        
+        # Add newlines after block elements to improve readability
+        block_elements = ['p', 'div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'li', 'tr', 'section', 'article']
+        for tag in block_elements:
+            pattern = f'</{tag}>'
+            html_content = re.sub(pattern, f'</{tag}>\n\n', html_content, flags=re.IGNORECASE)
+        
+        # Handle list items with bullets
+        html_content = re.sub(r'<li[^>]*>', '• ', html_content, flags=re.IGNORECASE)
+        
+        # Handle headings with emphasis
+        for i in range(1, 7):
+            html_content = re.sub(f'<h{i}[^>]*>(.*?)</h{i}>', 
+                                 lambda m: f"\n\n{m.group(1).upper()}\n\n", 
+                                 html_content, flags=re.IGNORECASE|re.DOTALL)
+        
+        # Remove all remaining HTML tags
+        html_content = re.sub(r'<[^>]+>', ' ', html_content)
+        
+        # Unescape HTML entities
+        import html
+        html_content = html.unescape(html_content)
+        
+        # Clean up whitespace
+        html_content = re.sub(r' {2,}', ' ', html_content)
+        html_content = re.sub(r'\n{3,}', '\n\n', html_content)
+        
+        # Strip out email headers that we display separately
+        html_content = re.sub(r'(?i)(-+\s*Forwarded message\s*-+\s*)?'
+                             r'From:.*?(?=To:|Subject:|Date:|$).*?\n', '', html_content)
+        html_content = re.sub(r'(?i)Date:\s*.*?\n', '', html_content)
+        html_content = re.sub(r'(?i)To:\s*.*?\n', '', html_content)
+        html_content = re.sub(r'(?i)Subject:\s*.*?\n', '', html_content)
+        html_content = re.sub(r'(?i)Cc:\s*.*?\n', '', html_content)
+        
+        # Remove any remaining forwarded message markers
+        html_content = re.sub(r'(?i)(-+\s*Forwarded message\s*-+\s*)', '', html_content)
+        
+        # Clean up excessive whitespace after header removal
+        html_content = re.sub(r'\n{3,}', '\n\n', html_content)
+        
+        # Format sections divided by separator lines
+        html_content = re.sub(r'([_\-=]{3,})\s*', '\n\n----------\n\n', html_content)
+        
+        # Add spacing around links and URLs
+        html_content = re.sub(r'(https?://\S+)', r'\n\1\n', html_content)
+        
+        # Add spacing around list items for better readability
+        html_content = re.sub(r'(•\s+.*?)(\n•\s+)', r'\1\n\2', html_content)
+        
+        # Normalize paragraph spacing (ensure double newlines between paragraphs)
+        # Readerview is destroying this.
+        html_content = re.sub(r'([^\n])\n([^\n])', r'\1\n\n\2', html_content)
+        
+        # Clean up any excessive newlines again
+        html_content = re.sub(r'\n{3,}', '\n\n', html_content)
+        
+        return html_content.strip()
+        
+    def _clean_plaintext_for_reading(self, text: str) -> str:
+        """Clean plain text content for better readability."""
+        # Normalize newlines
+        text = re.sub(r'(\r\n|\r|\n){2,}', '\n\n', text)
+        
+        # Clean up whitespace
+        text = re.sub(r' {2,}', ' ', text)
+        text = re.sub(r'\n{3,}', '\n\n', text)
+        
+        return text.strip()
+    
     async def get_email_reader_view(self, email_id: str, google_id: str) -> Optional[ReaderViewResponse]:
         """Process an email to generate a reader-view friendly version."""
         try:
@@ -362,32 +578,20 @@ class EmailService:
                 return None
                 
             body = email.body
-            is_html = bool(re.search(r'<(?:html|body|div|p|h[1-6])[^>]*>', body, re.IGNORECASE))
             original_length = len(body)
             
+            # Determine if content is HTML based on content
+            is_html = getattr(email, 'is_html', False)
+            if not is_html:
+                # Fallback detection if is_html attribute doesn't exist
+                is_html = bool(re.search(r'<(?:html|body|div|p|h[1-6])[^>]*>', body, re.IGNORECASE))
+            
             if is_html:
-                cleaned_body = re.sub(r'<script[^>]*>.*?</script>', '', body, flags=re.DOTALL)
-                cleaned_body = re.sub(r'<style[^>]*>.*?</style>', '', cleaned_body, flags=re.DOTALL)
-                
-                for tag in ['p', 'div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'li', 'br']:
-                    pattern = f'</{tag}>'
-                    cleaned_body = re.sub(pattern, f'</{tag}>\n\n', cleaned_body, flags=re.IGNORECASE)
-                
-                cleaned_body = re.sub(r'<a[^>]*href=[\'"]([^\'"]*)[\'"][^>]*>(.*?)</a>', 
-                                    r'\2 [\1]', cleaned_body, flags=re.DOTALL)
-                cleaned_body = re.sub(r'<[^>]+>', ' ', cleaned_body)
-                
-                import html
-                cleaned_body = html.unescape(cleaned_body)
+                reader_content = self._convert_html_to_readable_text(body)
                 content_type = "html"
             else:
-                cleaned_body = body
-                cleaned_body = re.sub(r'(\r\n|\r|\n){2,}', '\n\n', cleaned_body)
+                reader_content = self._clean_plaintext_for_reading(body)
                 content_type = "plain"
-                
-            reader_content = re.sub(r' {2,}', ' ', cleaned_body)
-            reader_content = re.sub(r'\n{3,}', '\n\n', reader_content)
-            reader_content = reader_content.strip()
             
             return ReaderViewResponse.from_email(
                 email=email,

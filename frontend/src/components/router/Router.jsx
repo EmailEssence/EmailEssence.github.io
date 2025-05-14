@@ -33,16 +33,20 @@ export function AppRouter() {
   const [userEmails, setUserEmails] = useState(emails);
   const location = useLocation();
   useEffect(() => {
-    if (location.hash.includes("#newEmails")) {
-      if (userEmails.length < emails.length) setUserEmails(emails);
-      window.history.replaceState(
-        null,
-        "",
-        window.location.pathname + window.location.search
-      ); // Remove the hash
-    }
-// eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [location.hash]);
+    const interval = setInterval(() => {
+      if (emails != userEmails || window.location.hash === "#newEmails") {
+        setUserEmails(emails);
+        window.history.replaceState(
+          null,
+          "",
+          window.location.pathname + window.location.search
+        ); // Remove the hash
+      }
+    }, 500);
+
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location]);
 
   return (
     <Routes>
