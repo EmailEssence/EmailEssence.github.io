@@ -1,18 +1,21 @@
 import { useEffect, useState } from "react";
 import {
+  BrowserRouter,
   Navigate,
   Route,
   Routes,
   useLocation,
-  BrowserRouter,
 } from "react-router";
 import { authenticate } from "../../authentication/authenticate";
 import { emails, userPreferences } from "../../emails/emailHandler";
 import Client from "../client/client";
-import Login from "../login/login";
+import Contact from "../login/contact";
 import Error from "../login/Error";
-import Loading from "../login/Loading";
 import Home from "../login/Home";
+import Loading from "../login/Loading";
+import Login from "../login/login";
+import PrivacyPolicy from "../login/privacy";
+import TermsOfService from "../login/terms";
 
 export function Router() {
   const testing = import.meta.env.MODE === "test";
@@ -49,6 +52,9 @@ export function AppRouter() {
     <Routes>
       <Route path="" element={<Navigate to="/home" replace />} />
       <Route path="/home" element={<Home />} />
+      <Route path="/contact" element={<Contact />} />
+      <Route path="/privacy" element={<PrivacyPolicy />} />
+      <Route path="/terms" element={<TermsOfService />} />
       <Route
         path="/login"
         element={<Login handleGoogleClick={authenticate} />}
