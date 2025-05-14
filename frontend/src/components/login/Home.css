@@ -1,12 +1,12 @@
 @import url("../../main.css");
 
-html,
+/* html,
 body {
   margin: 0;
   padding: 0;
   width: 250vw;
   overflow-x: hidden;
-}
+} */
 
 .home {
   width: 100vw;
@@ -19,7 +19,7 @@ body {
   top: 0;
   left: 0;
   width: 100%;
-  height: calc(3rem + 3vh)+calc(4rem+3vh);
+  height: calc(3rem + 3vh) + calc(4rem+3vh);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -87,15 +87,15 @@ body {
 
 .snap-of-ui {
   background-image: url("../../assets/Minimal_Browser_Dashboard.png");
-    width: 35vw;
-    height: 20vw;
-    background-size: cover;
-    background-position: center;
-    position: absolute;
-    top: 65%;
-    right: 30vw;
-    transform: translateY(-50%);
-    z-index: 2;
+  width: 35vw;
+  height: 20vw;
+  background-size: cover;
+  background-position: center;
+  position: absolute;
+  top: 65%;
+  right: 30vw;
+  transform: translateY(-50%);
+  z-index: 2;
   box-shadow: 0 0.2rem 0.7rem rgba(0, 0, 0, 0.2);
 }
 
@@ -201,7 +201,8 @@ body {
 }
 
 .privacy-policy,
-.terms-of-service, .contact-us {
+.terms-of-service,
+.contact-us {
   padding-top: calc(3rem + 3vh);
   border-top: 3px solid var(--grey-2);
   min-height: 80vh;

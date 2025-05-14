@@ -1,11 +1,10 @@
-import "./login.css";
 import Logo from "../../assets/Logo";
 import PropTypes from "prop-types";
+import "./login.css";
 
 const Login = ({ handleGoogleClick }) => {
   return (
-    // <div className="customcolor"></div>
-    <div className="page">
+    <div className="login-page">
       <div className="formBox">
         <div className="loginDiv">
           <div className="loginIcon">
