@@ -507,10 +507,6 @@ class EmailService:
             pattern = f'</{tag}>'
             html_content = re.sub(pattern, f'</{tag}>\n\n', html_content, flags=re.IGNORECASE)
         
-        # Convert links to text [URL] format
-        html_content = re.sub(r'<a[^>]*href=[\'"]([^\'"]*)[\'"][^>]*>(.*?)</a>', 
-                              r'\2 [\1]', html_content, flags=re.DOTALL)
-        
         # Handle list items with bullets
         html_content = re.sub(r'<li[^>]*>', '• ', html_content, flags=re.IGNORECASE)
         
@@ -529,6 +525,36 @@ class EmailService:
         
         # Clean up whitespace
         html_content = re.sub(r' {2,}', ' ', html_content)
+        html_content = re.sub(r'\n{3,}', '\n\n', html_content)
+        
+        # Strip out email headers that we display separately
+        html_content = re.sub(r'(?i)(-+\s*Forwarded message\s*-+\s*)?'
+                             r'From:.*?(?=To:|Subject:|Date:|$).*?\n', '', html_content)
+        html_content = re.sub(r'(?i)Date:\s*.*?\n', '', html_content)
+        html_content = re.sub(r'(?i)To:\s*.*?\n', '', html_content)
+        html_content = re.sub(r'(?i)Subject:\s*.*?\n', '', html_content)
+        html_content = re.sub(r'(?i)Cc:\s*.*?\n', '', html_content)
+        
+        # Remove any remaining forwarded message markers
+        html_content = re.sub(r'(?i)(-+\s*Forwarded message\s*-+\s*)', '', html_content)
+        
+        # Clean up excessive whitespace after header removal
+        html_content = re.sub(r'\n{3,}', '\n\n', html_content)
+        
+        # Format sections divided by separator lines
+        html_content = re.sub(r'([_\-=]{3,})\s*', '\n\n----------\n\n', html_content)
+        
+        # Add spacing around links and URLs
+        html_content = re.sub(r'(https?://\S+)', r'\n\1\n', html_content)
+        
+        # Add spacing around list items for better readability
+        html_content = re.sub(r'(•\s+.*?)(\n•\s+)', r'\1\n\2', html_content)
+        
+        # Normalize paragraph spacing (ensure double newlines between paragraphs)
+        # Readerview is destroying this.
+        html_content = re.sub(r'([^\n])\n([^\n])', r'\1\n\n\2', html_content)
+        
+        # Clean up any excessive newlines again
         html_content = re.sub(r'\n{3,}', '\n\n', html_content)
         
         return html_content.strip()
