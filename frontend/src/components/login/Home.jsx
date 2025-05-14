@@ -1,6 +1,9 @@
 import { useRef } from "react";
 import { useNavigate } from "react-router";
 import Logo from "../../assets/Logo";
+import Mail from "../../assets/mail";
+import ReaderView from "../../assets/ReaderView";
+import UserIcon from "../../assets/UserIcon";
 import "./Home.css";
 
 export default function Home() {
@@ -39,7 +42,7 @@ export default function Home() {
           <h2 className="subtitle">Redefining Email Management</h2>
           <h2 className="subtitle">An intelligent solution designed to enhance how we manage our inbox</h2>
           <h2 className="subtitle">Sign in now to connect to your AI-Powered Email Assistant</h2>
-          {/* insert snapshot of ui */}
+          <div className="snap-of-ui"></div>
           <div
             className="login-navigate-button"
             onClick={() => navigate("/login")}
@@ -54,7 +57,7 @@ export default function Home() {
           <h1>Overview</h1>
           <div className="overview-items">
             <div className="item1">
-              {/* insert image */}
+              <Mail className="mail-svg" />
               <h2>AI Email Summarization</h2>
               <p>
                 Automatically transforms long, cluttered emails into clear and
@@ -62,7 +65,7 @@ export default function Home() {
               </p>
             </div>
             <div className="item2">
-              {/* insert image */}
+              <ReaderView className="readerview-svg" />
               <h2>Reader View</h2>
               <p>
                 Offers a distraction-free reading experience by stripping away
@@ -70,7 +73,7 @@ export default function Home() {
               </p>
             </div>
             <div className="item3">
-              {/* insert image */}
+              <UserIcon className="usericon-svg" />
               <h2>User-Centric Design</h2>
               <p>
                 Built with simplicity and accessibility in mind — from intuitive

@@ -57,7 +57,7 @@ body {
 .background-container {
   position: relative;
   width: 100vw;
-  height: calc(50vh - (3rem + 2vh));
+  height: calc(60vh - (3rem + 2vh));
   overflow: hidden;
   box-shadow: 0 0.2rem 0.5rem rgba(0, 0, 0, 0.2);
 }
@@ -83,6 +83,20 @@ body {
   padding: calc(2rem + 1vh);
   position: relative;
   z-index: 1;
+}
+
+.snap-of-ui {
+  background-image: url("../../assets/Minimal_Browser_Dashboard.png");
+    width: 35vw;
+    height: 20vw;
+    background-size: cover;
+    background-position: center;
+    position: absolute;
+    top: 65%;
+    right: 30vw;
+    transform: translateY(-50%);
+    z-index: 2;
+  box-shadow: 0 0.2rem 0.7rem rgba(0, 0, 0, 0.2);
 }
 
 .home .title .subtitle {
@@ -148,13 +162,32 @@ body {
 .home .item1,
 .item2,
 .item3 {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
   border-radius: calc(0.3rem + 0.3vh);
-  padding: calc(0.5rem + 0.5vh) calc(1rem + 1vw);
+  padding: calc(0.7rem + 0.5vh) calc(2rem + 1vw);
   background-color: var(--grey-4);
   box-shadow: 0 0.2rem 0.5rem rgba(0, 0, 0, 0.2);
 }
 
+.item1 svg,
+.item2 svg,
+.item3 svg {
+  display: block;
+  margin: 0 auto 1rem auto;
+  width: calc(2rem + 1vh);
+  height: calc(2rem + 1vh);
+  color: var(--black);
+}
+
 /* ------------------------------------------------------------------------------- */
+.about-us {
+  border-top: 3px solid var(--grey-2);
+
+}
 
 .home .terms-of-service,
 .privacy-policy,
