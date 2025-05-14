@@ -163,8 +163,13 @@ function InboxEmailList({
       </div>
 
       <div className="divider"></div>
-      <div className="emails" ref={ref} onScroll={handleScroll}>
-        {emails()}
+      <div className="emails-wrapper">
+        <div className="emails" ref={ref} onScroll={handleScroll}>
+          {emails()}
+          {emailList.length === 0 && (
+            <div className="empty-results">No matching emails found.</div>
+          )}
+        </div>
       </div>
     </div>
   );
