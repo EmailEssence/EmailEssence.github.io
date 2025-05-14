@@ -28,7 +28,7 @@ describe("Loading Component", () => {
         handleOAuthCallback.mockResolvedValueOnce();
         render(<Loading />);
         await vi.waitFor(() => {
-            expect(mockNavigate).toHaveBeenCalledWith("/client/dashboard#newEmails");
+            expect(mockNavigate).toHaveBeenCalledWith("/client/home#newEmails");
         });
     });
 

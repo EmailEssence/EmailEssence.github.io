@@ -97,7 +97,7 @@ function Client({
       />
       <Routes>
         <Route
-          path="dashboard"
+          path="home"
           element={
             <Dashboard
               emailList={emailsByDate}

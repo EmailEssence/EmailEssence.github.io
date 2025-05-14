@@ -3,6 +3,8 @@ import PropTypes from "prop-types";
 import { useEffect, useState } from "react";
 import ReactDom from "react-dom";
 import ReaderViewIcon from "../../../assets/ReaderView";
+import Email from "./Email";
+import { getReaderView } from "../../../emails/emailHandler";
 import "./emailDisplay.css";
 
 function EmailDisplay({
@@ -31,7 +33,7 @@ function EmailDisplay({
       </div>
       <div className="body">
         <div className="content-container">
-          <div className="content">{curEmail.body}</div>
+          <Email email={curEmail} />
         </div>
       </div>
     </div>
@@ -42,14 +44,15 @@ function ReaderView({ curEmail }) {
   const [text, setText] = useState("Loading ...");
   const [displaying, setDisplaying] = useState(false);
 
-  function displayReaderView() {
+  async function displayReaderView() {
+    setDisplaying(!displaying);
     if (!displaying) {
+      const readerViewText = await getReaderView(curEmail.email_id);
       const parser = new DOMParser();
-      const doc = parser.parseFromString(curEmail.body, "text/html");
+      const doc = parser.parseFromString(readerViewText, "text/html");
       const article = new Readability(doc).parse();
       setText(article.textContent);
     }
-    setDisplaying(!displaying);
   }
 
   useEffect(() => {
@@ -66,31 +69,51 @@ function ReaderView({ curEmail }) {
       >
         <ReaderViewIcon />
       </div>
-      <PopUp isOpen={displaying} handleClose={displayReaderView}>
-        <div>{text}</div>
-      </PopUp>
+      {displaying && (
+        <PopUp
+          isLoading={text === "Loading..."}
+          handleClose={displayReaderView}
+        >
+          <div className="title">{curEmail.subject}</div>
+          <div className="from">{`From: ${getSenderName(
+            curEmail.sender
+          )}`}</div>
+          <div className="date">{formatDate(curEmail.received_at)}</div>
+          <div className="gap"></div>
+          <div className="body">{text}</div>
+        </PopUp>
+      )}
     </div>
   );
 }
 
-function PopUp({ isOpen, handleClose, children }) {
-  if (!isOpen) return null;
+function PopUp({ isLoading, handleClose, children }) {
   return ReactDom.createPortal(
-    <>
-      <div className="overlay-background" />
-      <div className="pop-up-container">
-        {children}
-        <div className="button" onClick={handleClose}>
-          Click To Close
-        </div>
+    isLoading ? (
+      <div className="loading-reader-view" onClick={handleClose}>
+        <div className="loading-icon" data-testid="loading"></div>
       </div>
-    </>,
+    ) : (
+      <>
+        <div className="overlay-background" />
+        <div className="pop-up-container">
+          <div className="content">{children}</div>
+          <div className="button" onClick={handleClose}>
+            Click To Close
+          </div>
+        </div>
+      </>
+    ),
     document.getElementById("portal")
   );
 }
 
 const formatDate = (date) => {
   return `${date[1]}/${date[2]}/${date[0]}`;
+};
+
+const getSenderName = (sender) => {
+  return sender.slice(0, sender.indexOf("<"));
 };
 
 EmailDisplay.propTypes = {

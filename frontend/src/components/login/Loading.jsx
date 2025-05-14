@@ -11,7 +11,7 @@ export default function Loading() {
         //calls Oauth and updates the loading state
         await handleOAuthCallback();
 
-        navigate("/client/dashboard#newEmails");
+        navigate("/client/home#newEmails");
         // Link to /client & mention new emails
       } catch (error) {
         console.error("OAuth callback failed:", error);
