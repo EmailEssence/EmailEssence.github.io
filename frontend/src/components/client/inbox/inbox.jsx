@@ -6,17 +6,17 @@ import EmailDisplay from "./emailDisplay";
 import { getPageSummaries } from "../../../emails/emailHandler";
 import "./emailEntry.css";
 import "./emailList.css";
-import { baseUrl } from "../../../emails/emailHandler"; // shared API URL base
+import { trimList } from "../../../emails/emailHandler"; // shared API URL base
 
 function Inbox({ displaySummaries, emailList, setCurEmail, curEmail }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredEmails, setFilteredEmails] = useState(emailList);
-  const token = localStorage.getItem("auth_token");
+  // const token = localStorage.getItem("auth_token");
 
   useEffect(() => {
     setFilteredEmails(emailList);
   }, [emailList]);
-
+  // Localize this process
   // Search triggered only on Enter key
   const handleSearchKeyDown = async (e) => {
     if (e.key !== "Enter") return;
@@ -25,22 +25,22 @@ function Inbox({ displaySummaries, emailList, setCurEmail, curEmail }) {
       setFilteredEmails(emailList);
       return;
     }
-
-    try {
-      const res = await fetch(`${baseUrl}/emails/search?keyword=${searchTerm}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setFilteredEmails(Array.isArray(data) ? data : []);
-      } else {
-        console.error("Search failed", res.status);
-      }
-    } catch (err) {
-      console.error("Search error", err);
-    }
+    setFilteredEmails(trimList(searchTerm));
+    // try {
+    //   const res = await fetch(`${baseUrl}/emails/search?keyword=${searchTerm}`, {
+    //     headers: {
+    //       Authorization: `Bearer ${token}`,
+    //     },
+    //   });
+    //   if (res.ok) {
+    //     const data = await res.json();
+    //     setFilteredEmails(Array.isArray(data) ? data : []);
+    //   } else {
+    //     console.error("Search failed", res.status);
+    //   }
+    // } catch (err) {
+    //   console.error("Search error", err);
+    // }
   };
 
   return (
@@ -71,7 +71,9 @@ function EmailEntry({ displaySummary, email, onClick, selected }) {
   const date = getDate(email.received_at);
   return (
     <div
-      className={`entry${displaySummary ? "" : " no-summary"}${selected ? " selected" : ""}`}
+      className={`entry${displaySummary ? "" : " no-summary"}${
+        selected ? " selected" : ""
+      }`}
       onClick={onClick}
     >
       <div className="indicator-container">
@@ -110,7 +112,11 @@ function InboxEmailList({
   const handleScroll = () => {
     // add external summary call
     const fullyScrolled =
-      Math.abs(ref.current.scrollHeight - ref.current.clientHeight - ref.current.scrollTop) <= 1;
+      Math.abs(
+        ref.current.scrollHeight -
+          ref.current.clientHeight -
+          ref.current.scrollTop
+      ) <= 1;
     if (fullyScrolled && hasUnloadedEmails) {
       setPages(pages + 1);
     }
@@ -151,11 +157,17 @@ function InboxEmailList({
           padding: "10px",
         }}
       >
-        <div className="inbox-title" style={{ display: "flex", alignItems: "center" }}>
+        <div
+          className="inbox-title"
+          style={{ display: "flex", alignItems: "center" }}
+        >
           <div className="inbox-icon">
             <ArrowIcon />
           </div>
-          <div className="inbox-word" style={{ marginLeft: "8px", fontWeight: "bold", fontSize: "18px" }}>
+          <div
+            className="inbox-word"
+            style={{ marginLeft: "8px", fontWeight: "bold", fontSize: "18px" }}
+          >
             Inbox
           </div>
         </div>

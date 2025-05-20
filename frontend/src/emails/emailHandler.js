@@ -212,6 +212,11 @@ async function addSummaries(emailList) {
   }
 }
 
+export function trimList(keyword) {
+  // ToDo: Implement
+  return emails;
+}
+
 export async function markEmailAsRead(emailId) {
   console.log(emailId);
   return;
