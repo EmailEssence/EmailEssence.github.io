@@ -16,7 +16,7 @@ from starlette.concurrency import run_in_threadpool
 
 # Import from app modules
 from app.models import EmailSchema, ReaderViewResponse
-from app.services.database import EmailRepository, get_email_repository
+from app.services.database import EmailRepository, SummaryRepository, get_email_repository, get_summary_repository
 from app.services.database.factories import get_user_service, get_auth_service
 from app.services import auth_service
 
@@ -37,14 +37,16 @@ class EmailService:
     processing, and storage operations.
     """
     
-    def __init__(self, email_repository: EmailRepository = None):
+    def __init__(self, email_repository: EmailRepository = None, summary_repository: SummaryRepository = None):
         """
         Initialize the email service.
         
         Args:
             email_repository: Email repository instance
+            summary_repository: Summary repository instance
         """
         self.email_repository = email_repository or get_email_repository()
+        self.summary_repository = summary_repository or get_summary_repository()
         self.imap_host = 'imap.gmail.com'
         self.default_email_account = os.environ.get("EMAIL_ACCOUNT")
     
@@ -492,6 +494,45 @@ class EmailService:
         except Exception as e:
             self._handle_email_error(e, "delete", email_id, google_id)
     
+    async def search_emails_by_keyword(self, google_id: str, keyword: str, limit: int = 50) -> List[EmailSchema]:
+        """
+        Search for emails using summary keywords.
+
+        Args:
+            google_id: Google ID of the user.
+            keyword: Keyword to search in the summary keywords.
+            limit: Maximum number of emails to return.
+
+        Returns:
+            List[EmailSchema]: List of emails whose summaries match the keyword and then enriched with corresponding summary.
+        """
+        logger.info(f"[Keyword Search] google_id={google_id}, keyword='{keyword}'")
+        
+        try:
+            #Find all email_ids from summaries that match the keyword for the given user
+            email_ids = await self.summary_repository.find_email_ids_by_keyword(google_id, keyword)
+            if not email_ids:
+                return []
+
+            #Query emails from the email repository using those email_ids
+            query = {"google_id": google_id, "email_id": {"$in": [str(eid) for eid in email_ids]}}
+            emails = await self.email_repository.find_many(query, limit=limit)
+
+            # Retrieve matching summary records to extract summary_text
+            summaries = await self.summary_repository.find_many(query)
+            summary_map = {s.email_id: getattr(s, "summary_text", "") for s in summaries}
+
+            # Enrich email records with their corresponding summaries
+            enriched = []
+            for e in emails:
+                base = e if isinstance(e, dict) else e.model_dump()
+                base["summary_text"] = summary_map.get(base["email_id"], "")
+                enriched.append(base)
+
+            return enriched
+
+        except Exception as e:
+            self._handle_email_error(e, "search by keyword", None, google_id)
     # -------------------------------------------------------------------------
     # Content Processing Methods
     # -------------------------------------------------------------------------

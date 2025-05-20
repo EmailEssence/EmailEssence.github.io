@@ -6,37 +6,72 @@ import EmailDisplay from "./emailDisplay";
 import { getPageSummaries } from "../../../emails/emailHandler";
 import "./emailEntry.css";
 import "./emailList.css";
+import { baseUrl } from "../../../emails/emailHandler"; // shared API URL base
 
 function Inbox({ displaySummaries, emailList, setCurEmail, curEmail }) {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filteredEmails, setFilteredEmails] = useState(emailList);
+  const token = localStorage.getItem("auth_token");
+
+  useEffect(() => {
+    setFilteredEmails(emailList);
+  }, [emailList]);
+
+  // Search triggered only on Enter key
+  const handleSearchKeyDown = async (e) => {
+    if (e.key !== "Enter") return;
+
+    if (searchTerm.trim() === "") {
+      setFilteredEmails(emailList);
+      return;
+    }
+
+    try {
+      const res = await fetch(`${baseUrl}/emails/search?keyword=${searchTerm}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setFilteredEmails(Array.isArray(data) ? data : []);
+      } else {
+        console.error("Search failed", res.status);
+      }
+    } catch (err) {
+      console.error("Search error", err);
+    }
+  };
+
   return (
     <div className="inbox-display">
       <InboxEmailList
         displaySummaries={displaySummaries}
-        emailList={emailList}
+        emailList={filteredEmails}
         curEmail={curEmail}
         onClick={setCurEmail}
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        handleSearchKeyDown={handleSearchKeyDown}
       />
-      <EmailDisplay key={curEmail} curEmail={curEmail} />
+      <EmailDisplay key={curEmail?.email_id || "none"} curEmail={curEmail} />
     </div>
   );
 }
 
 function EmailEntry({ displaySummary, email, onClick, selected }) {
   const summary = () => {
-    let returnBlock;
-    if (email.summary_text.length > 0) {
-      returnBlock = <div className="summary">{email.summary_text}</div>;
+    if (email.summary_text?.length > 0) {
+      return <div className="summary">{email.summary_text}</div>;
     } else {
-      returnBlock = <div className="summary loading"></div>;
+      return <div className="summary loading"></div>;
     }
-    return returnBlock;
   };
+
   const date = getDate(email.received_at);
   return (
     <div
-      className={`entry${displaySummary ? "" : " no-summary"}${
-        selected ? " selected" : ""
-      }`}
+      className={`entry${displaySummary ? "" : " no-summary"}${selected ? " selected" : ""}`}
       onClick={onClick}
     >
       <div className="indicator-container">
@@ -58,23 +93,24 @@ function EmailEntry({ displaySummary, email, onClick, selected }) {
   );
 }
 
-function InboxEmailList({ displaySummaries, emailList, curEmail, onClick }) {
+function InboxEmailList({
+  displaySummaries,
+  emailList,
+  curEmail,
+  onClick,
+  searchTerm,
+  setSearchTerm,
+  handleSearchKeyDown,
+}) {
   const [pages, setPages] = useState(1);
   const ref = useRef(null);
-  const maxEmails =
-    pages * emailsPerPage < emailList.length
-      ? pages * emailsPerPage
-      : emailList.length;
+  const maxEmails = Math.min(pages * emailsPerPage, emailList.length);
   const hasUnloadedEmails = maxEmails < emailList.length;
 
   const handleScroll = () => {
     // add external summary call
     const fullyScrolled =
-      Math.abs(
-        ref.current.scrollHeight -
-          ref.current.clientHeight -
-          ref.current.scrollTop
-      ) <= 1;
+      Math.abs(ref.current.scrollHeight - ref.current.clientHeight - ref.current.scrollTop) <= 1;
     if (fullyScrolled && hasUnloadedEmails) {
       setPages(pages + 1);
     }
@@ -106,22 +142,54 @@ function InboxEmailList({ displaySummaries, emailList, curEmail, onClick }) {
   };
   return (
     <div className="list">
-      <div className="inbox-title-container">
-        <div className="inbox-title">
+      <div
+        className="inbox-title-container"
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "10px",
+        }}
+      >
+        <div className="inbox-title" style={{ display: "flex", alignItems: "center" }}>
           <div className="inbox-icon">
             <ArrowIcon />
           </div>
-          <div className="inbox-word">Inbox</div>
+          <div className="inbox-word" style={{ marginLeft: "8px", fontWeight: "bold", fontSize: "18px" }}>
+            Inbox
+          </div>
         </div>
+
+        <input
+          type="text"
+          placeholder="Search by keyword..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          onKeyDown={handleSearchKeyDown}
+          style={{
+            padding: "8px",
+            fontSize: "14px",
+            border: "1px solid #ccc",
+            borderRadius: "4px",
+            width: "280px",
+          }}
+        />
       </div>
+
       <div className="divider"></div>
-      <div className="emails" ref={ref} onScroll={handleScroll}>
-        {emails()}
+      <div className="emails-wrapper">
+        <div className="emails" ref={ref} onScroll={handleScroll}>
+          {emails()}
+          {emailList.length === 0 && (
+            <div className="empty-results">No matching emails found.</div>
+          )}
+        </div>
       </div>
     </div>
   );
 }
 
+// PropTypes
 Inbox.propTypes = {
   displaySummaries: PropTypes.bool,
   emailList: PropTypes.array,
@@ -141,14 +209,13 @@ InboxEmailList.propTypes = {
   emailList: PropTypes.array,
   curEmail: PropTypes.object,
   onClick: PropTypes.func,
+  searchTerm: PropTypes.string,
+  setSearchTerm: PropTypes.func,
+  handleSearchKeyDown: PropTypes.func,
 };
 
-const getDate = (date) => {
-  return `${date[1]}/${date[2]}/${date[0]}`;
-};
-
-const getSenderName = (sender) => {
-  return sender.slice(0, sender.indexOf("<"));
-};
+// Utils
+const getDate = (date) => `${date[1]}/${date[2]}/${date[0]}`;
+const getSenderName = (sender) => sender.slice(0, sender.indexOf("<"));
 
 export default Inbox;
