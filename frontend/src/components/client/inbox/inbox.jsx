@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import ArrowIcon from "../../../assets/InboxArrow";
 import { emailsPerPage } from "../../../assets/constants";
 import EmailDisplay from "./emailDisplay";
+import { getPageSummaries } from "../../../emails/emailHandler";
 import "./emailEntry.css";
 import "./emailList.css";
 import { baseUrl } from "../../../emails/emailHandler"; // shared API URL base
@@ -85,6 +86,9 @@ function EmailEntry({ displaySummary, email, onClick, selected }) {
         <div className="median"></div>
       </div>
       {displaySummary && summary()}
+      <div className="email-median-container">
+        <div className="median"></div>
+      </div>
     </div>
   );
 }
@@ -104,6 +108,7 @@ function InboxEmailList({
   const hasUnloadedEmails = maxEmails < emailList.length;
 
   const handleScroll = () => {
+    // add external summary call
     const fullyScrolled =
       Math.abs(ref.current.scrollHeight - ref.current.clientHeight - ref.current.scrollTop) <= 1;
     if (fullyScrolled && hasUnloadedEmails) {
@@ -113,19 +118,28 @@ function InboxEmailList({
 
   useEffect(() => {
     handleScroll();
-  }, [pages]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pages]); // Fixes minimum for large screens, but runs effect after every load which is unnecessary
 
-  const emails = () =>
-    emailList.slice(0, maxEmails).map((email) => (
-      <EmailEntry
-        key={email.email_id}
-        displaySummary={displaySummaries}
-        email={email}
-        onClick={() => onClick(email)}
-        selected={email === curEmail}
-      />
-    ));
-
+  const emails = () => {
+    const returnBlock = [];
+    const needsSummary = [];
+    for (let i = 0; i < maxEmails; i++) {
+      if (displaySummaries && emailList[i].summary_text === "")
+        needsSummary.push(emailList[i]);
+      returnBlock.push(
+        <EmailEntry
+          key={emailList[i].email_id}
+          displaySummary={displaySummaries}
+          email={emailList[i]}
+          onClick={() => onClick(emailList[i])}
+          selected={emailList[i] === curEmail}
+        />
+      );
+    }
+    if (needsSummary.length > 0) getPageSummaries(needsSummary);
+    return returnBlock;
+  };
   return (
     <div className="list">
       <div

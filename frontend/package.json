@@ -18,6 +18,7 @@
     "@mozilla/readability": "^0.6.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.3.0",
+    "dompurify": "^3.2.5",
     "gh-pages": "^6.3.0",
     "prop-types": "^15.8.1",
     "react": "^19.1.0",

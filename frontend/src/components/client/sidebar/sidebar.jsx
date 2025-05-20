@@ -17,8 +17,8 @@ function SideBar({ onLogoClick, expanded, handlePageChange }) {
       <Button
         expanded={expanded}
         curState={route}
-        onClick={() => handlePageChange("/client/dashboard")}
-        name="dashboard"
+        onClick={() => handlePageChange("/client/home")}
+        name="home"
       >
         <DashboardIcon />
       </Button>
