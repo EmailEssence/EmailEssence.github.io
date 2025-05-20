@@ -59,28 +59,6 @@ class SummaryRepository(BaseRepository[SummarySchema], ISummaryRepository):
         """
         return await self.find_many({"google_id": google_id})
 
-    async def find_email_ids_by_keyword(self, google_id: str, keyword: str) -> List[str]:
-        """
-        Search for emails using summary keywords.
-
-        Args:
-            google_id: Google ID of the user.
-            keyword: Keyword to search in the summary keywords.
-            limit: Maximum number of emails to return.
-
-        Returns:
-            List[EmailSchema]: List of emails whose summaries match the keyword.
-        """
-        
-        query = {
-            "google_id": google_id,
-            "keywords": {"$regex": keyword, "$options": "i"}
-        }
-        raw_results = await self._get_collection().find(query, {"email_id": 1}).to_list(length=100)
-
-        return [doc["email_id"] for doc in raw_results if "email_id" in doc]
-
-
     async def update_by_email_id(
         self, 
         email_id: str, 
@@ -122,8 +100,7 @@ class SummaryRepository(BaseRepository[SummarySchema], ISummaryRepository):
         query: Dict[str, Any], 
         limit: int = 100, 
         skip: int = 0, 
-        sort: List[tuple] = None,
-        projection: Optional[Dict[str, int]] = None
+        sort: List[tuple] = None
     ) -> List[SummarySchema]:
         """
         Find multiple summaries matching the query.
@@ -144,4 +121,4 @@ class SummaryRepository(BaseRepository[SummarySchema], ISummaryRepository):
                     if isinstance(value, datetime):
                         query["generated_at"][op] = value
         
-        return await super().find_many(query, limit, skip, sort, projection=projection) 
+        return await super().find_many(query, limit, skip, sort) 
