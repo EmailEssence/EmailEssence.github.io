@@ -15,12 +15,8 @@ function Inbox({ displaySummaries, emailList, setCurEmail, curEmail }) {
     setFilteredEmails(emailList);
   }, [emailList]);
 
-  const handleSearchKeyDown = (e) => {
-    if (e === "") {
-      setFilteredEmails(emailList);
-      return;
-    }
-    setFilteredEmails(trimList(e));
+  const handleEmailSearch = (e) => {
+    e === "" ? setFilteredEmails(emailList) : setFilteredEmails(trimList(e));
   };
 
   return (
@@ -30,7 +26,7 @@ function Inbox({ displaySummaries, emailList, setCurEmail, curEmail }) {
         emailList={filteredEmails}
         curEmail={curEmail}
         onClick={setCurEmail}
-        handleInboxBoxChange={handleSearchKeyDown}
+        handleEmailSearch={handleEmailSearch}
       />
       <EmailDisplay key={curEmail?.email_id || "none"} curEmail={curEmail} />
     </div>
@@ -78,7 +74,7 @@ function InboxEmailList({
   emailList,
   curEmail,
   onClick,
-  handleInboxBoxChange,
+  handleEmailSearch,
 }) {
   const [pages, setPages] = useState(1);
   const ref = useRef(null);
@@ -124,42 +120,22 @@ function InboxEmailList({
   };
   return (
     <div className="list">
-      <div
-        className="inbox-title-container"
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          padding: "10px",
-        }}
-      >
-        <div
-          className="inbox-title"
-          style={{ display: "flex", alignItems: "center" }}
-        >
+      <div className="inbox-title-container">
+        <div className="inbox-title">
           <div className="inbox-icon">
             <ArrowIcon />
           </div>
-          <div
-            className="inbox-word"
-            style={{ marginLeft: "8px", fontWeight: "bold", fontSize: "18px" }}
-          >
-            Inbox
-          </div>
+          <div className="inbox-word">Inbox</div>
         </div>
 
         <input
           type="text"
           placeholder="Search by keyword..."
-          onChange={(e) => handleInboxBoxChange(e.target.value)}
-          // onKeyDown={handleSearchKeyDown}
-          style={{
-            padding: "8px",
-            fontSize: "14px",
-            border: "1px solid #ccc",
-            borderRadius: "4px",
-            width: "280px",
+          onChange={(e) => {
+            handleEmailSearch(e.target.value);
+            setPages(1);
           }}
+          className="inbox-search"
         />
       </div>
 
@@ -196,7 +172,7 @@ InboxEmailList.propTypes = {
   emailList: PropTypes.array,
   curEmail: PropTypes.object,
   onClick: PropTypes.func,
-  handleInboxBoxChange: PropTypes.func,
+  handleEmailSearch: PropTypes.func,
 };
 
 // Utils
