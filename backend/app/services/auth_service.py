@@ -21,13 +21,14 @@ from app.models import TokenData, AuthState
 from app.services.database import TokenRepository, UserRepository, get_token_repository, get_user_repository
 from app.services.user_service import UserService
 from app.utils.config import Settings, get_settings
+from app.models import UserSchema
 
 # Configure logging
-logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'
-)
+# logging.basicConfig(
+#     level=logging.DEBUG,
+#     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+#     datefmt='%Y-%m-%d %H:%M:%S'
+# )
 
 logger = logging.getLogger(__name__)
 

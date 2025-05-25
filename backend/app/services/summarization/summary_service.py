@@ -19,12 +19,12 @@ from app.services.summarization import (
     GeminiEmailSummarizer
 )
 
-# Configure logging with format and level
-logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'
-)
+# Configure logging : redundant with the logging in the main file
+# logging.basicConfig(
+#     level=logging.DEBUG,
+#     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+#     datefmt='%Y-%m-%d %H:%M:%S'
+# )
 
 # Create module-specific logger
 logger = logging.getLogger(__name__)

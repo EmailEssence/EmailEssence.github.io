@@ -7,13 +7,11 @@ strategies to provide concise representations of emails.
 """
 
 import logging
-from typing import List, Optional, Annotated
+from typing import List
 from fastapi import APIRouter, HTTPException, Depends, Query, Path, status
-from contextlib import asynccontextmanager
 
-from app.utils.config import Settings, get_settings, SummarizerProvider
 from app.models import EmailSchema, SummarySchema, UserSchema
-from app.services import EmailService, SummaryService
+from app.services import SummaryService
 from app.services.summarization import get_summarizer
 from app.services.summarization.base import AdaptiveSummarizer
 from app.services.summarization import (
@@ -25,13 +23,6 @@ from app.routers.user_router import get_current_user
 from app.services.database.factories import (
     get_summary_service,
     get_email_service
-)
-
-# Configure logging with format and level
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'
 )
 
 # Add specific configuration for pymongo's logger

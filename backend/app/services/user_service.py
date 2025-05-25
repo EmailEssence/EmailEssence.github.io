@@ -5,19 +5,17 @@ User service for handling user-related operations.
 import logging
 from typing import Optional, Dict, Any
 from fastapi import HTTPException, status
-from bson import ObjectId
-from google.oauth2.credentials import Credentials
 
 # Import from app modules
-from app.models import UserSchema, TokenData, PreferencesSchema
-from app.services.database import UserRepository, get_user_repository
+from app.models import UserSchema, PreferencesSchema
+from app.services.database import get_user_repository, UserRepository
 
-# Configure logging
-logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'
-)
+# Configure logging : redundant with the logging in the main file
+# logging.basicConfig(
+#     level=logging.DEBUG,
+#     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+#     datefmt='%Y-%m-%d %H:%M:%S'
+# )
 
 logger = logging.getLogger(__name__)
 
@@ -31,14 +29,15 @@ class UserService:
     - Managing user authentication state
     """
     
-    def __init__(self, user_repository: UserRepository):
+    def __init__(self, user_repository: UserRepository = None):
         """
         Initialize the user service.
         
         Args:
             user_repository: User repository instance
         """
-        self.user_repository = user_repository
+        # TODO Make sure this is a good way to do this..
+        self.user_repository = user_repository or get_user_repository()
         # Note: We can't call ensure_indexes here because it's async
         # The indexes will be created on first use
 
@@ -126,7 +125,7 @@ class UserService:
                 detail="Failed to create user"
             )
 
-    async def update_user(self, user_id: str, user_data: Dict[str, Any]) -> Optional[UserSchema]:
+    async def update_user(self, google_id: str, user_data: Dict[str, Any]) -> Optional[UserSchema]:
         """
         Update a user.
         
@@ -139,21 +138,21 @@ class UserService:
         """
         try:
             # First get the current user to ensure it exists
-            current_user = await self.user_repository.find_by_id(user_id)
+            current_user = await self.user_repository.find_by_id(google_id)
             if not current_user:
-                logger.error(f"User not found: {user_id}")
+                logger.error(f"User not found: {google_id}")
                 return None
 
             # Update the user
-            success = await self.user_repository.update_one(user_id, user_data)
+            success = await self.user_repository.update_one(google_id, user_data)
             if not success:
-                logger.error(f"Update failed for user: {user_id}")
+                logger.error(f"Update failed for user: {google_id}")
                 return None
 
             # Get the updated user
-            updated_user = await self.user_repository.find_by_id(user_id)
+            updated_user = await self.user_repository.find_by_id(google_id)
             if not updated_user:
-                logger.error(f"Failed to fetch updated user: {user_id}")
+                logger.error(f"Failed to fetch updated user: {google_id}")
                 return None
 
             return UserSchema(**updated_user)
@@ -164,18 +163,18 @@ class UserService:
                 detail="Failed to update user"
             )
 
-    async def delete_user(self, user_id: str) -> bool:
+    async def delete_user(self, google_id: str) -> bool:
         """
         Delete a user.
         
         Args:
-            user_id: User ID
+            google_id: User ID
             
         Returns:
             True if deleted, False otherwise
         """
         try:
-            return await self.user_repository.delete_one(user_id)
+            return await self.user_repository.delete_one(google_id)
         except Exception as e:
             logger.error(f"Failed to delete user: {e}")
             raise HTTPException(

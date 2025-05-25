@@ -19,15 +19,18 @@ from app.models import EmailSchema, ReaderViewResponse
 from app.services.database import EmailRepository, get_email_repository
 from app.services.database.factories import get_user_service, get_auth_service
 from app.services import auth_service
+from app.utils.config import get_settings
 
-# Configure logging
-logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'
-)
+# Configure logging : redundant with the logging in the main file
+# logging.basicConfig(
+#     level=logging.INFO,
+#     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+#     datefmt='%Y-%m-%d %H:%M:%S'
+# )
 
+# Create module-specific logger
 logger = logging.getLogger(__name__)
+settings = get_settings()
 
 class EmailService:
     """

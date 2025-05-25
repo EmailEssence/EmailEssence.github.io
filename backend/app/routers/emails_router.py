@@ -7,29 +7,16 @@ It provides a set of REST endpoints for interacting with the user's email data.
 """
 
 from fastapi import APIRouter, HTTPException, Query, Depends, status
-from fastapi.security import OAuth2PasswordBearer
-from typing import List, Optional
-from pydantic import BaseModel
+from typing import Optional
 import logging
-from functools import lru_cache
 
 from app.models.email_models import EmailSchema, EmailResponse, ReaderViewResponse
 from app.models.user_models import UserSchema
 from app.routers.user_router import get_current_user
-from app.services.database.factories import get_email_repository, get_email_service
+from app.services.database.factories import get_email_service
 from app.services.email_service import EmailService
 
 router = APIRouter()
-
-# Configure logging with format and level
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'
-)
-
-# Add specific configuration for pymongo's logger
-logging.getLogger('pymongo').setLevel(logging.WARNING)
 
 # Create module-specific logger
 logger = logging.getLogger(__name__)

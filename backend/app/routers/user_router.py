@@ -7,14 +7,7 @@ It provides endpoints for retrieving and updating user information and preferenc
 
 from fastapi import APIRouter, HTTPException, status, Depends
 from fastapi.security import OAuth2PasswordBearer
-from fastapi.responses import JSONResponse
-from functools import lru_cache
-from typing import Optional, Dict, Any
-
-from google.auth.transport.requests import Request as GoogleRequest
-from google.oauth2.credentials import Credentials
-from googleapiclient.discovery import build
-from starlette.concurrency import run_in_threadpool
+import logging
 
 from app.models import UserSchema, PreferencesSchema
 from app.services.auth_service import AuthService
@@ -22,14 +15,15 @@ from app.services.user_service import UserService
 from app.services.database.factories import get_user_service, get_auth_service
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 # OAuth authentication scheme
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token", description="Enter the token you received from the login flow (without Bearer prefix)")
 
 # Debugging helper function
-def debug(message: str):
-    """Print debug messages with a consistent format"""
-    print(f"[DEBUG] {message}")
+# def debug(message: str):
+#     """Print debug messages with a consistent format"""
+#     print(f"[DEBUG] {message}")
 
 async def get_current_user_info(
     token: str = Depends(oauth2_scheme),
@@ -48,14 +42,14 @@ async def get_current_user_info(
     Raises:
         HTTPException: 401 error if token is invalid
     """
-    debug(f"Validating token for user authentication...")
+    logger.debug(f"Validating token for user authentication...")
     
     try:
         user_data = await auth_service.get_credentials_from_token(token)
-        debug(f"User authenticated successfully: {user_data.get('user_info', {}).get('email', 'Unknown')}")
+        logger.debug(f"User authenticated successfully: {user_data.get('user_info', {}).get('email', 'Unknown')}")
         return user_data
     except Exception as e:
-        debug(f"[ERROR] Authentication failed: {str(e)}")
+        logger.error(f"[ERROR] Authentication failed: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f"Invalid authentication: {str(e)}"
@@ -84,21 +78,21 @@ async def get_current_user(
     Raises:
         HTTPException: If user retrieval fails
     """
-    debug("Retrieving current user...")
+    logger.debug("Retrieving current user...")
     
     try:
         user_info = user_data['user_info']
         user_email = user_info.get('email')
         google_id = user_info.get('google_id')
         
-        debug(f"Fetching user from database or creating new: {user_email}")
+        logger.debug(f"Fetching user from database or creating new: {user_email}")
         
         # Try to get existing user
         user = await user_service.get_user_by_email(user_email)
         
         # If user doesn't exist, create new user
         if not user:
-            debug(f"Creating new user: {user_email}")
+            logger.debug(f"Creating new user: {user_email}")
             user = await user_service.create_user({
                 "email": user_email,
                 "name": user_info.get("name", ""),
@@ -106,18 +100,18 @@ async def get_current_user(
                 "google_id": google_id
             })
         else:
-            debug(f"Found existing user: {user_email}")
+            logger.debug(f"Found existing user: {user_email}")
             # Convert UserSchema to dict for checking google_id
-            user_dict = user.dict()
+            user_dict = user.model_dump()
             # Update google_id if it's missing
             if not user_dict.get('google_id'):
-                debug(f"Updating missing google_id for user: {user_email}")
+                logger.debug(f"Updating missing google_id for user: {user_email}")
                 await user_service.update_user(user_dict['_id'], {"google_id": google_id})
         
-        debug(f"User retrieval successful: {user_email}")
+        logger.debug(f"User retrieval successful: {user_email}")
         return user
     except Exception as e:
-        debug(f"[ERROR] Failed to retrieve user: {str(e)}")
+        logger.error(f"[ERROR] Failed to retrieve user: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to retrieve user: {str(e)}"
@@ -145,30 +139,30 @@ async def get_user_preferences(
     Raises:
         HTTPException: If preferences cannot be retrieved
     """
-    debug("Retrieving user preferences...")
+    logger.debug("Retrieving user preferences...")
     
     try:
         user_info = user_data['user_info']
         user_email = user_info.get('email')
         
-        debug(f"Fetching preferences for user: {user_email}")
+        logger.debug(f"Fetching preferences for user: {user_email}")
         
         # Get user first to ensure they exist
         user = await user_service.get_user_by_email(user_email)
         if not user:
-            debug(f"User not found: {user_email}")
+            logger.debug(f"User not found: {user_email}")
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="User not found"
             )
             
-        preferences = user.preferences.dict()
-        debug(f"Preferences retrieved successfully for user: {user_email}")
+        preferences = user.preferences.model_dump()
+        logger.debug(f"Preferences retrieved successfully for user: {user_email}")
         return {"preferences": preferences}
     except HTTPException:
         raise
     except Exception as e:
-        debug(f"[ERROR] Failed to retrieve user preferences: {str(e)}")
+        logger.error(f"[ERROR] Failed to retrieve user preferences: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to retrieve user preferences: {str(e)}"
@@ -198,36 +192,36 @@ async def update_preferences(
     Raises:
         HTTPException: If preference update fails
     """
-    debug("Updating user preferences...")
+    logger.debug("Updating user preferences...")
     
     try:
         user_info = user_data['user_info']
         user_email = user_info.get('email')
         
-        debug(f"Updating preferences for user: {user_email}")
+        logger.debug(f"Updating preferences for user: {user_email}")
         
         # Get user first to ensure they exist
         user = await user_service.get_user_by_email(user_email)
         if not user:
-            debug(f"User not found: {user_email}")
+            logger.debug(f"User not found: {user_email}")
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="User not found"
             )
             
-        debug(f"Found user with ID: {user.google_id}")
-        debug(f"Current user data: {user.dict()}")
+        logger.debug(f"Found user with ID: {user.google_id}")
+        logger.debug(f"Current user data: {user.model_dump()}")
             
         # Create update data with existing user fields and new preferences
         update_data = {
             "google_id": user.google_id,
             "email": user.email,
             "name": user.name,
-            "oauth": user.oauth.dict() if hasattr(user, 'oauth') else {},
-            "preferences": preferences.dict()
+            "oauth": user.oauth.model_dump() if hasattr(user, 'oauth') and user.oauth else {},
+            "preferences": preferences.model_dump()
         }
         
-        debug(f"Update data: {update_data}")
+        logger.debug(f"Update data: {update_data}")
         
         # Update user with new preferences
         try:
@@ -236,26 +230,26 @@ async def update_preferences(
                 update_data
             )
         except Exception as e:
-            debug(f"Error updating user: {str(e)}")
+            logger.error(f"Error updating user: {str(e)}", exc_info=True)
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Failed to update user: {str(e)}"
             )
         
         if not updated_user:
-            debug("Update returned None")
+            logger.debug("Update returned None")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Failed to update preferences"
             )
         
-        debug(f"Updated user data: {updated_user.dict()}")
-        debug(f"Preferences updated successfully for user: {user_email}")
-        return {"preferences": updated_user.preferences.dict()}
+        logger.debug(f"Updated user data: {updated_user.model_dump()}")
+        logger.debug(f"Preferences updated successfully for user: {user_email}")
+        return {"preferences": updated_user.preferences.model_dump()}
     except HTTPException:
         raise
     except Exception as e:
-        debug(f"[ERROR] Failed to update preferences: {str(e)}")
+        logger.error(f"[ERROR] Failed to update preferences: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to update preferences: {str(e)}"
