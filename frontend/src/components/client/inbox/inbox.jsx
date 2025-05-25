@@ -9,38 +9,18 @@ import "./emailList.css";
 import { trimList } from "../../../emails/emailHandler"; // shared API URL base
 
 function Inbox({ displaySummaries, emailList, setCurEmail, curEmail }) {
-  const [searchTerm, setSearchTerm] = useState("");
   const [filteredEmails, setFilteredEmails] = useState(emailList);
-  // const token = localStorage.getItem("auth_token");
 
   useEffect(() => {
     setFilteredEmails(emailList);
   }, [emailList]);
-  // Localize this process
-  // Search triggered only on Enter key
-  const handleSearchKeyDown = async (e) => {
-    if (e.key !== "Enter") return;
 
-    if (searchTerm.trim() === "") {
+  const handleSearchKeyDown = (e) => {
+    if (e === "") {
       setFilteredEmails(emailList);
       return;
     }
-    setFilteredEmails(trimList(searchTerm));
-    // try {
-    //   const res = await fetch(`${baseUrl}/emails/search?keyword=${searchTerm}`, {
-    //     headers: {
-    //       Authorization: `Bearer ${token}`,
-    //     },
-    //   });
-    //   if (res.ok) {
-    //     const data = await res.json();
-    //     setFilteredEmails(Array.isArray(data) ? data : []);
-    //   } else {
-    //     console.error("Search failed", res.status);
-    //   }
-    // } catch (err) {
-    //   console.error("Search error", err);
-    // }
+    setFilteredEmails(trimList(e));
   };
 
   return (
@@ -50,9 +30,7 @@ function Inbox({ displaySummaries, emailList, setCurEmail, curEmail }) {
         emailList={filteredEmails}
         curEmail={curEmail}
         onClick={setCurEmail}
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        handleSearchKeyDown={handleSearchKeyDown}
+        handleInboxBoxChange={handleSearchKeyDown}
       />
       <EmailDisplay key={curEmail?.email_id || "none"} curEmail={curEmail} />
     </div>
@@ -100,9 +78,7 @@ function InboxEmailList({
   emailList,
   curEmail,
   onClick,
-  searchTerm,
-  setSearchTerm,
-  handleSearchKeyDown,
+  handleInboxBoxChange,
 }) {
   const [pages, setPages] = useState(1);
   const ref = useRef(null);
@@ -175,9 +151,8 @@ function InboxEmailList({
         <input
           type="text"
           placeholder="Search by keyword..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          onKeyDown={handleSearchKeyDown}
+          onChange={(e) => handleInboxBoxChange(e.target.value)}
+          // onKeyDown={handleSearchKeyDown}
           style={{
             padding: "8px",
             fontSize: "14px",
@@ -221,9 +196,7 @@ InboxEmailList.propTypes = {
   emailList: PropTypes.array,
   curEmail: PropTypes.object,
   onClick: PropTypes.func,
-  searchTerm: PropTypes.string,
-  setSearchTerm: PropTypes.func,
-  handleSearchKeyDown: PropTypes.func,
+  handleInboxBoxChange: PropTypes.func,
 };
 
 // Utils
