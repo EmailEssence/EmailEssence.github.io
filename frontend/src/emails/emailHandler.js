@@ -213,8 +213,15 @@ async function addSummaries(emailList) {
 }
 
 export function trimList(keyword) {
-  // ToDo: Implement
-  return emails;
+  const toReturn = emails.filter((email) => {
+    if (email.subject.includes(keyword) || email.sender.includes(keyword))
+      return true;
+    for (const kWord in email.keywords) {
+      if (kWord.includes(keyword)) return true;
+    }
+    return false;
+  });
+  return toReturn;
 }
 
 export async function markEmailAsRead(emailId) {
