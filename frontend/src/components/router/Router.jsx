@@ -12,7 +12,6 @@ import Client from "../client/client";
 import Contact from "../login/contact";
 import Error from "../login/Error";
 import Home from "../login/Home";
-import Loading from "../login/Loading";
 import Login from "../login/login";
 import PrivacyPolicy from "../login/privacy";
 import TermsOfService from "../login/terms";
@@ -59,17 +58,14 @@ export function AppRouter() {
         path="/login"
         element={<Login handleGoogleClick={authenticate} />}
       />
-      <Route path="/loading" element={<Loading />} />
       <Route
         path="client/*"
         // userEmails.length being more than 0 ensures that curEmail is not undefined when client is rendered
         element={
-          userEmails.length > 0 && (
-            <Client
-              emailsByDate={userEmails}
-              defaultUserPreferences={userPreferences}
-            />
-          )
+          <Client
+            emailsByDate={userEmails}
+            defaultUserPreferences={userPreferences}
+          />
         }
       />
       <Route path="/error" element={<Error />} />

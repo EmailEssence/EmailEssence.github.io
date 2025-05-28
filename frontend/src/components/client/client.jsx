@@ -8,6 +8,7 @@ import Inbox from "./inbox/inbox";
 import { clientReducer, userPreferencesReducer } from "./reducers";
 import { Settings } from "./settings/settings";
 import SideBar from "./sidebar/sidebar";
+import Loading from "../login/Loading";
 
 function Client({
   emailsByDate,
@@ -17,6 +18,7 @@ function Client({
     theme: "light",
   },
 }) {
+  console.log("Client component");
   const navigate = useNavigate();
   const [client, dispatchClient] = useReducer(clientReducer, {
     expandedSideBar: false,
@@ -90,48 +92,57 @@ function Client({
 
   return (
     <div className="client">
-      <SideBar
-        onLogoClick={handleLogoClick}
-        expanded={client.expandedSideBar}
-        handlePageChange={handlePageChange}
-      />
       <Routes>
+        <Route path="loading" element={<Loading />} />
         <Route
-          path="home"
+          path="*"
           element={
-            <Dashboard
-              emailList={emailsByDate}
-              handlePageChange={handlePageChange}
-              setCurEmail={handleSetCurEmail}
-            />
+            <>
+              <SideBar
+                onLogoClick={handleLogoClick}
+                expanded={client.expandedSideBar}
+                handlePageChange={handlePageChange}
+              />
+              <Outlet />
+            </>
           }
-        />
-        <Route
-          path="inbox"
-          element={
-            <Inbox
-              displaySummaries={userPreferences.isChecked}
-              emailList={emailsByDate}
-              setCurEmail={handleSetCurEmail}
-              curEmail={client.curEmail}
-            />
-          }
-        />
-        <Route
-          path="settings"
-          element={
-            <Settings
-              isChecked={userPreferences.isChecked}
-              handleToggleSummariesInInbox={handleToggleSummariesInInbox}
-              emailFetchInterval={userPreferences.emailFetchInterval}
-              handleSetEmailFetchInterval={handleSetEmailFetchInterval}
-              theme={userPreferences.theme}
-              handleSetTheme={handleSetTheme}
-            />
-          }
-        />
+        >
+          <Route
+            path="inbox"
+            element={
+              <Inbox
+                displaySummaries={userPreferences.isChecked}
+                emailList={emailsByDate}
+                setCurEmail={handleSetCurEmail}
+                curEmail={client.curEmail}
+              />
+            }
+          />
+          <Route
+            path="settings"
+            element={
+              <Settings
+                isChecked={userPreferences.isChecked}
+                handleToggleSummariesInInbox={handleToggleSummariesInInbox}
+                emailFetchInterval={userPreferences.emailFetchInterval}
+                handleSetEmailFetchInterval={handleSetEmailFetchInterval}
+                theme={userPreferences.theme}
+                handleSetTheme={handleSetTheme}
+              />
+            }
+          />
+          <Route
+            path="home"
+            element={
+              <Dashboard
+                emailList={emailsByDate}
+                handlePageChange={handlePageChange}
+                setCurEmail={handleSetCurEmail}
+              />
+            }
+          />
+        </Route>
       </Routes>
-      <Outlet />
     </div>
   );
 }

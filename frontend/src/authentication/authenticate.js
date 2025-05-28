@@ -1,7 +1,7 @@
 import { baseUrl, retrieveUserData } from "../emails/emailHandler";
 export const authenticate = async () => {
   // Check for auth hash and render OAuthCallback if present
-  const redirect_uri = `${window.location.origin}/loading`;
+  const redirect_uri = `${window.location.origin}/client/loading`;
   window.location.href = `${baseUrl}/auth/login?redirect_uri=${redirect_uri}`;
 };
 
