@@ -9,6 +9,21 @@ body {
 } */
 
 .home {
+  height: 100vh;
+  background-color: var(--grey-split);
+  padding: calc(2rem + 1vh) calc(5rem + 4vw);
+}
+
+
+/* html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 250vw;
+  overflow-x: hidden;
+} */
+
+.home {
   width: 100vw;
   height: 100vh;
   background-color: var(--white);
