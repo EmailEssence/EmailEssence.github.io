@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { baseUrl } from "../../../emails/emailHandler";
 import "./settings.css";
 
@@ -11,6 +11,11 @@ export function Settings({
   handleSetTheme,
 }) {
   const isDarkTheme = useSystemTheme();
+  const handleLogout = () => {
+    localStorage.removeItem("auth_token");
+    window.location.href = "/login";
+  };
+
   // useEffect that sets the dark mode class when the theme is set to system
   useEffect(() => {
     if (theme === "system") {
@@ -34,6 +39,7 @@ export function Settings({
         onSetEmailFetchInterval={handleSetEmailFetchInterval}
       />
       <Theme theme={theme} onSetTheme={handleSetTheme} />
+      <Logout onLogout={handleLogout} />
     </div>
   );
 }
@@ -117,6 +123,18 @@ export function Theme({ theme, onSetTheme }) {
           )
         )}
       </div>
+    </div>
+  );
+}
+
+export function Logout({onLogout}) {
+  return (
+    <div className="settings-block logout-block"
+    onClick={onLogout}
+    tabIndex={0} role="button"
+    onKeyDown={e => { if (e.key === "Enter" || e.key === " ") onLogout(); }}
+    >
+      <span className="logout-text">Log Out</span>
     </div>
   );
 }
