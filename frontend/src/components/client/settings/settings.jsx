@@ -129,12 +129,12 @@ export function Theme({ theme, onSetTheme }) {
 
 export function Logout({onLogout}) {
   return (
-    <div className="settings-block logout-block"
+    <div className="logout"
     onClick={onLogout}
     tabIndex={0} role="button"
     onKeyDown={e => { if (e.key === "Enter" || e.key === " ") onLogout(); }}
     >
-      <span className="logout-text">Log Out</span>
+      <span className="logout-text">Logout</span>
     </div>
   );
 }
