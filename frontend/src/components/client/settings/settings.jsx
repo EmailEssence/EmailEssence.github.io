@@ -129,15 +129,13 @@ export function Theme({ theme, onSetTheme }) {
 
 export function Logout({onLogout}) {
   return (
-    <div className="logout"
-    onClick={onLogout}
-    tabIndex={0} role="button"
-    onKeyDown={e => { if (e.key === "Enter" || e.key === " ") onLogout(); }}
-    >
+    <button className="logout" onClick={onLogout}>
       <span className="logout-text">Logout</span>
-    </div>
+    </button>
   );
 }
+
+
 
 const useSystemTheme = () => {
   const getCurrentTheme = () =>
