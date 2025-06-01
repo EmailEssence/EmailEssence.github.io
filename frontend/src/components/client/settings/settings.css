@@ -221,10 +221,17 @@ h2 {
   outline-offset: 2px;
 }
 
-.logout {
+.settings-account-actions {
   position: absolute;
   right: 2rem;
   bottom: 2rem;
+  display: flex;
+  gap: 1rem;
+}
+
+.logout,
+.delete-account {
+  position: static;
   margin: 0;
   color: var(--color-button-text);
   cursor: pointer;
@@ -241,12 +248,15 @@ h2 {
   align-items: center;
 }
 
-.logout-block:hover,
-.logout-block:focus {
+.logout:hover,
+.logout:focus,
+.delete-account:hover,
+.delete-account:focus {
   background: var(--color-hover-background);
 }
 
-.logout-text {
+.logout-text,
+.delete-account-text {
   color: var(--color-text);
   font-family: var(--font-family);
   font-size: var(--font-size);
