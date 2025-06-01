@@ -10,12 +10,21 @@ export function Settings({
   theme,
   handleSetTheme,
 }) {
-  const isDarkTheme = useSystemTheme();
   const handleLogout = () => {
     localStorage.removeItem("auth_token");
     window.location.href = "/login";
   };
 
+  const handleDeleteAccount = () => {
+    //confirm if the user wants to delete their account
+    if (window.confirm("Are you sure you want to delete your account? This action is permanent and cannot be undone.")) return;
+    try {
+
+
+    } catch (error) { };
+  }
+
+  const isDarkTheme = useSystemTheme();
   // useEffect that sets the dark mode class when the theme is set to system
   useEffect(() => {
     if (theme === "system") {
@@ -39,7 +48,10 @@ export function Settings({
         onSetEmailFetchInterval={handleSetEmailFetchInterval}
       />
       <Theme theme={theme} onSetTheme={handleSetTheme} />
-      <Logout onLogout={handleLogout} />
+      <div className="settings-account-actions">
+        <Logout onLogout={handleLogout} />
+        <DeleteAccount onDelete={handleDeleteAccount} />
+      </div>
     </div>
   );
 }
@@ -127,7 +139,7 @@ export function Theme({ theme, onSetTheme }) {
   );
 }
 
-export function Logout({onLogout}) {
+export function Logout({ onLogout }) {
   return (
     <button className="logout" onClick={onLogout}>
       <span className="logout-text">Logout</span>
@@ -135,7 +147,13 @@ export function Logout({onLogout}) {
   );
 }
 
-
+export function DeleteAccount({ onDelete }) {
+  return (
+    <button className="delete-account" onClick={onDelete}>
+      <span className="delete-account-text">Delete Account</span>
+    </button>
+  );
+}
 
 const useSystemTheme = () => {
   const getCurrentTheme = () =>
