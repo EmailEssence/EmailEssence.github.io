@@ -91,20 +91,20 @@ function Client({
   };
 
   return (
-    <div className="client">
+    <>
       <Routes>
         <Route path="loading" element={<Loading />} />
         <Route
           path="*"
           element={
-            <>
+            <div className="client">
               <SideBar
                 onLogoClick={handleLogoClick}
                 expanded={client.expandedSideBar}
                 handlePageChange={handlePageChange}
               />
               <Outlet />
-            </>
+            </div>
           }
         >
           <Route
@@ -143,7 +143,7 @@ function Client({
           />
         </Route>
       </Routes>
-    </div>
+    </>
   );
 }
 

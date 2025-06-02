@@ -60,7 +60,6 @@ export function AppRouter() {
       />
       <Route
         path="client/*"
-        // userEmails.length being more than 0 ensures that curEmail is not undefined when client is rendered
         element={
           <Client
             emailsByDate={userEmails}
