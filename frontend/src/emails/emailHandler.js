@@ -180,6 +180,10 @@ export function trimList(emails, keyword) {
   return toReturn;
 }
 
+export function getTop5(emails) {
+  return emails.length > 5 ? emails.slice(0, 5) : emails;
+}
+
 export async function markEmailAsRead(emailId) {
   console.log(emailId);
   return;

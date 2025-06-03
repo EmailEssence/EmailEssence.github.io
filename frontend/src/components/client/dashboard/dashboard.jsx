@@ -31,9 +31,18 @@ function Dashboard({
   );
 }
 
-function WeightedEmailList({ emailList, setCurEmail, handlePageChange }) {
-  const emails = () => {
+function WeightedEmailList({
+  emailList,
+  setCurEmail,
+  handlePageChange,
+  requestSummaries,
+}) {
+  const emails = async () => {
     const WEList = getTop5(emailList);
+    let needSummaries = WEList.filter(
+      (email) => email.summary_text.length < 1 && email.keywords.length < 1
+    );
+    if (needSummaries.legnth > 0) requestSummaries(needSummaries);
     const returnBlock = [];
     for (let i = 0; i < WEList.length; i++) {
       returnBlock.push(
