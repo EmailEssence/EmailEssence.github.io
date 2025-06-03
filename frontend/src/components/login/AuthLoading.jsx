@@ -15,7 +15,7 @@ export default function Loading() {
       }
     }
     completeOAuth();
-  });
+  }, [navigate]);
 
   return (
     <div className="loading">

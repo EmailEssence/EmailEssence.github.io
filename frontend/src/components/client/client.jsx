@@ -1,4 +1,3 @@
-import PropTypes from "prop-types";
 import { useEffect, useReducer } from "react";
 import { Outlet, Route, Routes, useNavigate } from "react-router";
 import { fetchNewEmails } from "../../emails/emailHandler";
@@ -102,7 +101,10 @@ function Client() {
   return (
     <>
       <Routes>
-        <Route path="loading" element={<Loading />} />
+        <Route
+          path="loading"
+          element={<Loading setInitialEmails={handleAddEmails} />}
+        />
         <Route
           path="*"
           element={
@@ -121,7 +123,7 @@ function Client() {
             element={
               <Inbox
                 displaySummaries={userPreferences.isChecked}
-                emailList={emailsByDate}
+                emailList={client.emails}
                 setCurEmail={handleSetCurEmail}
                 curEmail={client.curEmail}
               />
@@ -144,7 +146,7 @@ function Client() {
             path="home"
             element={
               <Dashboard
-                emailList={emailsByDate}
+                emailList={client.emails}
                 handlePageChange={handlePageChange}
                 setCurEmail={handleSetCurEmail}
               />
