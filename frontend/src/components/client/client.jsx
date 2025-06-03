@@ -1,6 +1,6 @@
-import { useEffect, useReducer } from "react";
+import { useEffect, useReducer, useState } from "react";
 import { Outlet, Route, Routes, useNavigate } from "react-router";
-import { fetchNewEmails, fetchMoreEmails } from "../../emails/emailHandler";
+import { fetchNewEmails, fetchEmails } from "../../emails/emailHandler";
 import "./client.css";
 import Dashboard from "./dashboard/dashboard";
 import Inbox from "./inbox/inbox";
@@ -11,6 +11,9 @@ import Loading from "../login/Loading";
 
 function Client() {
   const navigate = useNavigate();
+  const [emailsPerPage, setEmailsPerPage] = useState(
+    Math.max(1, Math.floor(window.innerHeight / (window.innerHeight * 0.5)))
+  );
   const [client, dispatchClient] = useReducer(clientReducer, {
     expandedSideBar: false,
     emails: [],
@@ -33,6 +36,26 @@ function Client() {
     }, userPreferences.emailFetchInterval * 1000);
     return () => clearInterval(clock);
   }, [userPreferences.emailFetchInterval]);
+
+  useEffect(() => {
+    function updateEmailsPerPage() {
+      setEmailsPerPage(
+        Math.max(1, Math.floor(window.innerHeight / (window.innerHeight * 0.5)))
+      );
+    }
+
+    let resizeTimeout = null;
+    function handleResize() {
+      if (resizeTimeout) clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(updateEmailsPerPage, 50);
+    }
+
+    window.addEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      if (resizeTimeout) clearTimeout(resizeTimeout);
+    };
+  }, []);
 
   const root = document.querySelector(":root");
   root.style.setProperty(
@@ -95,7 +118,7 @@ function Client() {
   // requests a page worth of emails and adds to the current email list,
   // returns whether more emails exist or not
   const requestMoreEmails = async () => {
-    const newEmails = fetchMoreEmails(client.emails.length);
+    const newEmails = await fetchEmails(client.emails.length);
     if (newEmails.length > 0) {
       handleAddEmails(newEmails);
     } else {
@@ -118,6 +141,7 @@ function Client() {
           path="loading"
           element={
             <Loading
+              emailsPerPage={emailsPerPage}
               setInitialEmails={handleAddEmails}
               setInitialEmail={handleSetCurEmail}
             />

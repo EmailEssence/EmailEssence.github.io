@@ -4,10 +4,13 @@ import { useNavigate } from "react-router";
 import fetchEmails, { getUserPreferences } from "../../emails/emailHandler";
 import "./Loading.css";
 
-const emailsPerPage = 20;
 const user_id = null; // Get user ID
 
-export default function Loading({ setInitialEmails, setInitialEmail }) {
+export default function Loading({
+  setInitialEmails,
+  setInitialEmail,
+  emailsPerPage,
+}) {
   const navigate = useNavigate();
   useEffect(() => {
     async function getInitialData() {
@@ -23,7 +26,7 @@ export default function Loading({ setInitialEmails, setInitialEmail }) {
       }
     }
     getInitialData();
-  }, [navigate, setInitialEmails, setInitialEmail]);
+  }, [navigate, setInitialEmails, setInitialEmail, emailsPerPage]);
   return (
     <div className="loading">
       <div className="loading-spinner" role="spinner"></div>
@@ -35,4 +38,5 @@ export default function Loading({ setInitialEmails, setInitialEmail }) {
 Loading.propTypes = {
   setInitialEmails: PropTypes.func,
   setInitialEmail: PropTypes.func,
+  emailsPerPage: PropTypes.number,
 };
