@@ -7,7 +7,7 @@ import "./Loading.css";
 const emailsPerPage = 20;
 const user_id = null; // Get user ID
 
-export default function Loading({ setInitialEmails }) {
+export default function Loading({ setInitialEmails, setInitialEmail }) {
   const navigate = useNavigate();
   useEffect(() => {
     async function getInitialData() {
@@ -18,11 +18,12 @@ export default function Loading({ setInitialEmails }) {
         navigate("/error");
       } else {
         setInitialEmails(initialEmails);
+        setInitialEmail(initialEmails[0]);
         navigate("/client/home");
       }
     }
     getInitialData();
-  }, [navigate, setInitialEmails]);
+  }, [navigate, setInitialEmails, setInitialEmail]);
   return (
     <div className="loading">
       <div className="loading-spinner" role="spinner"></div>
@@ -33,4 +34,5 @@ export default function Loading({ setInitialEmails }) {
 
 Loading.propTypes = {
   setInitialEmails: PropTypes.func,
+  setInitialEmail: PropTypes.func,
 };

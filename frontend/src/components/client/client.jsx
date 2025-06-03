@@ -104,7 +104,12 @@ function Client() {
       <Routes>
         <Route
           path="loading"
-          element={<Loading setInitialEmails={handleAddEmails} />}
+          element={
+            <Loading
+              setInitialEmails={handleAddEmails}
+              setInitialEmail={handleSetCurEmail}
+            />
+          }
         />
         <Route
           path="*"
