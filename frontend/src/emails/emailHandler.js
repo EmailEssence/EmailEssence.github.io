@@ -3,47 +3,36 @@ import DOMPurify from "dompurify";
 // TODO : env variable for baseUrl
 // export const baseUrl = "http://127.0.0.1:8000";
 export const baseUrl = "https://ee-backend-w86t.onrender.com";
-export let emails = [];
 export let userPreferences = {
   isChecked: true,
   emailFetchInterval: 120,
   theme: "light",
 };
 
-export const fetchNewEmails = async () => {
-  try {
-    const requestedEmails = await fetchEmails(100);
-    if (requestedEmails.length > 0) {
-      const newEmails = getNewEmails(requestedEmails, emails); // O(n^2) operation
-      if (newEmails.length > 0) {
-        emails = [...emails, ...newEmails];
-        window.location.hash = "#newEmails";
-      }
-    }
-  } catch (error) {
-    console.error(`Error fetching new emails: ${error}`);
-  }
-};
-
-function getNewEmails(requestedEmails, allEmails) {
-  return requestedEmails.filter((reqEmail) => {
-    let exists = false;
-    for (const email of allEmails) {
-      if (email.email_id === reqEmail.email_id) exists = true;
-    }
-    return !exists;
-  });
-}
-
-// export const retrieveUserData = async () => {
+// export const fetchNewEmails = async () => {
 //   try {
-//     emails = await fetchEmails(100);
-//     const user_id = null; // Get user ID
-//     if (user_id) getUserPreferences(user_id);
+//     const requestedEmails = await fetchEmails(100);
+//     if (requestedEmails.length > 0) {
+//       const newEmails = getNewEmails(requestedEmails, emails); // O(n^2) operation
+//       if (newEmails.length > 0) {
+//         emails = [...emails, ...newEmails];
+//         window.location.hash = "#newEmails";
+//       }
+//     }
 //   } catch (error) {
-//     console.error(error);
+//     console.error(`Error fetching new emails: ${error}`);
 //   }
 // };
+
+// function getNewEmails(requestedEmails, allEmails) {
+//   return requestedEmails.filter((reqEmail) => {
+//     let exists = false;
+//     for (const email of allEmails) {
+//       if (email.email_id === reqEmail.email_id) exists = true;
+//     }
+//     return !exists;
+//   });
+// }
 
 export const getUserPreferences = async (user_id) => {
   try {
@@ -99,31 +88,31 @@ export async function getReaderView(emailId) {
   return email.reader_content;
 }
 
-async function getSummaries(emailIds) {
-  const option = {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
-      "Content-Type": "application/json",
-    },
-  };
-  try {
-    const queryParams = new URLSearchParams();
-    emailIds.forEach((id) => queryParams.append("ids", id));
-    const req = new Request(
-      `${baseUrl}/summaries/batch?${queryParams}`,
-      option
-    );
-    const response = await fetch(req);
-    if (!response.ok) {
-      throw new Error(`Failed to retrieve summaries: ${response.statusText}`);
-    }
-    return await response.json();
-  } catch (error) {
-    console.error("Summary fetch error:", error);
-    return []; // Return empty array on error for graceful degradation
-  }
-}
+// async function getSummaries(emailIds) {
+//   const option = {
+//     method: "GET",
+//     headers: {
+//       Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
+//       "Content-Type": "application/json",
+//     },
+//   };
+//   try {
+//     const queryParams = new URLSearchParams();
+//     emailIds.forEach((id) => queryParams.append("ids", id));
+//     const req = new Request(
+//       `${baseUrl}/summaries/batch?${queryParams}`,
+//       option
+//     );
+//     const response = await fetch(req);
+//     if (!response.ok) {
+//       throw new Error(`Failed to retrieve summaries: ${response.statusText}`);
+//     }
+//     return await response.json();
+//   } catch (error) {
+//     console.error("Summary fetch error:", error);
+//     return []; // Return empty array on error for graceful degradation
+//   }
+// }
 
 function parseDate(date) {
   if (!date) return ["", "", "", ""]; // Handle null/undefined dates
@@ -139,6 +128,8 @@ function parseDate(date) {
     return ["", "", "", ""]; // Return empty date array on error
   }
 }
+
+export async function fetchMoreEmails(curEmailsLength) {}
 
 export default async function fetchEmails(numRequested) {
   try {
@@ -171,44 +162,7 @@ export default async function fetchEmails(numRequested) {
   }
 }
 
-export function getPageSummaries(emailList) {
-  const toGetSummaries = emailList.filter(
-    (email) => email.summary_text.length === 0
-  );
-  if (toGetSummaries.length > 0) addSummaries(toGetSummaries);
-}
-
-export function getTop5(emailList) {
-  let toGetSummaries = emailList.length > 5 ? emailList.slice(0, 5) : emailList;
-  toGetSummaries = toGetSummaries.filter(
-    (email) => email.summary_text.length === 0
-  );
-  if (toGetSummaries.length > 0) addSummaries(toGetSummaries);
-  return emailList.length > 5 ? emailList.slice(0, 5) : emailList;
-}
-
-async function addSummaries(emailList) {
-  const ids = emailList.map((emailList) => {
-    return emailList.email_id;
-  });
-  try {
-    const summaries = await getSummaries(ids);
-    summaries.reverse(); // link summaries to respected email
-    for (let i = 0; i < emailList.length; i++) {
-      const index = emails.indexOf(emailList[i]);
-      emails[index] = {
-        ...emails[index],
-        summary_text: summaries[i].summary_text || "",
-        keywords: summaries[i].keywords || [],
-      };
-    }
-    if (emailList.length > 0) window.location.hash = "#newEmails";
-  } catch (error) {
-    console.error("Summaries adding error:", error);
-  }
-}
-
-export function trimList(keyword) {
+export function trimList(emails, keyword) {
   const toReturn = emails.filter((email) => {
     if (email.subject.includes(keyword) || email.sender.includes(keyword))
       return true;
