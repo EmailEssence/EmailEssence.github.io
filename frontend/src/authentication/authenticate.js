@@ -1,7 +1,7 @@
 import { baseUrl, retrieveUserData } from "../emails/emailHandler";
 export const authenticate = async () => {
   // Check for auth hash and render OAuthCallback if present
-  const redirect_uri = `${window.location.origin}/client/loading`;
+  const redirect_uri = `${window.location.origin}/loading`;
   window.location.href = `${baseUrl}/auth/login?redirect_uri=${redirect_uri}`;
 };
 
@@ -16,23 +16,26 @@ export const handleOAuthCallback = async () => {
       if (authState.authenticated && authState.token) {
         const isAuthenticated = checkAuthStatus(authState.token);
         if (isAuthenticated) {
-          await handleAuthenticate(authState.token);
+          localStorage.setItem("auth_token", authState.token);
         } else {
           handleAuthError("Unable to authenticate");
+          return false;
         }
       }
-      return;
     } catch (error) {
       window.location.hash = "";
       console.error("Error parsing auth state:", error);
       handleAuthError(error);
+      return false;
     }
+    return true;
   }
+  return false;
 };
 
 export const handleAuthenticate = async (token) => {
   try {
-    localStorage.setItem("auth_token", token);
+    localStorage.setItem("auth_token", token); // decepate
     await retrieveUserData();
   } catch (error) {
     handleAuthError(error);
