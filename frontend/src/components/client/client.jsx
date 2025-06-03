@@ -1,6 +1,6 @@
 import { useEffect, useReducer } from "react";
 import { Outlet, Route, Routes, useNavigate } from "react-router";
-import { fetchNewEmails } from "../../emails/emailHandler";
+import { fetchNewEmails, fetchMoreEmails } from "../../emails/emailHandler";
 import "./client.css";
 import Dashboard from "./dashboard/dashboard";
 import Inbox from "./inbox/inbox";
@@ -92,6 +92,18 @@ function Client() {
     }
   };
 
+  // requests a page worth of emails and adds to the current email list,
+  // returns whether more emails exist or not
+  const requestMoreEmails = async () => {
+    const newEmails = fetchMoreEmails(client.emails.length);
+    if (newEmails.length > 0) {
+      handleAddEmails(newEmails);
+    } else {
+      return false;
+    }
+    return true;
+  };
+
   const handleSetCurEmail = (email) => {
     dispatchClient({
       type: "emailChange",
@@ -132,6 +144,7 @@ function Client() {
                 emailList={client.emails}
                 setCurEmail={handleSetCurEmail}
                 curEmail={client.curEmail}
+                requestMoreEmails={requestMoreEmails}
               />
             }
           />
@@ -155,6 +168,7 @@ function Client() {
                 emailList={client.emails}
                 handlePageChange={handlePageChange}
                 setCurEmail={handleSetCurEmail}
+                requestMoreEmails={requestMoreEmails}
               />
             }
           />
