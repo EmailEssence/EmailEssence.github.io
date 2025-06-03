@@ -87,31 +87,40 @@ export async function getReaderView(emailId) {
   return email.reader_content;
 }
 
-// async function getSummaries(emailIds) {
-//   const option = {
-//     method: "GET",
-//     headers: {
-//       Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
-//       "Content-Type": "application/json",
-//     },
-//   };
-//   try {
-//     const queryParams = new URLSearchParams();
-//     emailIds.forEach((id) => queryParams.append("ids", id));
-//     const req = new Request(
-//       `${baseUrl}/summaries/batch?${queryParams}`,
-//       option
-//     );
-//     const response = await fetch(req);
-//     if (!response.ok) {
-//       throw new Error(`Failed to retrieve summaries: ${response.statusText}`);
-//     }
-//     return await response.json();
-//   } catch (error) {
-//     console.error("Summary fetch error:", error);
-//     return []; // Return empty array on error for graceful degradation
-//   }
-// }
+async function getSummary(emailId) {
+  const option = {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
+      "Content-Type": "application/json",
+    },
+  };
+  try {
+    const req = new Request(`${baseUrl}/summaries/?email_id${emailId}`, option);
+    const response = await fetch(req);
+    if (!response.ok) {
+      throw new Error(`Failed to retrieve summaries: ${response.statusText}`);
+    }
+    let summary = await response.json();
+    summary.valid = true;
+    return summary;
+  } catch (error) {
+    console.error("Summary fetch error:", error);
+    return { valid: false };
+  }
+}
+
+export async function setSummary(email, emails) {
+  let curEmails = emails;
+  let curEmail = email;
+  const summary = await getSummary(email.email_id);
+  if (!summary.valid) return [];
+  curEmail.keywords = summary.keywords;
+  curEmail.summary_text = summary.summary_text;
+  const index = curEmails.indexOf(email);
+  curEmails[index] = curEmail;
+  return curEmails;
+}
 
 function parseDate(date) {
   if (!date) return ["", "", "", ""]; // Handle null/undefined dates

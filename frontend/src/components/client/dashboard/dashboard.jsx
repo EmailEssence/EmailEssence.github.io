@@ -10,6 +10,7 @@ function Dashboard({
   setCurEmail,
   requestMoreEmails,
   emailsPerPage,
+  requestSummaries,
 }) {
   return (
     <div className="dashboard">
@@ -17,6 +18,7 @@ function Dashboard({
         emailList={emailList}
         setCurEmail={setCurEmail}
         handlePageChange={handlePageChange}
+        requestSummaries={requestSummaries}
       />
       <MiniViewPanel
         emailList={emailList}
@@ -85,11 +87,13 @@ Dashboard.propTypes = {
   emailList: PropTypes.array,
   requestMoreEmails: PropTypes.func,
   emailsPerPage: PropTypes.func,
+  requestSummaries: PropTypes.func,
 };
 
 WeightedEmailList.propTypes = {
   ...commonPropTypesDashboard,
   emailList: PropTypes.array,
+  requestSummaries: PropTypes.func,
 };
 
 WEListEmail.propTypes = {

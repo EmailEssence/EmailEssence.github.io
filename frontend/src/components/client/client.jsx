@@ -1,6 +1,10 @@
 import { useEffect, useReducer, useState } from "react";
 import { Outlet, Route, Routes, useNavigate } from "react-router";
-import { fetchEmails, handleNewEmails } from "../../emails/emailHandler";
+import {
+  fetchEmails,
+  handleNewEmails,
+  setSummary,
+} from "../../emails/emailHandler";
 import "./client.css";
 import Dashboard from "./dashboard/dashboard";
 import Inbox from "./inbox/inbox";
@@ -12,7 +16,7 @@ import Loading from "../login/Loading";
 function Client() {
   const navigate = useNavigate();
   const [emailsPerPage, setEmailsPerPage] = useState(
-    Math.max(1, Math.floor(window.innerHeight / (window.innerHeight * 0.5)))
+    Math.max(1, Math.floor(window.innerHeight / 35))
   );
   const [client, dispatchClient] = useReducer(clientReducer, {
     expandedSideBar: false,
@@ -40,9 +44,7 @@ function Client() {
 
   useEffect(() => {
     function updateEmailsPerPage() {
-      setEmailsPerPage(
-        Math.max(1, Math.floor(window.innerHeight / (window.innerHeight * 0.5)))
-      );
+      setEmailsPerPage(Math.max(1, Math.floor(window.innerHeight / 35)));
     }
 
     let resizeTimeout = null;
@@ -135,6 +137,20 @@ function Client() {
     });
   };
 
+  const handleRequestSummaries = async (emails) => {
+    let curEmails = client.emails;
+    for (const email in emails) {
+      const res = await setSummary(email, curEmails);
+      if (res.length > 0) {
+        curEmails = res;
+      }
+    }
+    dispatchClient({
+      type: "emailAdd",
+      email: curEmails,
+    });
+  };
+
   return (
     <>
       <Routes>
@@ -170,6 +186,7 @@ function Client() {
                 setCurEmail={handleSetCurEmail}
                 curEmail={client.curEmail}
                 requestMoreEmails={requestMoreEmails}
+                requestSummaries={handleRequestSummaries}
               />
             }
           />
@@ -195,6 +212,7 @@ function Client() {
                 setCurEmail={handleSetCurEmail}
                 requestMoreEmails={requestMoreEmails}
                 emailsPerPage={emailsPerPage}
+                requestSummaries={handleRequestSummaries}
               />
             }
           />
