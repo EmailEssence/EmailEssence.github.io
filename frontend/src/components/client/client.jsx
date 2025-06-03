@@ -35,7 +35,8 @@ function Client() {
       }
     }, userPreferences.emailFetchInterval * 1000);
     return () => clearInterval(clock);
-  }, [userPreferences.emailFetchInterval, client.emails, handleAddEmails]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userPreferences.emailFetchInterval]);
 
   useEffect(() => {
     function updateEmailsPerPage() {
@@ -193,6 +194,7 @@ function Client() {
                 handlePageChange={handlePageChange}
                 setCurEmail={handleSetCurEmail}
                 requestMoreEmails={requestMoreEmails}
+                emailsPerPage={emailsPerPage}
               />
             }
           />

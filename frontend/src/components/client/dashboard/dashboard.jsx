@@ -4,7 +4,13 @@ import MiniViewPanel from "./miniview";
 import PropTypes from "prop-types";
 import "./dashboard.css";
 
-function Dashboard({ emailList, handlePageChange, setCurEmail }) {
+function Dashboard({
+  emailList,
+  handlePageChange,
+  setCurEmail,
+  requestMoreEmails,
+  emailsPerPage,
+}) {
   return (
     <div className="dashboard">
       <WeightedEmailList
@@ -16,6 +22,8 @@ function Dashboard({ emailList, handlePageChange, setCurEmail }) {
         emailList={emailList}
         handlePageChange={handlePageChange}
         setCurEmail={setCurEmail}
+        requestMoreEmails={requestMoreEmails}
+        emailsPerPage={emailsPerPage}
       />
     </div>
   );
@@ -75,6 +83,8 @@ const commonPropTypesDashboard = {
 Dashboard.propTypes = {
   ...commonPropTypesDashboard,
   emailList: PropTypes.array,
+  requestMoreEmails: PropTypes.func,
+  emailsPerPage: PropTypes.func,
 };
 
 WeightedEmailList.propTypes = {

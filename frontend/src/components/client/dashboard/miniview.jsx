@@ -3,10 +3,15 @@ import PropTypes from "prop-types";
 import { useEffect, useRef, useState } from "react";
 import FullScreenIcon from "../../../assets/FullScreenIcon";
 import InboxIcon from "../../../assets/InboxArrow";
-import { emailsPerPage } from "../../../assets/constants";
 import "./miniview.css";
 
-function MiniViewPanel({ emailList, handlePageChange, setCurEmail }) {
+function MiniViewPanel({
+  emailList,
+  handlePageChange,
+  setCurEmail,
+  requestMoreEmails,
+  emailsPerPage,
+}) {
   return (
     <div className="mini-view">
       <MiniViewHead handlePageChange={handlePageChange} />
@@ -14,6 +19,8 @@ function MiniViewPanel({ emailList, handlePageChange, setCurEmail }) {
         emailList={emailList}
         setCurEmail={setCurEmail}
         handlePageChange={handlePageChange}
+        requestMoreEmails={requestMoreEmails}
+        emailsPerPage={emailsPerPage}
       />
     </div>
   );
@@ -39,24 +46,31 @@ function MiniViewHead({ handlePageChange }) {
   );
 }
 
-function MiniViewBody({ emailList, setCurEmail, handlePageChange }) {
+function MiniViewBody({
+  emailList,
+  setCurEmail,
+  handlePageChange,
+  requestMoreEmails,
+  emailsPerPage,
+}) {
   const [pages, setPages] = useState(1);
+  const [maxed, setMaxed] = useState(false);
   const ref = useRef(null);
-  const maxEmails =
-    pages * emailsPerPage < emailList.length
-      ? pages * emailsPerPage
-      : emailList.length;
+  const maxEmails = pages * emailsPerPage;
   const hasUnloadedEmails = maxEmails < emailList.length;
 
-  const handleScroll = () => {
+  const handleScroll = async () => {
     const fullyScrolled =
       Math.abs(
         ref.current.scrollHeight -
           ref.current.clientHeight -
           ref.current.scrollTop
       ) <= 1;
-    if (fullyScrolled && hasUnloadedEmails) {
+    if (fullyScrolled && !maxed) {
       setPages(pages + 1);
+      if (!hasUnloadedEmails) {
+        setMaxed(await requestMoreEmails);
+      }
     }
   };
 
@@ -108,9 +122,15 @@ const commonPropTypesDashboard = {
   setCurEmail: PropTypes.func,
 };
 
+const commonUtilityPropTypes = {
+  emailList: PropTypes.array,
+  requestMoreEmails: PropTypes.func,
+  emailsPerPage: PropTypes.number,
+};
+
 MiniViewPanel.propTypes = {
   ...commonPropTypesDashboard,
-  emailList: PropTypes.array,
+  ...commonUtilityPropTypes,
 };
 
 MiniViewHead.propTypes = {
@@ -119,7 +139,7 @@ MiniViewHead.propTypes = {
 
 MiniViewBody.propTypes = {
   ...commonPropTypesDashboard,
-  emailList: PropTypes.array,
+  commonUtilityPropTypes,
 };
 
 MiniViewEmail.propTypes = {
