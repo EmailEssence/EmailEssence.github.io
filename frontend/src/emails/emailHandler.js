@@ -4,30 +4,25 @@ import DOMPurify from "dompurify";
 // export const baseUrl = "http://127.0.0.1:8000";
 export const baseUrl = "https://ee-backend-w86t.onrender.com";
 
-// export const fetchNewEmails = async () => {
-//   try {
-//     const requestedEmails = await fetchEmails(100);
-//     if (requestedEmails.length > 0) {
-//       const newEmails = getNewEmails(requestedEmails, emails); // O(n^2) operation
-//       if (newEmails.length > 0) {
-//         emails = [...emails, ...newEmails];
-//         window.location.hash = "#newEmails";
-//       }
-//     }
-//   } catch (error) {
-//     console.error(`Error fetching new emails: ${error}`);
-//   }
-// };
+function getNewEmails(allEmails, requestedEmails) {
+  return requestedEmails.filter((reqEmail) => {
+    let exists = false;
+    for (const email of allEmails) {
+      if (email.email_id === reqEmail.email_id) exists = true;
+    }
+    return !exists;
+  });
+}
 
-// function getNewEmails(requestedEmails, allEmails) {
-//   return requestedEmails.filter((reqEmail) => {
-//     let exists = false;
-//     for (const email of allEmails) {
-//       if (email.email_id === reqEmail.email_id) exists = true;
-//     }
-//     return !exists;
-//   });
-// }
+export const handleNewEmails = (allEmails, requestedEmails) => {
+  if (requestedEmails.length > 0) {
+    const newEmails = getNewEmails(allEmails, requestedEmails);
+    if (newEmails.length > 0) {
+      return newEmails;
+    }
+  }
+  return [];
+};
 
 export const getUserPreferences = async (user_id) => {
   try {

@@ -1,6 +1,6 @@
 import { useEffect, useReducer, useState } from "react";
 import { Outlet, Route, Routes, useNavigate } from "react-router";
-import { fetchNewEmails, fetchEmails } from "../../emails/emailHandler";
+import { fetchEmails, handleNewEmails } from "../../emails/emailHandler";
 import "./client.css";
 import Dashboard from "./dashboard/dashboard";
 import Inbox from "./inbox/inbox";
@@ -27,15 +27,15 @@ function Client() {
   useEffect(() => {
     const clock = setInterval(async () => {
       try {
-        const newEmails = await fetchNewEmails();
-        console.log(newEmails);
-        // TODO: Do something with new emails
+        const requestedEmails = await fetchEmails(0, true);
+        const newEmails = handleNewEmails(client.emails, requestedEmails);
+        if (newEmails.length > 0) handleAddEmails(newEmails, true);
       } catch (error) {
         console.error(`Loading Emails Error: ${error}`);
       }
     }, userPreferences.emailFetchInterval * 1000);
     return () => clearInterval(clock);
-  }, [userPreferences.emailFetchInterval]);
+  }, [userPreferences.emailFetchInterval, client.emails, handleAddEmails]);
 
   useEffect(() => {
     function updateEmailsPerPage() {
