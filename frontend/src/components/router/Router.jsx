@@ -1,13 +1,5 @@
-import { useEffect, useState } from "react";
-import {
-  BrowserRouter,
-  Navigate,
-  Route,
-  Routes,
-  useLocation,
-} from "react-router";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router";
 import { authenticate } from "../../authentication/authenticate";
-import { emails, userPreferences } from "../../emails/emailHandler";
 import Client from "../client/client";
 import Contact from "../login/contact";
 import Error from "../login/Error";
@@ -30,24 +22,6 @@ export function Router() {
 }
 
 export function AppRouter() {
-  const [userEmails, setUserEmails] = useState(emails);
-  const location = useLocation();
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (emails != userEmails || window.location.hash === "#newEmails") {
-        setUserEmails(emails);
-        window.history.replaceState(
-          null,
-          "",
-          window.location.pathname + window.location.search
-        ); // Remove the hash
-      }
-    }, 500);
-
-    return () => clearInterval(interval);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [location]);
-
   return (
     <Routes>
       <Route path="" element={<Navigate to="/home" replace />} />
@@ -60,15 +34,7 @@ export function AppRouter() {
         path="/login"
         element={<Login handleGoogleClick={authenticate} />}
       />
-      <Route
-        path="client/*"
-        element={
-          <Client
-            emailsByDate={userEmails}
-            defaultUserPreferences={userPreferences}
-          />
-        }
-      />
+      <Route path="client/*" element={<Client />} />
       <Route path="/error" element={<Error />} />
     </Routes>
   );

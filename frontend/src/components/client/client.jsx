@@ -1,7 +1,6 @@
 import { useEffect, useReducer, useState } from "react";
 import { Outlet, Route, Routes, useNavigate } from "react-router";
-import {
-  fetchEmails,
+import fetchEmails, {
   handleNewEmails,
   setSummary,
 } from "../../emails/emailHandler";

@@ -3,7 +3,6 @@ import { useEffect, useRef, useState } from "react";
 import ArrowIcon from "../../../assets/InboxArrow";
 import { emailsPerPage } from "../../../assets/constants";
 import EmailDisplay from "./emailDisplay";
-import { getPageSummaries } from "../../../emails/emailHandler";
 import "./emailEntry.css";
 import "./emailList.css";
 import { trimList } from "../../../emails/emailHandler"; // shared API URL base
@@ -76,6 +75,8 @@ function InboxEmailList({
   onClick,
   handleEmailSearch,
 }) {
+  // const [allEmailsLoaded, setAllEmailsLoaded] = useState(false);
+  // const [loadingEmails, setLoadingEmails] = useState(false);
   const [pages, setPages] = useState(1);
   const ref = useRef(null);
   const maxEmails = Math.min(pages * emailsPerPage, emailList.length);
@@ -115,7 +116,7 @@ function InboxEmailList({
         />
       );
     }
-    if (needsSummary.length > 0) getPageSummaries(needsSummary);
+    // if (needsSummary.length > 0) getPageSummaries(needsSummary);
     return returnBlock;
   };
   return (
