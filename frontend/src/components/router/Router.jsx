@@ -15,6 +15,7 @@ import Home from "../login/Home";
 import Login from "../login/login";
 import PrivacyPolicy from "../login/privacy";
 import TermsOfService from "../login/terms";
+import AuthLoading from "../login/AuthLoading";
 
 export function Router() {
   const testing = import.meta.env.MODE === "test";
@@ -54,6 +55,7 @@ export function AppRouter() {
       <Route path="/contact" element={<Contact />} />
       <Route path="/privacy" element={<PrivacyPolicy />} />
       <Route path="/terms" element={<TermsOfService />} />
+      <Route path="/loading" element={<AuthLoading />} />
       <Route
         path="/login"
         element={<Login handleGoogleClick={authenticate} />}
