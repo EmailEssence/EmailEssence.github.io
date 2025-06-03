@@ -35,17 +35,17 @@ function getNewEmails(requestedEmails, allEmails) {
   });
 }
 
-export const retrieveUserData = async () => {
-  try {
-    emails = await fetchEmails(100);
-    const user_id = null; // Get user ID
-    if (user_id) getUserPreferences(user_id);
-  } catch (error) {
-    console.error(error);
-  }
-};
+// export const retrieveUserData = async () => {
+//   try {
+//     emails = await fetchEmails(100);
+//     const user_id = null; // Get user ID
+//     if (user_id) getUserPreferences(user_id);
+//   } catch (error) {
+//     console.error(error);
+//   }
+// };
 
-const getUserPreferences = async (user_id) => {
+export const getUserPreferences = async (user_id) => {
   try {
     const preferences = await fetchUserPreferences(user_id);
     userPreferences = preferences;
@@ -144,9 +144,6 @@ export default async function fetchEmails(numRequested) {
   try {
     // Fetch both emails and summaries concurrently
     const newEmails = await getEmails(numRequested);
-    // remove and replace with per page summary loading
-    // const summaries = await getSummaries(ids);
-    // summaries.reverse(); // link summaries to respected email
     // Validate array responses
     if (!Array.isArray(newEmails.emails)) {
       console.error("Invalid emails response:", newEmails);
@@ -167,7 +164,6 @@ export default async function fetchEmails(numRequested) {
         received_at: parseDate(email.received_at),
       };
     });
-
     return processedEmails;
   } catch (error) {
     console.error("Email processing error:", error);

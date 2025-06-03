@@ -25,6 +25,7 @@ function Client() {
     const clock = setInterval(async () => {
       try {
         const newEmails = await fetchNewEmails();
+        console.log(newEmails);
         // TODO: Do something with new emails
       } catch (error) {
         console.error(`Loading Emails Error: ${error}`);

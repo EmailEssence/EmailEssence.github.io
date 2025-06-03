@@ -14,6 +14,12 @@ export function clientReducer(client, action) {
         curPage: action.page,
       };
     }
+    case "emailAdd": {
+      return {
+        ...client,
+        emails: action.email,
+      };
+    }
     case "emailChange": {
       return {
         ...client,
