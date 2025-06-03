@@ -1,4 +1,4 @@
-import { baseUrl, retrieveUserData } from "../emails/emailHandler";
+import { baseUrl } from "../emails/emailHandler";
 export const authenticate = async () => {
   // Check for auth hash and render OAuthCallback if present
   const redirect_uri = `${window.location.origin}/loading`;
@@ -31,15 +31,6 @@ export const handleOAuthCallback = async () => {
     return true;
   }
   return false;
-};
-
-export const handleAuthenticate = async (token) => {
-  try {
-    localStorage.setItem("auth_token", token); // decepate
-    await retrieveUserData();
-  } catch (error) {
-    handleAuthError(error);
-  }
 };
 
 const handleAuthError = async (error) => {

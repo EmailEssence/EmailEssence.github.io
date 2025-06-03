@@ -16,6 +16,7 @@ export default function Loading() {
     }
     completeOAuth();
   });
+
   return (
     <div className="loading">
       <div className="loading-spinner" role="spinner"></div>

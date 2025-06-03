@@ -10,29 +10,23 @@ import { Settings } from "./settings/settings";
 import SideBar from "./sidebar/sidebar";
 import Loading from "../login/Loading";
 
-function Client({
-  emailsByDate,
-  defaultUserPreferences = {
-    isChecked: true,
-    emailFetchInterval: 120,
-    theme: "light",
-  },
-}) {
-  console.log("Client component");
+function Client() {
   const navigate = useNavigate();
   const [client, dispatchClient] = useReducer(clientReducer, {
     expandedSideBar: false,
-    curEmail: emailsByDate[0],
+    emails: [],
+    curEmail: {},
   });
   const [userPreferences, dispatchUserPreferences] = useReducer(
     userPreferencesReducer,
-    defaultUserPreferences
+    { isChecked: true, emailFetchInterval: 120, theme: "light" }
   );
 
   useEffect(() => {
     const clock = setInterval(async () => {
       try {
-        await fetchNewEmails();
+        const newEmails = await fetchNewEmails();
+        // TODO: Do something with new emails
       } catch (error) {
         console.error(`Loading Emails Error: ${error}`);
       }
@@ -81,6 +75,21 @@ function Client({
       type: "theme",
       theme: theme,
     });
+  };
+  const handleAddEmails = (emailsToAdd, addToFront = false) => {
+    if (addToFront) {
+      // add emails to the Front
+      dispatchClient({
+        type: "emailAdd",
+        email: [...emailsToAdd, ...client.emails],
+      });
+    } else {
+      // add emails to the back
+      dispatchClient({
+        type: "emailAdd",
+        email: [...client.emails, ...emailsToAdd],
+      });
+    }
   };
 
   const handleSetCurEmail = (email) => {
@@ -146,10 +155,5 @@ function Client({
     </>
   );
 }
-
-Client.propTypes = {
-  emailsByDate: PropTypes.array,
-  defaultUserPreferences: PropTypes.object,
-};
 
 export default Client;
