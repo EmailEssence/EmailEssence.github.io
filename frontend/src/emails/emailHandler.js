@@ -3,11 +3,6 @@ import DOMPurify from "dompurify";
 // TODO : env variable for baseUrl
 // export const baseUrl = "http://127.0.0.1:8000";
 export const baseUrl = "https://ee-backend-w86t.onrender.com";
-export let userPreferences = {
-  isChecked: true,
-  emailFetchInterval: 120,
-  theme: "light",
-};
 
 // export const fetchNewEmails = async () => {
 //   try {
@@ -37,13 +32,22 @@ export let userPreferences = {
 export const getUserPreferences = async (user_id) => {
   try {
     const preferences = await fetchUserPreferences(user_id);
-    userPreferences = preferences;
+    return preferences;
   } catch (error) {
     console.error(error);
   }
 };
 
-async function getEmails(extension) {
+async function getEmails(number, ...args) {
+  let refresh = "false";
+  let curEmail = "0";
+  if (args.length > 0) {
+    if (typeof args[0] === "number") {
+      curEmail = parseInt(args[0], 10);
+    } else if (args[0]) {
+      refresh = "true";
+    }
+  }
   const option = {
     method: "GET",
     headers: {
@@ -53,7 +57,7 @@ async function getEmails(extension) {
   };
   try {
     const req = new Request(
-      `${baseUrl}/emails/?skip=0&limit=${extension}&unread_only=false&sort_by=received_at&sort_order=desc&refresh=true`,
+      `${baseUrl}/emails/?skip=${curEmail}&limit=${number}&unread_only=false&sort_by=received_at&sort_order=desc&refresh=${refresh}`,
       option
     );
     const response = await fetch(req);
@@ -129,12 +133,10 @@ function parseDate(date) {
   }
 }
 
-export async function fetchMoreEmails(curEmailsLength) {}
-
-export default async function fetchEmails(numRequested) {
+export default async function fetchEmails(pageSize, ...args) {
   try {
     // Fetch both emails and summaries concurrently
-    const newEmails = await getEmails(numRequested);
+    const newEmails = await getEmails(pageSize, ...args);
     // Validate array responses
     if (!Array.isArray(newEmails.emails)) {
       console.error("Invalid emails response:", newEmails);
