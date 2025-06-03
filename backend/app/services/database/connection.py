@@ -44,7 +44,15 @@ class DatabaseConnection:
                 
                 self._client = AsyncIOMotorClient(
                     settings.mongo_uri,
-                    **connection_options
+                    connection_options = 
+                    {
+                        #"serverSelectionTimeoutMS": 5000,
+                        #"connectTimeoutMS": 10000,
+                        "retryWrites": True,
+                        "retryReads": True,
+                        "maxPoolSize": 100,     # maximum concurrent connections
+                        "minPoolSize": 2,      # Minimum connections in the pool on startup
+                    }
                 )
                 self._db = self._client.email_essence
                 
