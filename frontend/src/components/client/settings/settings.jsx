@@ -15,13 +15,20 @@ export function Settings({
     window.location.href = "/login";
   };
 
-  const handleDeleteAccount = () => {
+  const handleDeleteAccount = async() => {
     //confirm if the user wants to delete their account
     if (window.confirm("Are you sure you want to delete your account? This action is permanent and cannot be undone.")) return;
     try {
+      const profile = await fetchUserProfile();
+      const userId = profile.id || profile.user_id;
+      await deleteUserById(userId);
 
-
-    } catch (error) { };
+      localStorage.removeItem("auth_token");
+      window.location.href = "/login";
+    } catch (error) {
+      console.error("Failed to delete account:", error);
+      alert("Failed to delete account. Please try again later.");
+    };
   }
 
   const isDarkTheme = useSystemTheme();
@@ -242,14 +249,15 @@ export const updateUserById = async (user_id) => {
 
 // @router.delete( "/user_id"), deletes user, deletes user account by user ID
 export const deleteUserById = async (user_id) => {
-  const response = await fetch("${baseUrl}/user/${user_id}", {
+  const response = await fetch(`${baseUrl}/user/${user_id}`, {
+    method: "DELETE",
     headers: {
-      Authorization: "Bearer ${token}",
+      Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
     },
   });
   if (!response.ok) {
-    throw new Error("Failed to delete user by ID ${response.status}");
+    throw new Error(`Failed to delete user by ID ${response.status}`);
   }
   return response.json();
 };
