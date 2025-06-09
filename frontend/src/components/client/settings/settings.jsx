@@ -17,7 +17,7 @@ export function Settings({
 
   const handleDeleteAccount = async() => {
     //confirm if the user wants to delete their account
-    if (window.confirm("Are you sure you want to delete your account? This action is permanent and cannot be undone.")) return;
+    if (!window.confirm("Are you sure you want to delete your account? This action is permanent and cannot be undone.")) return;
     try {
       const profile = await fetchUserProfile();
       const userId = profile.id || profile.user_id;
@@ -182,8 +182,12 @@ const useSystemTheme = () => {
 
 //  @router.get("/me"), gets current users profile, Retrieves the authenticated user's profile
 export const fetchUserProfile = async () => {
+  const token = localStorage.getItem("auth_token");
   const response = await fetch(`${baseUrl}/user/me`, {
-    headers: {},
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
   });
   if (!response.ok) {
     throw new Error(`Failed to fetch users profile ${response.status}`);
@@ -193,9 +197,10 @@ export const fetchUserProfile = async () => {
 
 // @router.get("/preferences"), gets the user preferences, Retrieves the authenticated user's preferences settings
 export const fetchUserPreferences = async () => {
+  const token = localStorage.getItem("auth_token");
   const response = await fetch(`${baseUrl}/user/preferences`, {
     headers: {
-      Authorization: "Bearer ${token}",
+      Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
     },
   });
@@ -207,48 +212,52 @@ export const fetchUserPreferences = async () => {
 
 // @router.put("/preferences"), updates the user preferences, Updates the authenticated user's preferences settings
 export const updateUserPreferences = async () => {
-  const response = await fetch("${baseUrl}/user/preferences", {
+  const token = localStorage.getItem("auth_token");
+  const response = await fetch(`${baseUrl}/user/preferences`, {
     headers: {
-      Authorization: "Bearer ${token}",
+      Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
     },
   });
   if (!response.ok) {
-    throw new Error("Failed to update user preferences ${response.status}");
+    throw new Error(`Failed to update user preferences ${response.status}`);
   }
   return response.json();
 };
 
 // @router.get ("/user_id"). gets user by ID, retrieves user information by user ID
-export const fetchUserById = async (user_id) => {
-  const response = await fetch("${baseUrl}/user/${user_id}", {
+export const fetchUserById = async () => {
+  const token = localStorage.getItem("auth_token");
+  const response = await fetch(`${baseUrl}/user/${user_id}`, {
     headers: {
-      Authorization: "Bearer ${token}",
+      Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
     },
   });
   if (!response.ok) {
-    throw new Error("Failed to fetch user by ID ${response.status}");
+    throw new Error(`Failed to fetch user by ID ${response.status}`);
   }
   return response.json();
 };
 
 // @router.put("/user_id"), updates user, updates user information by user ID
 export const updateUserById = async (user_id) => {
-  const response = await fetch("${baseUrl}/user/${user_id}", {
+  const token = localStorage.getItem("auth_token");
+  const response = await fetch(`${baseUrl}/user/${user_id}`, {
     headers: {
-      Authorization: "Bearer ${token}",
+      Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
     },
   });
   if (!response.ok) {
-    throw new Error("Failed to update user by ID ${response.status}");
+    throw new Error(`Failed to update user by ID ${response.status}`);
   }
   return response.json();
 };
 
 // @router.delete( "/user_id"), deletes user, deletes user account by user ID
 export const deleteUserById = async (user_id) => {
+  const token = localStorage.getItem("auth_token");
   const response = await fetch(`${baseUrl}/user/${user_id}`, {
     method: "DELETE",
     headers: {
@@ -262,22 +271,17 @@ export const deleteUserById = async (user_id) => {
   return response.json();
 };
 
-// function that gets the user preferences from the backend
-// export const fetchUserPreferences = async (user_id) => {
-//   const response = await fetch(`http://localhost:8000/preferences`);
-//   if (!response.ok) {
-//     throw new Error(`Failed to fetch ${response.status}`);
-//   }
-//   return response.json();
-// }
-
 // function saves the user preferences to the backend
-export const saveUserPreferences = async (userPreferences) => {
+export const saveUserPreferences = async (user_id, userPreferences) => {
+  const token = localStorage.getItem("auth_token");
   const response = await fetch(
-    `http://localhost:8000/user/${user_id}/preferences`,
+    `${baseUrl}/user/${user_id}/preferences`,
     {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json"
+      },
       body: JSON.stringify(userPreferences),
     }
   );
