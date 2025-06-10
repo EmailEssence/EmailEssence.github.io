@@ -96,13 +96,18 @@ async function getSummary(emailId) {
     },
   };
   try {
-    const req = new Request(`${baseUrl}/summaries/?email_id${emailId}`, option);
+    const req = new Request(
+      `${baseUrl}/summaries/?email_id=${emailId}`,
+      option
+    );
     const response = await fetch(req);
     if (!response.ok) {
       throw new Error(`Failed to retrieve summaries: ${response.statusText}`);
     }
     let summary = await response.json();
     summary.valid = true;
+    console.log(`Summary for ${emailId}:`);
+    console.log(summary);
     return summary;
   } catch (error) {
     console.error("Summary fetch error:", error);

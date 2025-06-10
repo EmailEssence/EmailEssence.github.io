@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import ViewIcon from "../../../assets/ViewIcon";
 import { getTop5 } from "../../../emails/emailHandler";
 import MiniViewPanel from "./miniview";
@@ -37,26 +38,43 @@ function WeightedEmailList({
   handlePageChange,
   requestSummaries,
 }) {
-  const emails = async () => {
-    const WEList = getTop5(emailList);
-    let needSummaries = WEList.filter(
-      (email) => email.summary_text.length < 1 && email.keywords.length < 1
-    );
-    if (needSummaries.legnth > 0) requestSummaries(needSummaries);
-    const returnBlock = [];
-    for (let i = 0; i < WEList.length; i++) {
-      returnBlock.push(
+  const [WEEmails, setWEEmails] = useState([]);
+
+  useEffect(() => {
+    async function fetchEmails() {
+      const WEList = getTop5(emailList);
+      let needSummaries = WEList.filter((email) => {
+        return email.summary_text.length < 1 && email.keywords.length < 1;
+      });
+      if (needSummaries.length > 0) await requestSummaries(needSummaries);
+      setWEEmails(WEList);
+    }
+    fetchEmails();
+  }, [emailList, requestSummaries]);
+  // const emails = async () => {
+  //   const WEList = getTop5(emailList);
+  //   let needSummaries = WEList.filter(
+  //     (email) => email.summary_text.length < 1 && email.keywords.length < 1
+  //   );
+  //   if (needSummaries.legnth > 0) await requestSummaries(needSummaries);
+  //   const returnBlock = [];
+  //   for (let i = 0; i < WEList.length; i++) {
+  //     returnBlock.push();
+  //   }
+  //   return returnBlock;
+  // };
+  return (
+    <div className="weighted-email-list-container">
+      {WEEmails.map((email) => {
         <WEListEmail
-          key={WEList[i].email_id}
-          email={WEList[i]}
+          key={email.email_id}
+          email={email}
           setCurEmail={setCurEmail}
           handlePageChange={handlePageChange}
-        />
-      );
-    }
-    return returnBlock;
-  };
-  return <div className="weighted-email-list-container">{emails()}</div>;
+        />;
+      })}
+    </div>
+  );
 }
 
 function WEListEmail({ email, setCurEmail, handlePageChange }) {

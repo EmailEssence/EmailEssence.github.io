@@ -138,12 +138,18 @@ function Client() {
 
   const handleRequestSummaries = async (emails) => {
     let curEmails = client.emails;
-    for (const email in emails) {
-      const res = await setSummary(email, curEmails);
+    console.log("In handle request summaries");
+
+    const result = await Promise.all(
+      emails.map((email) => setSummary(email, curEmails))
+    );
+
+    result.forEach((res) => {
       if (res.length > 0) {
         curEmails = res;
       }
-    }
+    });
+
     dispatchClient({
       type: "emailAdd",
       email: curEmails,
