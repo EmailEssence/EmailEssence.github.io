@@ -17,7 +17,7 @@ export function Settings({
 
   const handleDeleteAccount = async() => {
     //confirm if the user wants to delete their account
-    if (!window.confirm("Are you sure you want to delete your account? This action is permanent and cannot be undone.")) return;
+    if (!window.confirm("Are you sure you want to delete your EmailEssence Account? \nThis will remove all information associated with your gmail account from our server and lead to longer loading times when you log back in next time.")) return;
     try{
       const profile = await fetchUserProfile();
       const userId = profile.google_id
