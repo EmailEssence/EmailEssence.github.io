@@ -120,7 +120,7 @@ function Client() {
   // requests a page worth of emails and adds to the current email list,
   // returns whether more emails exist or not
   const requestMoreEmails = async () => {
-    const newEmails = await fetchEmails(client.emails.length);
+    const newEmails = await fetchEmails(emailsPerPage, client.emails.length);
     if (newEmails.length > 0) {
       handleAddEmails(newEmails);
     } else {

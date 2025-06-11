@@ -69,7 +69,7 @@ function MiniViewBody({
     if (fullyScrolled && !maxed) {
       setPages(pages + 1);
       if (!hasUnloadedEmails) {
-        setMaxed(await requestMoreEmails);
+        setMaxed(await requestMoreEmails());
       }
     }
   };
