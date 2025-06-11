@@ -156,7 +156,7 @@ class UserService:
             True if deleted, False otherwise
         """
         try:
-            result = await self.user_repository.delete_one(google_id)
+            result = await self.user_repository.delete_by_google_id(google_id)
             if result:
                 log_operation(logger, 'info', f"Deleted user: {google_id}")
             return result
