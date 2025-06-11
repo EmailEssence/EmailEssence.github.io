@@ -5,11 +5,15 @@ This module provides functionality for summarizing emails using various provider
 and strategies.
 """
 
+# Standard library imports
 from typing import TypeVar, Generic
+
+# Third-party imports
 from fastapi import Depends, HTTPException
 
-from app.utils.config import Settings, get_settings, SummarizerProvider
+# Internal imports
 from app.models import EmailSchema
+from app.utils.config import Settings, get_settings, SummarizerProvider
 from .base import AdaptiveSummarizer
 from .providers.openai.openai import OpenAIEmailSummarizer
 from .providers.google.google import GeminiEmailSummarizer

@@ -5,55 +5,27 @@ This module handles user profile management, preferences, and user-related opera
 It provides endpoints for retrieving and updating user information and preferences.
 """
 
-from fastapi import APIRouter, HTTPException, status, Depends
-from fastapi.security import OAuth2PasswordBearer
-import logging
+# Third-party imports
+from fastapi import APIRouter, Depends, HTTPException, status
 
-from app.models import UserSchema, PreferencesSchema
+# Internal imports
+from app.dependencies import get_current_user, get_current_user_info
+from app.utils.helpers import get_logger, log_operation, standardize_error_response
+from app.models import PreferencesSchema, UserSchema
 from app.services.auth_service import AuthService
+from app.services.database.factories import get_auth_service, get_user_service
 from app.services.user_service import UserService
-from app.services.database.factories import get_user_service, get_auth_service
+
+# -------------------------------------------------------------------------
+# Router Configuration
+# -------------------------------------------------------------------------
 
 router = APIRouter()
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, 'router')
 
-# OAuth authentication scheme
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token", description="Enter the token you received from the login flow (without Bearer prefix)")
-
-# Debugging helper function
-# def debug(message: str):
-#     """Print debug messages with a consistent format"""
-#     print(f"[DEBUG] {message}")
-
-async def get_current_user_info(
-    token: str = Depends(oauth2_scheme),
-    auth_service: AuthService = Depends(get_auth_service)
-):
-    """
-    Validates token and returns user information.
-    
-    Args:
-        token: JWT token from OAuth2 authentication
-        auth_service: Auth service instance
-        
-    Returns:
-        dict: User information and credentials
-        
-    Raises:
-        HTTPException: 401 error if token is invalid
-    """
-    logger.debug(f"Validating token for user authentication...")
-    
-    try:
-        user_data = await auth_service.get_credentials_from_token(token)
-        logger.debug(f"User authenticated successfully: {user_data.get('user_info', {}).get('email', 'Unknown')}")
-        return user_data
-    except Exception as e:
-        logger.error(f"[ERROR] Authentication failed: {str(e)}", exc_info=True)
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Invalid authentication: {str(e)}"
-        )
+# -------------------------------------------------------------------------
+# Endpoints
+# -------------------------------------------------------------------------
 
 @router.get(
     "/me", 
@@ -61,61 +33,20 @@ async def get_current_user_info(
     summary="Get current user profile",
     description="Retrieves the authenticated user's profile information or creates a new user record if one doesn't exist"
 )
-async def get_current_user(
-    user_data: dict = Depends(get_current_user_info),
-    user_service: UserService = Depends(get_user_service)
+async def get_current_user_profile(
+    user: UserSchema = Depends(get_current_user)
 ):
     """
-    Retrieve user details or create user if they don't exist.
+    Retrieve current user profile.
     
     Args:
-        user_data: User information and credentials from token validation
-        user_service: User service instance
+        user: Current authenticated user from dependency
         
     Returns:
         UserSchema: User profile information
-        
-    Raises:
-        HTTPException: If user retrieval fails
     """
-    logger.debug("Retrieving current user...")
-    
-    try:
-        user_info = user_data['user_info']
-        user_email = user_info.get('email')
-        google_id = user_info.get('google_id')
-        
-        logger.debug(f"Fetching user from database or creating new: {user_email}")
-        
-        # Try to get existing user
-        user = await user_service.get_user_by_email(user_email)
-        
-        # If user doesn't exist, create new user
-        if not user:
-            logger.debug(f"Creating new user: {user_email}")
-            user = await user_service.create_user({
-                "email": user_email,
-                "name": user_info.get("name", ""),
-                "picture": user_info.get("picture", ""),
-                "google_id": google_id
-            })
-        else:
-            logger.debug(f"Found existing user: {user_email}")
-            # Convert UserSchema to dict for checking google_id
-            user_dict = user.model_dump()
-            # Update google_id if it's missing
-            if not user_dict.get('google_id'):
-                logger.debug(f"Updating missing google_id for user: {user_email}")
-                await user_service.update_user(user_dict['_id'], {"google_id": google_id})
-        
-        logger.debug(f"User retrieval successful: {user_email}")
-        return user
-    except Exception as e:
-        logger.error(f"[ERROR] Failed to retrieve user: {str(e)}", exc_info=True)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to retrieve user: {str(e)}"
-        )
+    logger.debug(f"User profile retrieved: {user.email}")
+    return user
 
 @router.get(
     "/preferences",
@@ -159,14 +90,8 @@ async def get_user_preferences(
         preferences = user.preferences.model_dump()
         logger.debug(f"Preferences retrieved successfully for user: {user_email}")
         return {"preferences": preferences}
-    except HTTPException:
-        raise
     except Exception as e:
-        logger.error(f"[ERROR] Failed to retrieve user preferences: {str(e)}", exc_info=True)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to retrieve user preferences: {str(e)}"
-        )
+        raise standardize_error_response(e, "retrieve user preferences")
 
 @router.put(
     "/preferences",
@@ -230,11 +155,7 @@ async def update_preferences(
                 update_data
             )
         except Exception as e:
-            logger.error(f"Error updating user: {str(e)}", exc_info=True)
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Failed to update user: {str(e)}"
-            )
+            raise standardize_error_response(e, "update preferences")
         
         if not updated_user:
             logger.debug("Update returned None")
@@ -246,14 +167,8 @@ async def update_preferences(
         logger.debug(f"Updated user data: {updated_user.model_dump()}")
         logger.debug(f"Preferences updated successfully for user: {user_email}")
         return {"preferences": updated_user.preferences.model_dump()}
-    except HTTPException:
-        raise
     except Exception as e:
-        logger.error(f"[ERROR] Failed to update preferences: {str(e)}", exc_info=True)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to update preferences: {str(e)}"
-        )
+        raise standardize_error_response(e, "update preferences")
 
 @router.get("/{user_id}", response_model=UserSchema)
 async def get_user(
@@ -277,9 +192,10 @@ async def get_user(
     """
     user = await user_service.get_user(user_id)
     if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
+        raise standardize_error_response(
+            Exception("User not found"), 
+            "get user", 
+            user_id
         )
     return user
 
@@ -303,9 +219,10 @@ async def get_user_by_email(
     """
     user = await user_service.get_user_by_email(email)
     if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
+        raise standardize_error_response(
+            Exception("User not found"), 
+            "get user by email", 
+            email
         )
     return user
 
@@ -350,9 +267,10 @@ async def update_user(
     """
     user = await user_service.update_user(user_id, user_data)
     if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
+        raise standardize_error_response(
+            Exception("User not found"), 
+            "update user", 
+            user_id
         )
     return user
 
@@ -378,9 +296,10 @@ async def delete_user(
     """
     success = await user_service.delete_user(user_id)
     if not success:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
+        raise standardize_error_response(
+            Exception("User not found"), 
+            "delete user", 
+            user_id
         )
     return {"message": "User deleted successfully"}
     

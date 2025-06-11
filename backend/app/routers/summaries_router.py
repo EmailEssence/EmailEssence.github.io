@@ -6,32 +6,40 @@ retrieving existing summaries, and managing summary data. It leverages various s
 strategies to provide concise representations of emails.
 """
 
+# Standard library imports
 import logging
 from typing import List
-from fastapi import APIRouter, HTTPException, Depends, Query, Path, status
 
+# Third-party imports
+from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
+
+# Internal imports
+from app.dependencies import get_current_user
+from app.utils.helpers import get_logger, log_operation, standardize_error_response
 from app.models import EmailSchema, SummarySchema, UserSchema
 from app.services import SummaryService
-from app.services.summarization import get_summarizer
-from app.services.summarization.base import AdaptiveSummarizer
+from app.services.database.factories import get_email_service, get_summary_service
 from app.services.summarization import (
-  ProcessingStrategy, 
-  OpenAIEmailSummarizer,
-  GeminiEmailSummarizer
+    GeminiEmailSummarizer,
+    OpenAIEmailSummarizer,
+    ProcessingStrategy,
+    get_summarizer,
 )
-from app.routers.user_router import get_current_user
-from app.services.database.factories import (
-    get_summary_service,
-    get_email_service
-)
+from app.services.summarization.base import AdaptiveSummarizer
+
+# -------------------------------------------------------------------------
+# Router Configuration
+# -------------------------------------------------------------------------
+
+router = APIRouter()
 
 # Add specific configuration for pymongo's logger
 logging.getLogger('pymongo').setLevel(logging.WARNING)
+logger = get_logger(__name__, 'router')
 
-# Create module-specific logger
-logger = logging.getLogger(__name__)
-
-router = APIRouter()
+# -------------------------------------------------------------------------
+# Endpoints
+# -------------------------------------------------------------------------
 
 @router.get(
     "/batch", 
@@ -78,15 +86,17 @@ async def get_summaries_by_ids(
         if not result['summaries']:
             if result['missing_emails'] and not result['failed_summaries']:
                 # Only missing emails, no generation failures
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail=f"Emails not found: {result['missing_emails']}"
+                raise standardize_error_response(
+                    Exception("Emails not found"), 
+                    "get summaries by ids", 
+                    result['missing_emails']
                 )
             elif result['failed_summaries'] and not result['missing_emails']:
                 # Only generation failures, no missing emails
-                raise HTTPException(
-                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                    detail=f"Failed to generate summaries for emails: {result['failed_summaries']}"
+                raise standardize_error_response(
+                    Exception("Failed to generate summaries"), 
+                    "get summaries by ids", 
+                    result['failed_summaries']
                 )
             else:
                 # Both missing emails and generation failures
@@ -94,14 +104,15 @@ async def get_summaries_by_ids(
                     "missing_emails": result['missing_emails'],
                     "failed_summaries": result['failed_summaries']
                 }
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail=f"No summaries could be generated: {error_details}"
+                raise standardize_error_response(
+                    Exception("No summaries could be generated"), 
+                    "get summaries by ids", 
+                    error_details
                 )
         
         # If we have some successful summaries but also some failures, log a warning
         if result['missing_emails'] or result['failed_summaries']:
-            logger.warning(
+            log_operation(logger, 'warning', f"Partial success for user {user.google_id}: "
                 f"Partial success for user {user.google_id}: "
                 f"{len(result['summaries'])} successful, "
                 f"{len(result['missing_emails'])} missing, "
@@ -114,11 +125,7 @@ async def get_summaries_by_ids(
         # Re-raise HTTP exceptions as-is
         raise
     except Exception as e:
-        logger.error(f"Error retrieving/generating summaries by IDs: {str(e)}", exc_info=True)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to retrieve email summaries: {str(e)}"
-        )
+        raise standardize_error_response(e, "retrieve/generate summaries by IDs")
 
 @router.get(
     "/", 
@@ -233,12 +240,7 @@ async def get_summaries(
             )
             
     except Exception as e:
-        # Log the full error for debugging
-        logger.error(f"Error processing summaries: {str(e)}", exc_info=True)
-        raise HTTPException(
-            status_code=500,
-            detail="Failed to process email summaries"
-        )
+        raise standardize_error_response(e, "process email summaries")
 
 @router.get(
     "/recent/{days}", 
@@ -265,7 +267,7 @@ async def get_recent_summaries(
     """
     try:
         # Log request parameters
-        logger.debug(f"Getting recent summaries for user {user.email} - days: {days}, limit: {limit}")
+        log_operation(logger, 'debug', f"Getting recent summaries for user {user.email} - days: {days}, limit: {limit}")
         
         # Get summaries from service
         summaries = await summary_service.get_recent_summaries(
@@ -274,22 +276,10 @@ async def get_recent_summaries(
             google_id=user.google_id
         )
         
-        logger.debug(f"Retrieved {len(summaries)} summaries for user {user.email}")
+        log_operation(logger, 'debug', f"Retrieved {len(summaries)} summaries for user {user.email}")
         return summaries
     except Exception as e:
-        logger.error(
-            f"Error retrieving recent summaries for user {user.email}: {str(e)}",
-            exc_info=True,
-            extra={
-                "user_email": user.email,
-                "days": days,
-                "limit": limit
-            }
-        )
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve recent summaries"
-        )
+        raise standardize_error_response(e, "retrieve recent summaries")
 
 @router.get(
     "/keyword/{keyword}", 
@@ -322,11 +312,7 @@ async def search_by_keyword(
         results = await summary_service.search_by_keywords([keyword], limit=limit, google_id=user.google_id)
         return results
     except Exception as e:
-        logging.error(f"Error searching summaries by keyword: {str(e)}", exc_info=True)
-        raise HTTPException(
-            status_code=500,
-            detail="Failed to search summaries"
-        )
+        raise standardize_error_response(e, "search summaries by keyword")
 
 @router.get("/{email_id}", response_model=SummarySchema)
 async def get_summary_by_id(
@@ -351,19 +337,16 @@ async def get_summary_by_id(
         # Get summary from repository
         summary = await summary_service.get_or_create_summary(email_id, summarizer, user.google_id)
         if not summary:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Summary not found for email {email_id}"
+            raise standardize_error_response(
+                Exception("Summary not found"), 
+                "get summary", 
+                email_id
             )
             
         return SummarySchema(**summary)
         
     except Exception as e:
-        logger.error(f"Error retrieving/generating summary: {e}", exc_info=True)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=str(e)
-        )
+        raise standardize_error_response(e, "retrieve/generate summary", email_id)
 
 @router.post(
     "/summarize", 
@@ -415,11 +398,7 @@ async def summarize_single_email(
         return summary
         
     except Exception as e:
-        logging.error(f"Error summarizing email: {str(e)}", exc_info=True)
-        raise HTTPException(
-            status_code=500,
-            detail="Failed to generate email summary"
-        )
+        raise standardize_error_response(e, "generate email summary")
 
 @router.delete(
     "/{email_id}",
@@ -448,8 +427,9 @@ async def delete_summary(
     """
     deleted = await summary_service.delete_summary(email_id, user.google_id)
     if not deleted:
-        raise HTTPException(
-            status_code=404,
-            detail=f"Summary for email {email_id} not found"
+        raise standardize_error_response(
+            Exception("Summary not found"), 
+            "delete summary", 
+            email_id
         )
     return {"message": f"Summary for email {email_id} deleted"}

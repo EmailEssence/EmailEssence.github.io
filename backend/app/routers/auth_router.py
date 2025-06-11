@@ -6,69 +6,47 @@ token management, and authentication status verification. It supports secure acc
 via OAuth2 to retrieve and process email data.
 """
 
+# Standard library imports
+import base64
 import json
 import urllib.parse
-import base64
 import uuid
-import logging
 
-from fastapi import APIRouter, HTTPException, status, Depends, Query, Form
-from fastapi.security import OAuth2PasswordBearer
-from fastapi.responses import RedirectResponse, HTMLResponse
+# Third-party imports
+from fastapi import APIRouter, Depends, Form, HTTPException, Query, status
+from fastapi.responses import HTMLResponse, RedirectResponse
 from google.auth.transport.requests import Request as GoogleRequest
 from google.oauth2.credentials import Credentials
-from starlette.concurrency import run_in_threadpool
-# from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
+from starlette.concurrency import run_in_threadpool
 
-from app.services.auth_service import AuthService, SCOPES
+# Internal imports
+from app.dependencies import get_current_user_email, oauth2_scheme
+from app.utils.helpers import get_logger, log_operation
+from app.models import (
+    AuthStatusResponse,
+    ExchangeCodeRequest,
+    RefreshTokenRequest,
+    TokenData,
+    TokenResponse,
+    VerifyTokenRequest,
+)
+from app.services.auth_service import SCOPES, AuthService
+from app.services.database.factories import get_auth_service, get_user_service
 from app.services.user_service import UserService
 from app.utils.config import get_settings
-from app.services.database.factories import get_auth_service, get_user_service
-from app.models import TokenData, TokenResponse, AuthStatusResponse, ExchangeCodeRequest, RefreshTokenRequest, VerifyTokenRequest
+
+# -------------------------------------------------------------------------
+# Router Configuration
+# -------------------------------------------------------------------------
 
 router = APIRouter()
 settings = get_settings()
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, 'router')
 
-# -- Authentication Schemes --
-
-# This is a simpler authentication scheme for Swagger UI
-# It only shows a token field without client_id/client_secret
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token", description="Enter the token you received from the login flow (without Bearer prefix)")
-
-# -- Authentication Utility --
-
-async def get_current_user_email(
-    token: str = Depends(oauth2_scheme),
-    auth_service: AuthService = Depends(get_auth_service)
-):
-    """
-    Dependency to extract user email from valid token.
-    Will raise 401 automatically if token is invalid.
-    
-    Args:
-        token: JWT token from OAuth2 authentication
-        auth_service: Auth service instance
-        
-    Returns:
-        str: User's email address
-        
-    Raises:
-        HTTPException: 401 error if token is invalid
-    """
-    try:
-        # Get user info from token
-        user_data = await auth_service.get_credentials_from_token(token)
-        return user_data['email']
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid authentication credentials",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-# -- Endpoints --
+# -------------------------------------------------------------------------
+# Endpoints
+# -------------------------------------------------------------------------
 
 @router.get(
     "/login", 
@@ -94,7 +72,7 @@ async def login(
     Returns:
         RedirectResponse: Redirects to Google's authentication page
     """
-    logger.debug(f"Login initiated - Redirect URI: {redirect_uri}")
+    log_operation(logger, 'debug', f"Login initiated - Redirect URI: {redirect_uri}")
 
     try:
         # Create a state object that includes the frontend redirect URI
@@ -110,17 +88,13 @@ async def login(
         result = auth_service.create_authorization_url(encoded_custom_state)
         authorization_url = result["authorization_url"]
 
-        logger.debug(f"Generated Google OAuth URL: {authorization_url}")
+        log_operation(logger, 'debug', f"Generated Google OAuth URL: {authorization_url}")
         
         # Now redirect to the correct URL
         return RedirectResponse(authorization_url)
 
     except Exception as e:
-        logger.error(f"[ERROR] Login failed: {str(e)}", exc_info=True)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to create authorization URL: {str(e)}"
-        )
+        raise standardize_error_response(e, "login")
 
 @router.get("/callback")
 async def callback(
@@ -141,7 +115,7 @@ async def callback(
     Returns:
         RedirectResponse: Redirects to frontend with authentication state
     """
-    logger.debug(f"Received callback with code: {code}")
+    log_operation(logger, 'debug', f"Received callback with code: {code}")
     
     try:
         if not state:
@@ -151,13 +125,13 @@ async def callback(
         decoded_state = json.loads(base64.urlsafe_b64decode(state).decode())
         frontend_url = decoded_state.get("redirect_uri")
 
-        logger.debug(f"Decoded state - Redirecting to frontend: {frontend_url}")
+        log_operation(logger, 'debug', f"Decoded state - Redirecting to frontend: {frontend_url}")
 
         if not frontend_url:
             raise ValueError("Missing redirect URI in state parameter")
 
         # Exchange code for tokens and get user info in one step
-        logger.debug("Exchanging code for tokens and getting user info...")
+        log_operation(logger, 'debug', "Exchanging code for tokens and getting user info...")
         token_data = await auth_service.get_tokens_from_code(code, None)  # First exchange
         
         # Get user info using the token
@@ -178,7 +152,7 @@ async def callback(
         )
         
         user_email = user_info.get('email')
-        logger.debug(f"User email retrieved: {user_email}")
+        log_operation(logger, 'debug', f"User email retrieved: {user_email}")
         
         if not user_email:
             raise ValueError("Could not retrieve user email from Google")
@@ -186,7 +160,7 @@ async def callback(
         # Check if user exists, create if not
         user = await user_service.get_user_by_email(user_email)
         if not user:
-            logger.debug(f"Creating new user: {user_email}")
+            log_operation(logger, 'info', f"Creating new user: {user_email}")
             user = await user_service.create_user({
                 "email": user_email,
                 "name": user_info.get("name", ""),
@@ -194,7 +168,7 @@ async def callback(
                 "google_id": user_info.get("id")
             })
         else:
-            logger.debug(f"Found existing user: {user_email}")
+            log_operation(logger, 'info', f"Found existing user: {user_email}")
         
         # Special handling for Swagger UI testing
         if "localhost:8000/docs" in frontend_url or "/docs" in frontend_url:
@@ -234,7 +208,7 @@ async def exchange_code(
     Requires the user's email to associate the tokens.
     """
     
-    logger.debug(f"Exchanging OAuth code for user: {request.user_email}")
+    log_operation(logger, 'info', f"Exchanging OAuth code for user: {request.user_email}")
     try:
         if not request.code or not request.user_email:
             raise HTTPException(
@@ -245,7 +219,7 @@ async def exchange_code(
         # Exchange auth code for tokens and store them in MongoDB
         tokens = await auth_service.get_tokens_from_code(request.code, request.user_email)
         
-        logger.debug(f"Token exchange successful for {request.user_email}")
+        log_operation(logger, 'debug', f"Token exchange successful for {request.user_email}")
         return TokenResponse(
             access_token=tokens.token,
             token_type="bearer",
@@ -254,11 +228,8 @@ async def exchange_code(
         )
         
     except Exception as e:
-        logger.error(f"[ERROR] Code exchange failed: {str(e)}", exc_info=True)
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Failed to exchange code for tokens: {str(e)}"
-        )
+        log_operation(logger, 'error', f"Code exchange failed: {str(e)}")
+        raise standardize_error_response(e, "exchange code")
 
 @router.get("/token", response_model=TokenResponse)
 async def get_token(
@@ -278,10 +249,7 @@ async def get_token(
             token_type="bearer"
         )
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Token retrieval failed: {str(e)}"
-        )
+        raise standardize_error_response(e, "get token")
 
 @router.post("/refresh", response_model=TokenResponse)
 async def refresh_token(
@@ -308,10 +276,7 @@ async def refresh_token(
             token_type="bearer"
         )
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Token refresh failed: {str(e)}"
-        )
+        raise standardize_error_response(e, "refresh token")
 
 @router.get("/status", response_model=AuthStatusResponse)
 async def auth_status(
@@ -328,7 +293,7 @@ async def auth_status(
         user_data = await auth_service.get_credentials_from_token(token)
         user_google_id = user_data['google_id']
         
-        logger.debug(f"User google_id extracted from token: {user_google_id}")
+        log_operation(logger, 'debug', f"User google_id extracted from token: {user_google_id}")
         
         # Get detailed credentials from the database using that email
         try:
@@ -359,7 +324,7 @@ async def auth_status(
             
     except Exception as e:
         # Token validation failed
-        logger.error(f"[ERROR] Auth status check failed: {str(e)}", exc_info=True)
+        log_operation(logger, 'error', f"Auth status check failed: {str(e)}")
         return AuthStatusResponse(
             is_authenticated=False,
             token_valid=False,
@@ -582,7 +547,4 @@ async def token_endpoint(
             "token_type": "bearer"
         }
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Failed to store token: {str(e)}"
-        )
+        raise standardize_error_response(e, "token endpoint")

@@ -6,20 +6,30 @@ fetching individual email details, marking emails as read, and deleting emails.
 It provides a set of REST endpoints for interacting with the user's email data.
 """
 
-from fastapi import APIRouter, HTTPException, Query, Depends, status
+# Standard library imports
 from typing import Optional
-import logging
 
-from app.models.email_models import EmailSchema, EmailResponse, ReaderViewResponse
+# Third-party imports
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+
+# Internal imports
+from app.dependencies import get_current_user
+from app.utils.helpers import get_logger, log_operation, standardize_error_response
+from app.models.email_models import EmailResponse, EmailSchema, ReaderViewResponse
 from app.models.user_models import UserSchema
-from app.routers.user_router import get_current_user
 from app.services.database.factories import get_email_service
 from app.services.email_service import EmailService
 
-router = APIRouter()
+# -------------------------------------------------------------------------
+# Router Configuration
+# -------------------------------------------------------------------------
 
-# Create module-specific logger
-logger = logging.getLogger(__name__)
+router = APIRouter()
+logger = get_logger(__name__, 'router')
+
+# -------------------------------------------------------------------------
+# Endpoints
+# -------------------------------------------------------------------------
 
 @router.get(
     "/", 
@@ -78,8 +88,8 @@ async def retrieve_emails(
     
     try:
         # Log request parameters
-        logger.debug(f"Email retrieval request with refresh={refresh}", extra={"params": debug_info["request_params"]})
-        logger.debug(f"Google ID for email retrieval: {user.google_id}")
+        log_operation(logger, 'debug', f"Email retrieval request with refresh={refresh}", extra={"params": debug_info["request_params"]})
+        log_operation(logger, 'debug', f"Google ID for email retrieval: {user.google_id}")
         
         emails, total, service_debug_info = await email_service.fetch_emails(
             google_id=user.google_id,
@@ -95,7 +105,7 @@ async def retrieve_emails(
         
         # Combine debug info
         debug_info.update(service_debug_info)
-        logger.info(f"Retrieved {len(emails)} emails out of {total} total")
+        log_operation(logger, 'info', f"Retrieved {len(emails)} emails out of {total} total")
         
         return EmailResponse(
             emails=emails,
@@ -105,9 +115,7 @@ async def retrieve_emails(
         )
         
     except Exception as e:
-        error_msg = f"Failed to retrieve emails: {str(e)}"
-        logger.exception(error_msg)  # This logs the full stack trace
-        raise HTTPException(status_code=500, detail=error_msg)
+        raise standardize_error_response(e, "retrieve emails")
 
 @router.get(
     "/{email_id}", 
@@ -136,7 +144,11 @@ async def retrieve_email(
     """
     email = await email_service.get_email(email_id, user.google_id)
     if not email:
-        raise HTTPException(status_code=404, detail="Email not found")
+        raise standardize_error_response(
+            Exception("Email not found"), 
+            "get email", 
+            email_id
+        )
     return email
 
 @router.put(
@@ -166,7 +178,11 @@ async def mark_email_as_read(
     """
     updated_email = await email_service.mark_email_as_read(email_id, user.google_id)
     if not updated_email:
-        raise HTTPException(status_code=404, detail="Email not found")
+        raise standardize_error_response(
+            Exception("Email not found"), 
+            "mark email as read", 
+            email_id
+        )
     return updated_email
 
 @router.delete(
@@ -196,7 +212,11 @@ async def delete_email(
     """
     success = await email_service.delete_email(email_id, user.google_id)
     if not success:
-        raise HTTPException(status_code=404, detail="Email not found")
+        raise standardize_error_response(
+            Exception("Email not found"), 
+            "delete email", 
+            email_id
+        )
     return {"message": "Email deleted successfully"}
 
 @router.get(
@@ -230,13 +250,15 @@ async def get_email_reader_view(
         reader_content = await email_service.get_email_reader_view(email_id, user.google_id)
         
         if not reader_content:
-            raise HTTPException(status_code=404, detail="Email not found")
+            raise standardize_error_response(
+                Exception("Email not found"), 
+                "get email reader view", 
+                email_id
+            )
             
         return reader_content
         
     except Exception as e:
         if isinstance(e, HTTPException):
             raise e
-        error_msg = f"Failed to generate reader view: {str(e)}"
-        logger.exception(error_msg)
-        raise HTTPException(status_code=500, detail=error_msg)
+        raise standardize_error_response(e, "generate reader view", email_id)

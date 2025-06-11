@@ -1,10 +1,22 @@
 # uvicorn main:app --reload
+
+# Standard library imports
 import os
+from contextlib import asynccontextmanager
+import logging
+
+# Third-party imports
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
-from contextlib import asynccontextmanager
-import logging
+
+# Internal imports
+from app.routers import emails_router, summaries_router, auth_router, user_router
+from app.services.database.connection import DatabaseConnection
+
+# -------------------------------------------------------------------------
+# Logging Configuration
+# -------------------------------------------------------------------------
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -13,11 +25,9 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 logging.getLogger("httpcore").setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
 
-from app.routers import emails_router, summaries_router, auth_router, user_router
-from app.services.database.connection import DatabaseConnection
-
-
-# from app.models.user_model import User
+# -------------------------------------------------------------------------
+# Database Lifecycle Management
+# -------------------------------------------------------------------------
 
 async def startup_db_client():
     """
@@ -53,6 +63,10 @@ async def lifespan(app: FastAPI):
     yield
     await shutdown_db_client()
 
+# -------------------------------------------------------------------------
+# FastAPI Application Setup
+# -------------------------------------------------------------------------
+
 app = FastAPI(
     title="Email Essence API",
     description="API for the Email Essence application",
@@ -62,6 +76,9 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+# -------------------------------------------------------------------------
+# Middleware Configuration
+# -------------------------------------------------------------------------
 
 # Configure CORS
 app.add_middleware(
@@ -83,7 +100,10 @@ app.add_middleware(
     allow_headers=["*"],  # Allows all headers
 )
 
-# API Route Handlers (definitions moved before router inclusions)
+# -------------------------------------------------------------------------
+# API Route Handlers
+# -------------------------------------------------------------------------
+
 @app.get("/", tags=["Root"])
 async def root():
     """
@@ -165,7 +185,10 @@ async def health_check():
     
     return health_status
 
-# Register Routers
+# -------------------------------------------------------------------------
+# Router Registration
+# -------------------------------------------------------------------------
+
 app.include_router(auth_router, prefix="/auth", tags=["Auth"])
 app.include_router(user_router, prefix="/user", tags=["User"])
 app.include_router(emails_router, prefix="/emails", tags=["Emails"])

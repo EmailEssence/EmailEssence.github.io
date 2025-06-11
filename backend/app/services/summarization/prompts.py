@@ -1,9 +1,17 @@
-# summarization/providers/prompts.py
+"""
+Prompt management for email summarization.
+
+This module provides abstract base classes and concrete implementations for managing
+prompts across different LLM providers.
+"""
+
+# Standard library imports
 from abc import ABC, abstractmethod
 from typing import Optional, Protocol, Dict, Any, runtime_checkable
 from dataclasses import dataclass, field
 from enum import Enum
 
+# Internal imports
 from app.utils.config import PromptVersion
 
 @dataclass
