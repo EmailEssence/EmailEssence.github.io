@@ -18,9 +18,9 @@ export function Settings({
   const handleDeleteAccount = async() => {
     //confirm if the user wants to delete their account
     if (!window.confirm("Are you sure you want to delete your account? This action is permanent and cannot be undone.")) return;
-    try {
+    try{
       const profile = await fetchUserProfile();
-      const userId = profile.id || profile.user_id;
+      const userId = profile.google_id
       await deleteUserById(userId);
 
       localStorage.removeItem("auth_token");
@@ -258,6 +258,7 @@ export const updateUserById = async (user_id) => {
 // @router.delete( "/user_id"), deletes user, deletes user account by user ID
 export const deleteUserById = async (user_id) => {
   const token = localStorage.getItem("auth_token");
+  
   const response = await fetch(`${baseUrl}/user/${user_id}`, {
     method: "DELETE",
     headers: {
