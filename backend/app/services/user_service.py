@@ -2,24 +2,22 @@
 User service for handling user-related operations.
 """
 
-import logging
+# Standard library imports
 from typing import Optional, Dict, Any
+
+# Third-party imports
 from fastapi import HTTPException, status
-from bson import ObjectId
-from google.oauth2.credentials import Credentials
 
-# Import from app modules
-from app.models import UserSchema, TokenData, PreferencesSchema
-from app.services.database import UserRepository, get_user_repository
+# Internal imports
+from app.utils.helpers import get_logger, log_operation, standardize_error_response
+from app.models import UserSchema, PreferencesSchema
+from app.services.database import get_user_repository, UserRepository
 
-# Configure logging
-logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'
-)
+# -------------------------------------------------------------------------
+# Configuration
+# -------------------------------------------------------------------------
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, 'service')
 
 class UserService:
     """
@@ -31,16 +29,14 @@ class UserService:
     - Managing user authentication state
     """
     
-    def __init__(self, user_repository: UserRepository):
+    def __init__(self, user_repository: UserRepository = None):
         """
         Initialize the user service.
         
         Args:
             user_repository: User repository instance
         """
-        self.user_repository = user_repository
-        # Note: We can't call ensure_indexes here because it's async
-        # The indexes will be created on first use
+        self.user_repository = user_repository or get_user_repository()
 
     async def get_user(self, user_id: str) -> Optional[UserSchema]:
         """
@@ -55,11 +51,7 @@ class UserService:
         try:
             return await self.user_repository.find_by_id(user_id)
         except Exception as e:
-            logger.error(f"Failed to get user: {e}")
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to get user"
-            )
+            raise standardize_error_response(e, "get user", user_id)
 
     async def get_user_by_email(self, email: str) -> Optional[UserSchema]:
         """
@@ -74,11 +66,7 @@ class UserService:
         try:
             return await self.user_repository.find_by_email(email)
         except Exception as e:
-            logger.error(f"Failed to get user by email: {e}")
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to get user by email"
-            )
+            raise standardize_error_response(e, "get user by email", email)
 
     async def create_user(self, user_data: Dict[str, Any]) -> UserSchema:
         """
@@ -90,7 +78,6 @@ class UserService:
         Returns:
             Created user
         """
-
         try:
             # Create a complete user data dictionary with all required fields
             complete_user_data = {
@@ -118,20 +105,17 @@ class UserService:
             user_id = await self.user_repository.insert_one(user)
             user._id = user_id
             
+            log_operation(logger, 'info', f"Created user: {user.email}")
             return user
         except Exception as e:
-            logger.error(f"Failed to create user: {e}")
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to create user"
-            )
+            raise standardize_error_response(e, "create user", user_data.get("email"))
 
-    async def update_user(self, user_id: str, user_data: Dict[str, Any]) -> Optional[UserSchema]:
+    async def update_user(self, google_id: str, user_data: Dict[str, Any]) -> Optional[UserSchema]:
         """
         Update a user.
         
         Args:
-            user_id: User ID
+            google_id: User Google ID
             user_data: Updated user data
             
         Returns:
@@ -139,49 +123,45 @@ class UserService:
         """
         try:
             # First get the current user to ensure it exists
-            current_user = await self.user_repository.find_by_id(user_id)
+            current_user = await self.user_repository.find_by_id(google_id)
             if not current_user:
-                logger.error(f"User not found: {user_id}")
+                log_operation(logger, 'warning', f"User not found: {google_id}")
                 return None
 
             # Update the user
-            success = await self.user_repository.update_one(user_id, user_data)
+            success = await self.user_repository.update_one(google_id, user_data)
             if not success:
-                logger.error(f"Update failed for user: {user_id}")
+                log_operation(logger, 'warning', f"Update failed for user: {google_id}")
                 return None
 
             # Get the updated user
-            updated_user = await self.user_repository.find_by_id(user_id)
+            updated_user = await self.user_repository.find_by_id(google_id)
             if not updated_user:
-                logger.error(f"Failed to fetch updated user: {user_id}")
+                log_operation(logger, 'warning', f"Failed to fetch updated user: {google_id}")
                 return None
 
+            log_operation(logger, 'info', f"Updated user: {google_id}")
             return UserSchema(**updated_user)
         except Exception as e:
-            logger.error(f"Failed to update user: {e}")
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to update user"
-            )
+            raise standardize_error_response(e, "update user", google_id)
 
-    async def delete_user(self, user_id: str) -> bool:
+    async def delete_user(self, google_id: str) -> bool:
         """
         Delete a user.
         
         Args:
-            user_id: User ID
+            google_id: User Google ID
             
         Returns:
             True if deleted, False otherwise
         """
         try:
-            return await self.user_repository.delete_one(user_id)
+            result = await self.user_repository.delete_by_google_id(google_id)
+            if result:
+                log_operation(logger, 'info', f"Deleted user: {google_id}")
+            return result
         except Exception as e:
-            logger.error(f"Failed to delete user: {e}")
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to delete user"
-            )
+            raise standardize_error_response(e, "delete user", google_id)
 
     async def get_preferences(self, google_id: str) -> Dict[str, Any]:
         """
@@ -194,15 +174,11 @@ class UserService:
             Dict[str, Any]: User preferences
         """
         try:
-            logger.debug(f"Fetching preferences for Google ID: {google_id}")
+            log_operation(logger, 'debug', f"Fetching preferences for Google ID: {google_id}")
             user = await self.user_repository.find_one({"google_id": google_id})
             return user.get("preferences", {}) if user else {}
         except Exception as e:
-            logger.error(f"Failed to get preferences: {e}")
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to get preferences"
-            )
+            raise standardize_error_response(e, "get preferences", google_id)
 
     async def update_preferences(self, google_id: str, preferences: Dict[str, Any]) -> bool:
         """
@@ -216,15 +192,13 @@ class UserService:
             bool: True if update successful
         """
         try:
-            logger.debug(f"Updating preferences for Google ID: {google_id}")
+            log_operation(logger, 'debug', f"Updating preferences for Google ID: {google_id}")
             result = await self.user_repository.update_one(
-        {"google_id": google_id},
-        {"$set": {"preferences": preferences}}
-    )
+                {"google_id": google_id},
+                {"$set": {"preferences": preferences}}
+            )
+            if result:
+                log_operation(logger, 'info', f"Updated preferences for user: {google_id}")
             return result
         except Exception as e:
-            logger.error(f"Failed to update preferences: {e}")
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to update preferences"
-            )
+            raise standardize_error_response(e, "update preferences", google_id)

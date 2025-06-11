@@ -1,30 +1,33 @@
 # uvicorn main:app --reload
+
+# Standard library imports
 import os
-from fastapi import FastAPI, HTTPException, Depends, status
-from fastapi.responses import FileResponse
-from fastapi.middleware.cors import CORSMiddleware
-from starlette.concurrency import run_in_threadpool
 from contextlib import asynccontextmanager
 import logging
+
+# Third-party imports
+from fastapi import FastAPI, HTTPException
+from fastapi.responses import FileResponse
+from fastapi.middleware.cors import CORSMiddleware
+
+# Internal imports
+from app.routers import emails_router, summaries_router, auth_router, user_router
+from app.services.database.connection import DatabaseConnection
+
+# -------------------------------------------------------------------------
+# Logging Configuration
+# -------------------------------------------------------------------------
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 # Reduce verbosity of httpx and httpcore
 logging.getLogger("httpx").setLevel(logging.WARNING)
 logging.getLogger("httpcore").setLevel(logging.WARNING)
+logger = logging.getLogger(__name__)
 
-from app.routers import emails_router, summaries_router, auth_router, user_router
-from app.services.database.connection import DatabaseConnection
-from app.models import EmailSchema, SummarySchema, UserSchema
-
-
-# from app.models.user_model import User
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    await startup_db_client()
-    yield
-    await shutdown_db_client()
+# -------------------------------------------------------------------------
+# Database Lifecycle Management
+# -------------------------------------------------------------------------
 
 async def startup_db_client():
     """
@@ -54,6 +57,16 @@ async def shutdown_db_client():
     except Exception as e:
         raise RuntimeError("Failed to close database connection") from e
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await startup_db_client()
+    yield
+    await shutdown_db_client()
+
+# -------------------------------------------------------------------------
+# FastAPI Application Setup
+# -------------------------------------------------------------------------
+
 app = FastAPI(
     title="Email Essence API",
     description="API for the Email Essence application",
@@ -63,6 +76,9 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+# -------------------------------------------------------------------------
+# Middleware Configuration
+# -------------------------------------------------------------------------
 
 # Configure CORS
 app.add_middleware(
@@ -84,15 +100,10 @@ app.add_middleware(
     allow_headers=["*"],  # Allows all headers
 )
 
-logger = logging.getLogger(__name__)
+# -------------------------------------------------------------------------
+# API Route Handlers
+# -------------------------------------------------------------------------
 
-# Register routers
-app.include_router(auth_router, prefix="/auth", tags=["Auth"])
-app.include_router(user_router, prefix="/user", tags=["User"])
-app.include_router(emails_router, prefix="/emails", tags=["Emails"])
-app.include_router(summaries_router, prefix="/summaries", tags=["Summaries"])
-
-# Root route handler
 @app.get("/", tags=["Root"])
 async def root():
     """
@@ -114,7 +125,7 @@ async def root():
         "status": "online"
     }
 
-# Serve favicon.ico from root directory
+# Serve favicon.ico from root directory - only served to swagger UI
 @app.get('/favicon.ico')
 async def favicon():
     root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -173,3 +184,12 @@ async def health_check():
         health_status["status"] = "unhealthy"
     
     return health_status
+
+# -------------------------------------------------------------------------
+# Router Registration
+# -------------------------------------------------------------------------
+
+app.include_router(auth_router, prefix="/auth", tags=["Auth"])
+app.include_router(user_router, prefix="/user", tags=["User"])
+app.include_router(emails_router, prefix="/emails", tags=["Emails"])
+app.include_router(summaries_router, prefix="/summaries", tags=["Summaries"])

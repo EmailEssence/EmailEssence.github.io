@@ -1,8 +1,11 @@
+# Standard library imports
 from typing import Protocol, List, Optional, Dict
 from enum import Enum, auto
-from pydantic import Field
 from dataclasses import dataclass
 from datetime import datetime, timezone
+
+# Third-party imports
+from pydantic import Field
 
 ModelConfig = Dict[str, any]
 
