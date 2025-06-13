@@ -11,6 +11,7 @@ function MiniViewPanel({
   setCurEmail,
   requestMoreEmails,
   emailsPerPage,
+  hasUnloadedEmails,
 }) {
   return (
     <div className="mini-view">
@@ -21,6 +22,7 @@ function MiniViewPanel({
         handlePageChange={handlePageChange}
         requestMoreEmails={requestMoreEmails}
         emailsPerPage={emailsPerPage}
+        hasUnloadedEmails={hasUnloadedEmails}
       />
     </div>
   );
@@ -52,12 +54,12 @@ function MiniViewBody({
   handlePageChange,
   requestMoreEmails,
   emailsPerPage,
+  hasUnloadedEmails,
 }) {
   const [pages, setPages] = useState(1);
-  const [maxed, setMaxed] = useState(false);
   const ref = useRef(null);
   let maxEmails = Math.min(pages * emailsPerPage, emailList.length);
-  let hasUnloadedEmails = maxEmails < emailList.length;
+  let hasLocallyUnloadedEmails = maxEmails < emailList.length;
 
   const handleScroll = async () => {
     const fullyScrolled =
@@ -66,10 +68,9 @@ function MiniViewBody({
           ref.current.clientHeight -
           ref.current.scrollTop
       ) <= 1;
-    if (fullyScrolled && !maxed) {
-      if (!hasUnloadedEmails) {
-        const haveWeMaxed = await requestMoreEmails();
-        setMaxed(haveWeMaxed);
+    if (fullyScrolled && (hasLocallyUnloadedEmails || hasUnloadedEmails)) {
+      if (hasUnloadedEmails) {
+        await requestMoreEmails();
       }
       setPages(pages + 1);
     }
@@ -127,6 +128,7 @@ const commonUtilityPropTypes = {
   emailList: PropTypes.array,
   requestMoreEmails: PropTypes.func,
   emailsPerPage: PropTypes.number,
+  hasUnloadedEmails: PropTypes.bool,
 };
 
 MiniViewPanel.propTypes = {
@@ -140,7 +142,7 @@ MiniViewHead.propTypes = {
 
 MiniViewBody.propTypes = {
   ...commonPropTypesDashboard,
-  commonUtilityPropTypes,
+  ...commonUtilityPropTypes,
 };
 
 MiniViewEmail.propTypes = {

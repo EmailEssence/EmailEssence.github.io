@@ -172,8 +172,6 @@ export default async function fetchEmails(pageSize, ...args) {
         received_at: parseDate(email.received_at),
       };
     });
-    console.log("returning");
-    console.log(processedEmails);
     return processedEmails;
   } catch (error) {
     console.error("Email processing error:", error);

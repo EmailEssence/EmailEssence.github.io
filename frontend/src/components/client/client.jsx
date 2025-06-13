@@ -17,6 +17,7 @@ function Client() {
   const [emailsPerPage, setEmailsPerPage] = useState(
     Math.max(1, Math.floor(window.innerHeight / 35))
   );
+  const [hasUnloadedEmails, setHasUnloadedEmails] = useState(true);
   const [client, dispatchClient] = useReducer(clientReducer, {
     expandedSideBar: false,
     emails: [],
@@ -127,7 +128,6 @@ function Client() {
   // requests a page worth of emails and adds to the current email list,
   // returns whether more emails exist or not
   const requestMoreEmails = async () => {
-    let noMoreEmails = true;
     console.log(
       `fetchEmails being called with ${emailsPerPage} & ${client.emails.length}`
     );
@@ -135,9 +135,10 @@ function Client() {
     console.log(`newEmails.length = ${newEmails.length}`);
     if (newEmails.length > 0) {
       handleAddEmails(newEmails);
-      noMoreEmails = false;
+      console.log(`Length: ${newEmails.length}`);
+    } else {
+      setHasUnloadedEmails(false);
     }
-    return noMoreEmails;
   };
 
   const handleSetCurEmail = (email) => {
@@ -229,6 +230,7 @@ function Client() {
                 requestMoreEmails={requestMoreEmails}
                 emailsPerPage={emailsPerPage}
                 requestSummaries={handleRequestSummaries}
+                hasUnloadedEmails={hasUnloadedEmails}
               />
             }
           />

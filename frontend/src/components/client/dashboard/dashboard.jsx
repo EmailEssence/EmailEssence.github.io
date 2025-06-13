@@ -12,6 +12,7 @@ function Dashboard({
   requestMoreEmails,
   emailsPerPage,
   requestSummaries,
+  hasUnloadedEmails,
 }) {
   return (
     <div className="dashboard">
@@ -27,6 +28,7 @@ function Dashboard({
         setCurEmail={setCurEmail}
         requestMoreEmails={requestMoreEmails}
         emailsPerPage={emailsPerPage}
+        hasUnloadedEmails={hasUnloadedEmails}
       />
     </div>
   );
@@ -119,6 +121,7 @@ Dashboard.propTypes = {
   requestMoreEmails: PropTypes.func,
   emailsPerPage: PropTypes.func,
   requestSummaries: PropTypes.func,
+  hasUnloadedEmails: PropTypes.bool,
 };
 
 WeightedEmailList.propTypes = {
