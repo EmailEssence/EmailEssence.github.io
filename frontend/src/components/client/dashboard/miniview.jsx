@@ -56,8 +56,8 @@ function MiniViewBody({
   const [pages, setPages] = useState(1);
   const [maxed, setMaxed] = useState(false);
   const ref = useRef(null);
-  const maxEmails = pages * emailsPerPage;
-  const hasUnloadedEmails = maxEmails < emailList.length;
+  let maxEmails = Math.min(pages * emailsPerPage, emailList.length);
+  let hasUnloadedEmails = maxEmails < emailList.length;
 
   const handleScroll = async () => {
     const fullyScrolled =
@@ -67,10 +67,11 @@ function MiniViewBody({
           ref.current.scrollTop
       ) <= 1;
     if (fullyScrolled && !maxed) {
-      setPages(pages + 1);
       if (!hasUnloadedEmails) {
-        setMaxed(await requestMoreEmails());
+        const haveWeMaxed = await requestMoreEmails();
+        setMaxed(haveWeMaxed);
       }
+      setPages(pages + 1);
     }
   };
 

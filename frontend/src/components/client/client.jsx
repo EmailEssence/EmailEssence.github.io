@@ -117,16 +117,27 @@ function Client() {
     }
   };
 
+  const handleSetEmails = (emails) => {
+    dispatchClient({
+      type: "emailAdd",
+      email: emails,
+    });
+  };
+
   // requests a page worth of emails and adds to the current email list,
   // returns whether more emails exist or not
   const requestMoreEmails = async () => {
+    let noMoreEmails = true;
+    console.log(
+      `fetchEmails being called with ${emailsPerPage} & ${client.emails.length}`
+    );
     const newEmails = await fetchEmails(emailsPerPage, client.emails.length);
+    console.log(`newEmails.length = ${newEmails.length}`);
     if (newEmails.length > 0) {
       handleAddEmails(newEmails);
-    } else {
-      return false;
+      noMoreEmails = false;
     }
-    return true;
+    return noMoreEmails;
   };
 
   const handleSetCurEmail = (email) => {
@@ -164,7 +175,7 @@ function Client() {
           element={
             <Loading
               emailsPerPage={emailsPerPage}
-              setInitialEmails={handleAddEmails}
+              setInitialEmails={handleSetEmails}
               setInitialEmail={handleSetCurEmail}
             />
           }

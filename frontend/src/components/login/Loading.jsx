@@ -13,6 +13,7 @@ export default function Loading({
 }) {
   const navigate = useNavigate();
   useEffect(() => {
+    // duplicate call
     async function getInitialData() {
       const initialEmails = await fetchEmails(emailsPerPage);
       if (user_id) getUserPreferences(user_id);
