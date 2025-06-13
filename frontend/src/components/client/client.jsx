@@ -149,22 +149,22 @@ function Client() {
   };
 
   const handleRequestSummaries = async (emails) => {
-    let curEmails = client.emails;
-    console.log("In handle request summaries");
-
-    const result = await Promise.all(
-      emails.map((email) => setSummary(email, curEmails))
-    );
-
-    result.forEach((res) => {
-      if (res.length > 0) {
-        curEmails = res;
-      }
+    const allEmails = client.emails;
+    const ids = emails.map((email) => {
+      return email.email_id;
     });
+    console.log("In handle request summaries");
+    const result = await Promise.all(
+      allEmails.map((email) => {
+        let newEmail = email;
+        if (ids.includes(email.email_id)) newEmail = setSummary(email);
+        return newEmail;
+      })
+    );
 
     dispatchClient({
       type: "emailAdd",
-      email: curEmails,
+      email: result,
     });
   };
 
@@ -204,6 +204,8 @@ function Client() {
                 curEmail={client.curEmail}
                 requestMoreEmails={requestMoreEmails}
                 requestSummaries={handleRequestSummaries}
+                hasUnloadedEmails={hasUnloadedEmails}
+                emailsPerPage={emailsPerPage}
               />
             }
           />

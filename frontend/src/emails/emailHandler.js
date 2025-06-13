@@ -111,16 +111,14 @@ async function getSummary(emailId) {
   }
 }
 
-export async function setSummary(email, emails) {
-  let curEmails = emails;
+export async function setSummary(email) {
   let curEmail = email;
   const summary = await getSummary(email.email_id);
-  if (!summary.valid) return [];
+  console.log(`${email.email_id}`);
+  if (!summary.valid) return email;
   curEmail.keywords = summary.keywords;
   curEmail.summary_text = summary.summary_text;
-  const index = curEmails.indexOf(email);
-  curEmails[index] = curEmail;
-  return curEmails;
+  return curEmail;
 }
 
 function parseDate(date) {

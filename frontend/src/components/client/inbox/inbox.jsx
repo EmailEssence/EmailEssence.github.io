@@ -1,13 +1,21 @@
 import PropTypes from "prop-types";
 import { useEffect, useRef, useState } from "react";
 import ArrowIcon from "../../../assets/InboxArrow";
-import { emailsPerPage } from "../../../assets/constants";
 import EmailDisplay from "./emailDisplay";
 import "./emailEntry.css";
 import "./emailList.css";
 import { trimList } from "../../../emails/emailHandler"; // shared API URL base
 
-function Inbox({ displaySummaries, emailList, setCurEmail, curEmail }) {
+function Inbox({
+  displaySummaries,
+  emailList,
+  setCurEmail,
+  curEmail,
+  requestMoreEmails,
+  requestSummaries,
+  hasUnloadedEmails,
+  emailsPerPage,
+}) {
   const [filteredEmails, setFilteredEmails] = useState(emailList);
 
   useEffect(() => {
@@ -26,6 +34,10 @@ function Inbox({ displaySummaries, emailList, setCurEmail, curEmail }) {
         curEmail={curEmail}
         onClick={setCurEmail}
         handleEmailSearch={handleEmailSearch}
+        requestMoreEmails={requestMoreEmails}
+        requestSummaries={requestSummaries}
+        hasUnloadedEmails={hasUnloadedEmails}
+        emailsPerPage={emailsPerPage}
       />
       <EmailDisplay key={curEmail?.email_id || "none"} curEmail={curEmail} />
     </div>
@@ -74,23 +86,29 @@ function InboxEmailList({
   curEmail,
   onClick,
   handleEmailSearch,
+  requestMoreEmails,
+  requestSummaries,
+  hasUnloadedEmails,
+  emailsPerPage,
 }) {
   // const [allEmailsLoaded, setAllEmailsLoaded] = useState(false);
   // const [loadingEmails, setLoadingEmails] = useState(false);
   const [pages, setPages] = useState(1);
   const ref = useRef(null);
   const maxEmails = Math.min(pages * emailsPerPage, emailList.length);
-  const hasUnloadedEmails = maxEmails < emailList.length;
+  const hasLocallyUnloadedEmails = maxEmails < emailList.length;
 
-  const handleScroll = () => {
-    // add external summary call
+  const handleScroll = async () => {
     const fullyScrolled =
       Math.abs(
         ref.current.scrollHeight -
           ref.current.clientHeight -
           ref.current.scrollTop
       ) <= 1;
-    if (fullyScrolled && hasUnloadedEmails) {
+    if (fullyScrolled && (hasLocallyUnloadedEmails || hasUnloadedEmails)) {
+      if (hasUnloadedEmails) {
+        await requestMoreEmails();
+      }
       setPages(pages + 1);
     }
   };
@@ -116,7 +134,7 @@ function InboxEmailList({
         />
       );
     }
-    // if (needsSummary.length > 0) getPageSummaries(needsSummary);
+    if (needsSummary.length > 0) requestSummaries(needsSummary);
     return returnBlock;
   };
   return (
@@ -154,11 +172,19 @@ function InboxEmailList({
 }
 
 // PropTypes
-Inbox.propTypes = {
+
+const sharedPropTypes = {
   displaySummaries: PropTypes.bool,
   emailList: PropTypes.array,
-  setCurEmail: PropTypes.func,
   curEmail: PropTypes.object,
+  requestMoreEmails: PropTypes.func,
+  requestSummaries: PropTypes.func,
+  hasUnloadedEmails: PropTypes.bool,
+  emailsPerPage: PropTypes.number,
+};
+Inbox.propTypes = {
+  ...sharedPropTypes,
+  setCurEmail: PropTypes.func,
 };
 
 EmailEntry.propTypes = {
@@ -169,9 +195,7 @@ EmailEntry.propTypes = {
 };
 
 InboxEmailList.propTypes = {
-  displaySummaries: PropTypes.bool,
-  emailList: PropTypes.array,
-  curEmail: PropTypes.object,
+  ...sharedPropTypes,
   onClick: PropTypes.func,
   handleEmailSearch: PropTypes.func,
 };
