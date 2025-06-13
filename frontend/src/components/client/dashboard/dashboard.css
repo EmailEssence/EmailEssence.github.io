@@ -36,6 +36,10 @@
   gap: 1rem;
 }
 
+.dashboard .welist-email-container.solo {
+  grid-template-columns: 1fr;
+}
+
 .dashboard .email-link {
   color: var(--icon-color);
   border-radius: 0.2rem;

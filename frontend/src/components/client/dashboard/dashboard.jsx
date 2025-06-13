@@ -40,7 +40,7 @@ function WeightedEmailList({
   handlePageChange,
   requestSummaries,
 }) {
-  const [WEEmails, setWEEmails] = useState([]);
+  const [WEEmails, setWEEmails] = useState(startMiniView(emailList.length));
 
   useEffect(() => {
     async function fetchEmails() {
@@ -53,18 +53,6 @@ function WeightedEmailList({
     }
     fetchEmails();
   }, [emailList, requestSummaries]);
-  // const emails = async () => {
-  //   const WEList = getTop5(emailList);
-  //   let needSummaries = WEList.filter(
-  //     (email) => email.summary_text.length < 1 && email.keywords.length < 1
-  //   );
-  //   if (needSummaries.legnth > 0) await requestSummaries(needSummaries);
-  //   const returnBlock = [];
-  //   for (let i = 0; i < WEList.length; i++) {
-  //     returnBlock.push();
-  //   }
-  //   return returnBlock;
-  // };
   return (
     <div className="weighted-email-list-container">
       {WEEmails.map((email) => {
@@ -85,7 +73,21 @@ function WEListEmail({ email, setCurEmail, handlePageChange }) {
   const summary = () => {
     let returnBlock;
     if (email.summary_text.length > 0) {
-      returnBlock = <div className="summary">{email.summary_text}</div>;
+      returnBlock = (
+        <>
+          <div className="summary">{email.summary_text}</div>
+          <div
+            className="email-link"
+            data-testid={`WEListEmail${email.email_id}`}
+            onClick={() => {
+              setCurEmail(email); // Will not be reached when no email is present
+              handlePageChange("/client/inbox");
+            }}
+          >
+            <ViewIcon />
+          </div>
+        </>
+      );
     } else {
       returnBlock = <div className="summary loading"></div>;
     }
@@ -93,18 +95,12 @@ function WEListEmail({ email, setCurEmail, handlePageChange }) {
   };
 
   return (
-    <div className="welist-email-container">
+    <div
+      className={`welist-email-container ${
+        email.summary_text.length > 0 ? "" : " solo"
+      }`}
+    >
       {summary()}
-      <div
-        className="email-link"
-        data-testid={`WEListEmail${email.email_id}`}
-        onClick={() => {
-          setCurEmail(email);
-          handlePageChange("/client/inbox");
-        }}
-      >
-        <ViewIcon />
-      </div>
     </div>
   );
 }
@@ -131,6 +127,14 @@ WeightedEmailList.propTypes = {
 WEListEmail.propTypes = {
   ...commonPropTypesDashboard,
   email: PropTypes.object,
+};
+
+const startMiniView = (size) => {
+  let toReturn = [];
+  for (let i = 0; i < Math.min(size, 5); i++) {
+    toReturn.push({ email_id: i, summary_text: "" });
+  }
+  return toReturn;
 };
 
 export default Dashboard;
