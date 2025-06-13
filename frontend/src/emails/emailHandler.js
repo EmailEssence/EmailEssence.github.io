@@ -88,37 +88,27 @@ export async function getReaderView(emailId) {
 }
 
 async function getSummary(emailId) {
-  console.log(`getSummary is called for ${emailId}`);
-  return {
-    valid: true,
-    keywords: ["keyword1", "keyword2"],
-    summary_text: `example summary text #${emailId}`,
+  const option = {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
   };
-  // const option = {
-  //   method: "GET",
-  //   headers: {
-  //     Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
-  //     "Content-Type": "application/json",
-  //   },
-  // };
-  // try {
-  //   const req = new Request(
-  //     `${baseUrl}/summaries/?email_id=${emailId}`,
-  //     option
-  //   );
-  //   const response = await fetch(req);
-  //   if (!response.ok) {
-  //     throw new Error(`Failed to retrieve summaries: ${response.statusText}`);
-  //   }
-  //   let summary = await response.json();
-  //   summary.valid = true;
-  //   console.log(`Summary for ${emailId}:`);
-  //   console.log(summary);
-  //   return summary;
-  // } catch (error) {
-  //   console.error("Summary fetch error:", error);
-  //   return { valid: false };
-  // }
+  try {
+    const req = new Request(`${baseUrl}/summaries/${emailId}`, option);
+    const response = await fetch(req);
+    if (!response.ok) {
+      throw new Error(`Failed to retrieve summaries: ${response.statusText}`);
+    }
+    let summary = await response.json();
+    summary.valid = true;
+    return summary;
+  } catch (error) {
+    console.error("Summary fetch error:", error);
+    return { valid: false };
+  }
 }
 
 export async function setSummary(email, emails) {

@@ -49,8 +49,6 @@ function WeightedEmailList({
         return email.summary_text.length < 1 && email.keywords.length < 1;
       });
       if (needSummaries.length > 0) await requestSummaries(needSummaries);
-      console.log("We list is:");
-      console.log(WEList);
       setWEEmails(WEList);
     }
     fetchEmails();
