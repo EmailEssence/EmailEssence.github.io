@@ -33,26 +33,20 @@ class DatabaseConnection:
         if self._client is None:
             try:
                 settings = get_settings()
-                
-                # Configure connection options
+
+                # Define valid connection options
                 connection_options = {
-                    "serverSelectionTimeoutMS": 5000,  # 5 second timeout
-                    "connectTimeoutMS": 10000,        # 10 second connection timeout
-                    "retryWrites": True,              # Enable retryable writes
-                    "retryReads": True,               # Enable retryable reads
+                    #"serverSelectionTimeoutMS": 5000,
+                    #"connectTimeoutMS": 10000,
+                    "retryWrites": True,
+                    "retryReads": True,
+                    "maxPoolSize": 100,
+                    "minPoolSize": 2,
                 }
-                
+
                 self._client = AsyncIOMotorClient(
                     settings.mongo_uri,
-                    connection_options = 
-                    {
-                        #"serverSelectionTimeoutMS": 5000,
-                        #"connectTimeoutMS": 10000,
-                        "retryWrites": True,
-                        "retryReads": True,
-                        "maxPoolSize": 100,     # maximum concurrent connections
-                        "minPoolSize": 2,      # Minimum connections in the pool on startup
-                    }
+                    **connection_options
                 )
                 self._db = self._client.email_essence
                 
