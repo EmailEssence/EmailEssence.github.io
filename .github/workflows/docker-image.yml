@@ -49,6 +49,7 @@ jobs:
           TEST_GOOGLE_CLIENT_SECRET: ${{ secrets.TEST_GOOGLE_CLIENT_SECRET }}
           TEST_MONGO_URI: ${{ secrets.TEST_MONGO_URI }}
           TEST_OPENAI_API_KEY: ${{ secrets.TEST_OPENAI_API_KEY }}
+          TEST_OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           TEST_DEEPSEEK_API_KEY: ${{ secrets.TEST_DEEPSEEK_API_KEY }}
           TEST_GOOGLE_API_KEY: ${{ secrets.TEST_GEMINI_API_KEY }}
           TEST_SUMMARIZER_PROVIDER: ${{ secrets.TEST_SUMMARIZER_PROVIDER || 'openai' }}
