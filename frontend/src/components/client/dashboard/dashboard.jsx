@@ -41,9 +41,19 @@ function WeightedEmailList({ emailList, setCurEmail, handlePageChange }) {
 }
 
 function WEListEmail({ email, setCurEmail, handlePageChange }) {
+  const summary = () => {
+    let returnBlock;
+    if (email.summary_text.length > 0) {
+      returnBlock = <div className="summary">{email.summary_text}</div>;
+    } else {
+      returnBlock = <div className="summary loading"></div>;
+    }
+    return returnBlock;
+  };
+
   return (
     <div className="welist-email-container">
-      <div className="summary">{email.summary_text}</div>
+      {summary()}
       <div
         className="email-link"
         data-testid={`WEListEmail${email.email_id}`}

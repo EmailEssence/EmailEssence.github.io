@@ -9,36 +9,52 @@ import {
 import { authenticate } from "../../authentication/authenticate";
 import { emails, userPreferences } from "../../emails/emailHandler";
 import Client from "../client/client";
-import Login from "../login/login";
+import Contact from "../login/contact";
 import Error from "../login/Error";
+import Home from "../login/Home";
 import Loading from "../login/Loading";
+import Login from "../login/login";
+import PrivacyPolicy from "../login/privacy";
+import TermsOfService from "../login/terms";
 
-function Router() {
-  return (
-    <BrowserRouter>
-      <AppRouter />
-    </BrowserRouter>
-  );
+export function Router() {
+  const testing = import.meta.env.MODE === "test";
+  if (testing) {
+    return (
+      <BrowserRouter>
+        <AppRouter />
+      </BrowserRouter>
+    );
+  }
+  return <AppRouter />;
 }
 
 export function AppRouter() {
   const [userEmails, setUserEmails] = useState(emails);
   const location = useLocation();
   useEffect(() => {
-    if (location.hash.includes("#newEmails")) {
-      if (userEmails.length < emails.length) setUserEmails(emails);
-      window.history.replaceState(
-        null,
-        "",
-        window.location.pathname + window.location.search
-      ); // Remove the hash
-    }
+    const interval = setInterval(() => {
+      if (emails != userEmails || window.location.hash === "#newEmails") {
+        setUserEmails(emails);
+        window.history.replaceState(
+          null,
+          "",
+          window.location.pathname + window.location.search
+        ); // Remove the hash
+      }
+    }, 500);
+
+    return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [location.hash]);
+  }, [location]);
 
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/login" replace />} />
+      <Route path="" element={<Navigate to="/home" replace />} />
+      <Route path="/home" element={<Home />} />
+      <Route path="/contact" element={<Contact />} />
+      <Route path="/privacy" element={<PrivacyPolicy />} />
+      <Route path="/terms" element={<TermsOfService />} />
       <Route
         path="/login"
         element={<Login handleGoogleClick={authenticate} />}

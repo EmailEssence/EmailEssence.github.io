@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import ArrowIcon from "../../../assets/InboxArrow";
 import { emailsPerPage } from "../../../assets/constants";
 import EmailDisplay from "./emailDisplay";
+import { getPageSummaries } from "../../../emails/emailHandler";
 import "./emailEntry.css";
 import "./emailList.css";
 
@@ -21,6 +22,15 @@ function Inbox({ displaySummaries, emailList, setCurEmail, curEmail }) {
 }
 
 function EmailEntry({ displaySummary, email, onClick, selected }) {
+  const summary = () => {
+    let returnBlock;
+    if (email.summary_text.length > 0) {
+      returnBlock = <div className="summary">{email.summary_text}</div>;
+    } else {
+      returnBlock = <div className="summary loading"></div>;
+    }
+    return returnBlock;
+  };
   const date = getDate(email.received_at);
   return (
     <div
@@ -40,7 +50,10 @@ function EmailEntry({ displaySummary, email, onClick, selected }) {
       <div className="median-container">
         <div className="median"></div>
       </div>
-      {displaySummary && <div className="summary">{email.summary_text}</div>}
+      {displaySummary && summary()}
+      <div className="email-median-container">
+        <div className="median"></div>
+      </div>
     </div>
   );
 }
@@ -55,6 +68,7 @@ function InboxEmailList({ displaySummaries, emailList, curEmail, onClick }) {
   const hasUnloadedEmails = maxEmails < emailList.length;
 
   const handleScroll = () => {
+    // add external summary call
     const fullyScrolled =
       Math.abs(
         ref.current.scrollHeight -
@@ -73,7 +87,10 @@ function InboxEmailList({ displaySummaries, emailList, curEmail, onClick }) {
 
   const emails = () => {
     const returnBlock = [];
+    const needsSummary = [];
     for (let i = 0; i < maxEmails; i++) {
+      if (displaySummaries && emailList[i].summary_text === "")
+        needsSummary.push(emailList[i]);
       returnBlock.push(
         <EmailEntry
           key={emailList[i].email_id}
@@ -84,6 +101,7 @@ function InboxEmailList({ displaySummaries, emailList, curEmail, onClick }) {
         />
       );
     }
+    if (needsSummary.length > 0) getPageSummaries(needsSummary);
     return returnBlock;
   };
   return (

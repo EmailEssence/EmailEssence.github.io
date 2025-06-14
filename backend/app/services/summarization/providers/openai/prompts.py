@@ -1,5 +1,8 @@
-from dataclasses import dataclass, field
+# Standard library imports
+from dataclasses import dataclass
 from typing import Any, Dict, Optional
+
+# Internal imports
 from app.services.summarization.prompts import(
     PromptManager,
     EMAIL_SUMMARY_SYSTEM_PROMPT,

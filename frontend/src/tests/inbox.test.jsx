@@ -2,6 +2,7 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
 import Inbox from "../components/client/inbox/inbox";
 import EmailDisplay from "../components/client/inbox/emailDisplay";
+// import { getReaderView } from "../emails/emailHandler";
 
 // Need to implement scrolling test
 
@@ -23,7 +24,7 @@ for (let i = 2; i < 50; i++) {
     sender: "sender1@example.com",
     received_at: [2025, 2, 17],
     subject: `Subject ${i}`,
-    summary_text: `Summary ${i}`,
+    summary_text: i == 3 ? "" : `Summary ${i}`,
     body: `Body ${i}`,
     recipients: "recipient1@example.com",
     is_read: false,
@@ -100,6 +101,14 @@ describe("Email Display Component", () => {
   });
 
   it("renders ReaderView PopUp", () => {
+    vi.mock("../emails/emailHandler", async () => {
+      const original = await vi.importActual("../emails/emailHandler");
+      return {
+        ...original,
+        getReaderView: vi.fn(async () => "RVText"),
+      };
+    });
+    vi.useFakeTimers();
     // Create a mock portal in the test DOM
     const portal = document.createElement("div");
     portal.setAttribute("id", "portal");
@@ -110,9 +119,13 @@ describe("Email Display Component", () => {
     const button = screen.getByTestId("reader-view-button");
     fireEvent.click(button);
 
-    expect(screen.getByText("Click To Close")).toBeInTheDocument();
+    vi.advanceTimersByTime(1000);
+
+    expect(screen.getByTestId("loading")).toBeInTheDocument();
 
     // Clean up the portal after the test
     document.body.removeChild(portal);
+    vi.useRealTimers();
+    vi.clearAllMocks();
   });
 });

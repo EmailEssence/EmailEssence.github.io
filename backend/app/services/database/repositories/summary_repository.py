@@ -94,6 +94,19 @@ class SummaryRepository(BaseRepository[SummarySchema], ISummaryRepository):
             bool: True if deletion successful
         """
         return await self.delete_one({"email_id": email_id, "google_id": google_id})
+    
+    async def delete_by_google_id(self, google_id):
+        """
+        Delete all summaries attached to given Google user ID.
+        
+        Args:
+            google_id: Google ID of the user
+            
+        Returns:
+            bool: True if deletion successful
+        """
+        return await self.delete_many({"google_id": google_id})
+        
 
     async def find_many(
         self, 
