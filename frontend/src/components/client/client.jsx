@@ -107,21 +107,21 @@ function Client() {
       // add emails to the Front
       dispatchClient({
         type: "emailAdd",
-        email: [...emailsToAdd, ...client.emails],
+        theEmails: [...emailsToAdd, ...client.emails],
       });
     } else {
       // add emails to the back
       dispatchClient({
         type: "emailAdd",
-        email: [...client.emails, ...emailsToAdd],
+        theEmails: [...client.emails, ...emailsToAdd],
       });
     }
   };
 
-  const handleSetEmails = (emails) => {
+  const handleSetEmails = async (emails) => {
     dispatchClient({
       type: "emailAdd",
-      email: emails,
+      theEmails: emails,
     });
   };
 
@@ -141,7 +141,9 @@ function Client() {
     }
   };
 
-  const handleSetCurEmail = (email) => {
+  const handleSetCurEmail = async (email) => {
+    console.log("setting to email");
+    console.log(email);
     dispatchClient({
       type: "emailChange",
       email: email,
@@ -149,22 +151,27 @@ function Client() {
   };
 
   const handleRequestSummaries = async (emails) => {
-    const allEmails = client.emails;
     const ids = emails.map((email) => {
       return email.email_id;
     });
-    console.log("In handle request summaries");
-    const result = await Promise.all(
-      allEmails.map((email) => {
-        let newEmail = email;
-        if (ids.includes(email.email_id)) newEmail = setSummary(email);
-        return newEmail;
-      })
-    );
-
+    const result = setSummary(ids, client.emails);
+    const settledEmails = await Promise.allSettled(result);
+    const toSet = settledEmails
+      .filter((r) => r.status === "fulfilled")
+      .map((r) => r.value || r.result);
+    // console.log("In handle request summaries");
+    // const result = await Promise.all(
+    //   allEmails.map((email) => {
+    //     let newEmail = email;
+    //     if (ids.includes(email.email_id)) newEmail = setSummary(email);
+    //     return newEmail;
+    //   })
+    // );
+    console.log("setting to summary");
+    console.log(toSet);
     dispatchClient({
       type: "emailAdd",
-      email: result,
+      email: toSet,
     });
   };
 

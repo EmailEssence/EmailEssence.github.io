@@ -40,14 +40,15 @@ function WeightedEmailList({
   handlePageChange,
   requestSummaries,
 }) {
+  console.log(emailList);
   const [WEEmails, setWEEmails] = useState(startMiniView(emailList.length));
 
   useEffect(() => {
     async function fetchEmails() {
-      const WEList = getTop5(emailList);
-      let needSummaries = WEList.filter((email) => {
-        return email.summary_text.length < 1 && email.keywords.length < 1;
-      });
+      const WEList = getTop5(emailList) || [];
+      let needSummaries = WEList.filter(
+        (email) => email.summary_text.length < 1 && email.keywords.length < 1
+      );
       if (needSummaries.length > 0) await requestSummaries(needSummaries);
       setWEEmails(WEList);
     }
