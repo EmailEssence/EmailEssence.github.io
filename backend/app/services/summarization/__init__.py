@@ -17,6 +17,7 @@ from app.utils.config import Settings, get_settings, SummarizerProvider
 from .base import AdaptiveSummarizer
 from .providers.openai.openai import OpenAIEmailSummarizer
 from .providers.google.google import GeminiEmailSummarizer
+from .providers.openrouter.openrouter import OpenRouterEmailSummarizer
 from .types import ProcessingStrategy
 from .summary_service import SummaryService
 
@@ -27,6 +28,7 @@ __all__ = [
     'ProcessingStrategy',
     'OpenAIEmailSummarizer',
     'GeminiEmailSummarizer',
+    'OpenRouterEmailSummarizer',
     'get_summarizer'
 ]
 
@@ -68,6 +70,17 @@ async def get_summarizer(
                 api_key=settings.google_api_key,
                 prompt_version=settings.summarizer_prompt_version,
                 model=settings.summarizer_model,
+                batch_threshold=settings.summarizer_batch_threshold
+            )
+        case SummarizerProvider.OPENROUTER:
+            if not settings.openrouter_api_key:
+                raise HTTPException(
+                    status_code=500,
+                    detail="OpenRouter API key not configured"
+                )
+            return OpenRouterEmailSummarizer(
+                api_key=settings.openrouter_api_key,
+                prompt_version=settings.summarizer_prompt_version,
                 batch_threshold=settings.summarizer_batch_threshold
             )
         case _:

@@ -63,6 +63,16 @@ def get_logger(name: str, module_type: str = 'default') -> logging.Logger:
     logging_level = level_config.get(module_type, level_config['default'])
     
     logger.setLevel(logging_level)
+    
+    # Ensure the logger has a handler to output messages to the console
+    if not logger.handlers:
+        handler = logging.StreamHandler()
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        handler.setFormatter(formatter)
+        logger.addHandler(handler)
+        # Prevent logs from being passed to the root logger to avoid duplicate output
+        logger.propagate = False
+        
     return logger
 
 
