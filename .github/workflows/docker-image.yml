@@ -44,15 +44,15 @@ jobs:
           which pytest
           python -m pytest --maxfail=2
         env:
-          TEST_EMAIL_ACCOUNT: ${{ secrets.EMAIL_ACCOUNT }}
-          TEST_GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
-          TEST_GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
-          TEST_MONGO_URI: ${{ secrets.MONGO_URI }}
-          TEST_OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          TEST_OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
-          TEST_DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
-          TEST_GOOGLE_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          TEST_SUMMARIZER_PROVIDER: ${{ secrets.SUMMARIZER_PROVIDER || 'openrouter' }}
+          EMAIL_ACCOUNT: ${{ secrets.TEST_EMAIL_ACCOUNT }}
+          GOOGLE_CLIENT_ID: ${{ secrets.TEST_GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.TEST_GOOGLE_CLIENT_SECRET }}
+          MONGO_URI: ${{ secrets.TEST_MONGO_URI }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          GOOGLE_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          SUMMARIZER_PROVIDER: ${{ secrets.SUMMARIZER_PROVIDER || 'openrouter' }}
 
   # Add a placeholder job that will always run when tests are disabled
   test-skipped:
