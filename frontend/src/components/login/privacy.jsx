@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router";
 import Logo from "../../assets/Logo";
 import "./Home.css";
@@ -8,6 +8,8 @@ export default function PrivacyPolicy() {
     const homeRef = useRef(null);
     const overviewRef = useRef(null);
     const aboutRef = useRef(null);
+
+    useEffect(() => { window.scrollTo(0, 0);}, []); //scrolls to the top
 
     const scrollToSection = (ref) => {
         if (ref.current) {
