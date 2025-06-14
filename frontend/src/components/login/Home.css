@@ -1,5 +1,6 @@
 @import url("../../main.css");
 
+/* -----------------------Home Container & Layout------------------------ */
 .home {
   height: 100vh;
   background-color: var(--grey-split);
@@ -11,6 +12,7 @@
   background-color: var(--white);
 }
 
+/* -----------------------Navigation Bar------------------------ */
 .home .nav-container {
   position: fixed;
   top: 0;
@@ -51,6 +53,7 @@
   border-bottom: 2px solid var(--grey);
 }
 
+/* -----------------------Background Image & Container------------------------ */
 .background-container {
   position: relative;
   width: 100vw;
@@ -70,6 +73,7 @@
   left: 0;
 }
 
+/* -----------------------Title & Hero Section------------------------ */
 .home .title-container {
   display: flex;
   flex-direction: column;
@@ -126,6 +130,7 @@
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
+/* -----------------------Overview Section------------------------ */
 .home .overview-container {
   display: flex;
   flex-direction: column;
@@ -142,7 +147,6 @@
   align-items: center;
   justify-content: flex-start;
   text-align: left;
-
 }
 
 .home .overview-items {
@@ -181,7 +185,7 @@
   color: var(--black);
 }
 
-/* ------------------------------------------------------------------------------- */
+/* -----------Terms of Service, Privacy Policy, Contact Us, About Us-------------- */
 .home .terms-of-service,
 .privacy-policy,
 .contact-us,
@@ -207,7 +211,7 @@
   min-height: 80vh;
 }
 
-/*-----------------------------------footer----------------------------------------*/
+/* -----------------------Footer------------------------ */
 .footer-container {
   background-color: var(--grey-4);
   color: var(--black);
@@ -241,7 +245,7 @@
   color: var(--grey-light);
 }
 
-/*-----------------------------------Privacy Policy--------------------------------*/
+/* -----------------------Privacy Policy------------------------ */
 .privacy-policy {
   padding: 2.5rem 2rem;
   font-family: var(--font-family);
@@ -300,7 +304,7 @@
   text-decoration: underline;
 }
 
-/*-----------------------------------Terms of Service--------------------------------*/
+/* -----------------------Terms of Service------------------------ */
 .terms-of-service {
   padding: 2.5rem 2rem;
   font-family: var(--font-family);
@@ -355,7 +359,7 @@
   list-style-type: disc;
 }
 
-/*-----------------------------------Contact Us--------------------------------*/
+/* -----------------------Contact Us------------------------ */
 .contact-us {
   padding: 2.5rem 2rem;
   font-family: var(--font-family);

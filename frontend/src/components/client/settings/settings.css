@@ -7,6 +7,7 @@ body {
   background-color: var(--color-background);
 }
 
+/* ---------------------------Settings--------------------------------- */
 .settings {
   width: 100%;
   height: 100%;
@@ -31,6 +32,7 @@ body {
   position: relative;
 }
 
+/* ------------------------------Headings-------------------------------- */
 h2 {
   margin-right: 20px;
   color: var(--color-text);
@@ -40,7 +42,7 @@ h2 {
   line-height: normal;
 }
 
-/* The switch - the box around the slider */
+/* -----------------------------Settings Switch-------------------------- */
 .settings .switch {
   margin-left: auto;
   position: relative;
@@ -49,7 +51,6 @@ h2 {
   height: 20px;
 }
 
-/* Hide default HTML checkbox */
 .settings .switch input {
   opacity: 0;
   width: 0;
@@ -82,12 +83,12 @@ h2 {
   border-radius: 50%;
 }
 
-/* When the checkbox is checked, add a background color */
+/* Checked state for switch */
 .switch input:checked+.toggle {
   background-color: var(--color-toggle-border);
 }
 
-/* Move the slider when the checkbox is checked */
+/* Move the slider when checked */
 .switch input:checked+.toggle:before {
   transform: translateX(calc(1rem + 0.5vw));
   left: 75%;
@@ -103,6 +104,7 @@ h2 {
   border-radius: 50%;
 }
 
+/* --------------------------Email Fetch Interval-------------------------- */
 .email-fetch-interval {
   display: flex;
   flex-direction: column;
@@ -180,7 +182,7 @@ h2 {
   color: var(--color-slider-thumb);
 }
 
-/* Theme Toggle Styles */
+/* ---------------------------Theme Toggle-------------------------- */
 .theme-toggle-group {
   margin-left: auto;
   display: flex;
@@ -221,6 +223,7 @@ h2 {
   outline-offset: 2px;
 }
 
+/* -----------------------Logout and Delete Buttons------------------------ */
 .settings-account-actions {
   position: absolute;
   right: 2rem;
