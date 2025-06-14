@@ -531,6 +531,7 @@ class SummaryService:
                         if missing_emails:
                             # Generate summaries for missing emails
                             try:
+                                log_operation(logger, 'info', f"Attempting to generate summaries for {len(missing_emails)} emails.")
                                 new_summaries = await summarizer.summarize(
                                     missing_emails,
                                     strategy=ProcessingStrategy.ADAPTIVE
