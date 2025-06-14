@@ -15,7 +15,8 @@ from app.models import PreferencesSchema, UserSchema
 from app.services.auth_service import AuthService
 from app.services.user_service import UserService
 from app.services.email_service import EmailService
-from app.services.database.factories import get_auth_service, get_user_service, get_email_service
+from app.services.summarization.summary_service import SummaryService
+from app.services.database.factories import get_auth_service, get_user_service, get_email_service, get_summary_service
 
 # -------------------------------------------------------------------------
 # Router Configuration
@@ -280,7 +281,8 @@ async def delete_user(
     user_id: str,
     user_service: UserService = Depends(get_user_service),
     auth_service: AuthService = Depends(get_auth_service),
-    email_service: EmailService = Depends(get_email_service)
+    email_service: EmailService = Depends(get_email_service),
+    summary_service: SummaryService = Depends(get_summary_service)
 ) -> dict:
     """
     Delete a user.
@@ -289,6 +291,8 @@ async def delete_user(
         user_id: The ID of the user to delete
         user_service: Injected UserService instance
         auth_service: Injected AuthService instance
+        email_service: Injected EmailService instance
+        summary_service: Injected SummaryService instance
         
     Returns:
         dict: Success message
@@ -311,6 +315,16 @@ async def delete_user(
             "delete Emails by user ID", 
             user_id
        )
+    
+    # Note: This is commented out to avoid having to inccur the cost of deleting and resummarizing
+    
+    #successDeleteSummaries = await summary_service.delete_summaries_by_google_id(user_id)
+    #if not successDeleteSummaries:
+    #    raise standardize_error_response(
+    #        Exception("User not found"), 
+    #        "delete Summaries by user ID", 
+    #        user_id
+    #    )
     
     return {"message": "User deleted successfully"}
     
