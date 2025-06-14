@@ -107,21 +107,23 @@ function Client() {
       // add emails to the Front
       dispatchClient({
         type: "emailAdd",
-        theEmails: [...emailsToAdd, ...client.emails],
+        email: [...emailsToAdd, ...client.emails],
       });
     } else {
       // add emails to the back
       dispatchClient({
         type: "emailAdd",
-        theEmails: [...client.emails, ...emailsToAdd],
+        email: [...client.emails, ...emailsToAdd],
       });
     }
   };
 
   const handleSetEmails = async (emails) => {
+    console.log("setting to emails");
+    console.log(emails);
     dispatchClient({
       type: "emailAdd",
-      theEmails: emails,
+      email: emails,
     });
   };
 
@@ -142,8 +144,6 @@ function Client() {
   };
 
   const handleSetCurEmail = async (email) => {
-    console.log("setting to email");
-    console.log(email);
     dispatchClient({
       type: "emailChange",
       email: email,
@@ -151,24 +151,17 @@ function Client() {
   };
 
   const handleRequestSummaries = async (emails) => {
+    console.log("entered handlerequestssummaries");
     const ids = emails.map((email) => {
       return email.email_id;
     });
-    const result = setSummary(ids, client.emails);
+    const result = await setSummary(ids, client.emails);
     const settledEmails = await Promise.allSettled(result);
     const toSet = settledEmails
       .filter((r) => r.status === "fulfilled")
       .map((r) => r.value || r.result);
-    // console.log("In handle request summaries");
-    // const result = await Promise.all(
-    //   allEmails.map((email) => {
-    //     let newEmail = email;
-    //     if (ids.includes(email.email_id)) newEmail = setSummary(email);
-    //     return newEmail;
-    //   })
-    // );
-    console.log("setting to summary");
-    console.log(toSet);
+    console.log("setting to emails with summaries");
+    console.log(result);
     dispatchClient({
       type: "emailAdd",
       email: toSet,
