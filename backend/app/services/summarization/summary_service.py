@@ -280,6 +280,32 @@ class SummaryService:
         except Exception as e:
             raise standardize_error_response(e, "delete summary", email_id)
     
+    async def delete_summaries_by_google_id(self, google_id: str) -> bool:
+        """
+        Delete all summaries for a specific Google user ID.
+        
+        Args:
+            google_id: Google ID of the user whose summaries to delete
+            
+        Returns:
+            bool: True if any summaries were deleted, False otherwise
+            
+        Raises:
+            Exception: If database operation fails
+        """
+        try:
+            result = await self.summary_repository.delete_by_google_id({"google_id": google_id})
+            deleted = result.deleted_count > 0
+            
+            if deleted:
+                log_operation(logger, 'info', f"All summaries deleted for user {google_id}")
+            else:
+                log_operation(logger, 'info', f"No summaries found for user {google_id} to delete")
+                
+            return deleted
+        except Exception as e:
+            raise standardize_error_response(e, "delete summaries by google id", google_id)
+    
     async def save_summaries_batch(self, summaries: List[SummarySchema], google_id: str) -> Dict[str, int]:
         """
         Store multiple summaries in a single operation.

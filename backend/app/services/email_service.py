@@ -473,6 +473,23 @@ class EmailService:
             return await self.email_repository.delete_by_id(str(email_id), google_id)
         except Exception as e:
             self._handle_email_error(e, "delete", email_id, google_id)
+            
+    async def delete_emails(self, google_id: str) -> bool:
+        """
+        Deletes all emails attached to given Google ID.
+        
+        Args:
+            google_id: Google ID of the user
+            
+        Returns:
+            bool: True if deletion successful
+        """
+        try:
+            return await self.email_repository.delete_by_google_id(google_id)
+        except Exception as e:
+            self._handle_email_error(e, "delete", google_id)
+    
+    
     
     # -------------------------------------------------------------------------
     # Content Processing Methods

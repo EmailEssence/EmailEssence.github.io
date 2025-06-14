@@ -13,8 +13,10 @@ from app.dependencies import get_current_user, get_current_user_info
 from app.utils.helpers import get_logger, log_operation, standardize_error_response
 from app.models import PreferencesSchema, UserSchema
 from app.services.auth_service import AuthService
-from app.services.database.factories import get_auth_service, get_user_service
 from app.services.user_service import UserService
+from app.services.email_service import EmailService
+from app.services.summarization.summary_service import SummaryService
+from app.services.database.factories import get_auth_service, get_user_service, get_email_service, get_summary_service
 
 # -------------------------------------------------------------------------
 # Router Configuration
@@ -278,7 +280,9 @@ async def update_user(
 async def delete_user(
     user_id: str,
     user_service: UserService = Depends(get_user_service),
-    auth_service: AuthService = Depends(get_auth_service)
+    auth_service: AuthService = Depends(get_auth_service),
+    email_service: EmailService = Depends(get_email_service),
+    summary_service: SummaryService = Depends(get_summary_service)
 ) -> dict:
     """
     Delete a user.
@@ -287,6 +291,8 @@ async def delete_user(
         user_id: The ID of the user to delete
         user_service: Injected UserService instance
         auth_service: Injected AuthService instance
+        email_service: Injected EmailService instance
+        summary_service: Injected SummaryService instance
         
     Returns:
         dict: Success message
@@ -294,12 +300,31 @@ async def delete_user(
     Raises:
         HTTPException: 404 if user not found
     """
-    success = await user_service.delete_user(user_id)
-    if not success:
+    successDeleteUser = await user_service.delete_user(user_id)
+    if not successDeleteUser:
         raise standardize_error_response(
-            Exception("User not found"), 
-            "delete user", 
-            user_id
+            HTTPException(status_code=404, detail="User not found"),
+            action="delete user",
+            context=user_id
         )
+    
+    successDeleteEmails = await email_service.delete_emails(user_id)
+    if not successDeleteEmails:
+        raise standardize_error_response(
+            HTTPException(status_code=500, detail="Failed to delete user emails"),
+            action="delete emails by user ID",
+            context=user_id
+        )
+    
+    # Note: This is commented out to avoid having to inccur the cost of deleting and resummarizing
+    
+    #successDeleteSummaries = await summary_service.delete_summaries_by_google_id(user_id)
+    #if not successDeleteSummaries:
+    #    raise standardize_error_response(
+    #        HTTPException(status_code=404, detail="Summaries not found"),
+    #        action="delete summaries by user ID",
+    #        context=user_id
+    #)
+    
     return {"message": "User deleted successfully"}
     

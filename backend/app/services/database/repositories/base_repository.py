@@ -270,6 +270,22 @@ class BaseRepository(Generic[T]):
             return result.deleted_count > 0
         except Exception as e:
             raise
+    
+    async def delete_many(self, query: Dict[str, Any]) -> bool:
+        """
+        Delete multiple documents matching the query.
+        
+        Args:
+            query: MongoDB query filter
+            
+        Returns:
+            bool: True if deletion successful
+        """
+        try:
+            result = await self._get_collection().delete_many(query)
+            return result.deleted_count > 0
+        except Exception as e:
+            raise
 
     async def count_documents(self, query: Dict[str, Any]) -> int:
         """
