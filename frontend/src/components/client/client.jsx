@@ -9,6 +9,14 @@ import { clientReducer, userPreferencesReducer } from "./reducers";
 import { Settings } from "./settings/settings";
 import SideBar from "./sidebar/sidebar";
 
+/**
+ * Main client component for authenticated user experience.
+ * Handles sidebar, routing, user preferences, and periodic email fetching.
+ * @param {Object} props
+ * @param {Array<Email>} props.emailsByDate - List of emails grouped by date.
+ * @param {Object} props.defaultUserPreferences - Default user preferences.
+ * @returns {JSX.Element}
+ */
 function Client({
   emailsByDate,
   defaultUserPreferences = {
@@ -27,6 +35,10 @@ function Client({
     defaultUserPreferences
   );
 
+  /**
+   * Sets up an interval to fetch new emails based on user preference.
+   * @returns {void}
+   */
   useEffect(() => {
     const clock = setInterval(async () => {
       try {
@@ -38,12 +50,14 @@ function Client({
     return () => clearInterval(clock);
   }, [userPreferences.emailFetchInterval]);
 
+  // Dynamically update sidebar width
   const root = document.querySelector(":root");
   root.style.setProperty(
     "--sidebar-width",
     `calc(${client.expandedSideBar ? "70px + 5vw" : "30px + 2vw"})`
   );
 
+  /** Handles logo click to toggle sidebar expansion. */
   const handleLogoClick = () => {
     dispatchClient({
       type: "logoClick",
@@ -51,6 +65,10 @@ function Client({
     });
   };
 
+  /**
+   * Handles navigation between client pages.
+   * @param {string} pageName - The page route to navigate to.
+   */
   const handlePageChange = (pageName) => {
     const toChange = import.meta.env.MODE === "test" ? "/client" : null;
     if (toChange) {
@@ -60,6 +78,7 @@ function Client({
     }
   };
 
+  /** Toggles the summaries-in-inbox user preference. */
   const handleToggleSummariesInInbox = () => {
     dispatchUserPreferences({
       type: "isChecked",
@@ -67,6 +86,10 @@ function Client({
     });
   };
 
+  /**
+   * Sets the email fetch interval user preference.
+   * @param {number} interval - Interval in seconds.
+   */
   const handleSetEmailFetchInterval = (interval) => {
     dispatchUserPreferences({
       type: "emailFetchInterval",
@@ -74,6 +97,10 @@ function Client({
     });
   };
 
+  /**
+   * Sets the theme user preference.
+   * @param {string} theme - Theme name ("light", "system", "dark").
+   */
   const handleSetTheme = (theme) => {
     dispatchUserPreferences({
       type: "theme",
@@ -81,6 +108,10 @@ function Client({
     });
   };
 
+  /**
+   * Sets the currently selected email.
+   * @param {Email} email - The email object to set as current.
+   */
   const handleSetCurEmail = (email) => {
     dispatchClient({
       type: "emailChange",

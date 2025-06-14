@@ -2,6 +2,17 @@ import { useEffect, useState } from "react";
 import { baseUrl } from "../../../emails/emailHandler";
 import "./settings.css";
 
+/**
+ * Settings component for managing user preferences
+ * @param {Object} param0 - Component props
+ * @param {boolean} param0.isChecked - Indicates whether summaries are enabled
+ * @param {function} param0.handleToggleSummariesInInbox - Callback to toggle summaries
+ * @param {number} param0.emailFetchInterval - Current email fetch interval
+ * @param {function} param0.handleSetEmailFetchInterval - Callback to set email fetch interval
+ * @param {string} param0.theme - Current theme
+ * @param {function} param0.handleSetTheme - Callback to set theme
+ * @returns {JSX.Element}
+ */
 export function Settings({
   isChecked,
   handleToggleSummariesInInbox,
@@ -15,10 +26,15 @@ export function Settings({
     window.location.href = "/login";
   };
 
-  const handleDeleteAccount = async() => {
-    //confirm if the user wants to delete their account
+  /**
+   * Deletes the user account after confirmation, removes all user info from the database,
+   * and redirects to the login page.
+   * @async
+   * @returns {Promise<void>}
+   */
+  const handleDeleteAccount = async () => {
     if (!window.confirm("Are you sure you want to delete your EmailEssence Account? \nThis will remove all information associated with your gmail account from our server and lead to longer loading times when you log back in next time.")) return;
-    try{
+    try {
       const profile = await fetchUserProfile();
       const userId = profile.google_id
       await deleteUserById(userId);
@@ -31,8 +47,14 @@ export function Settings({
     };
   }
 
+
+  /**
+   * Custom hook to detect system theme preference
+   * This hook listens for changes in the user's system theme preference
+   * and updates the state accordingly.
+   * @returns {boolean} isDarkTheme - true if the system theme is dark, false otherwise
+   */
   const isDarkTheme = useSystemTheme();
-  // useEffect that sets the dark mode class when the theme is set to system
   useEffect(() => {
     if (theme === "system") {
       if (isDarkTheme) {
@@ -63,7 +85,7 @@ export function Settings({
   );
 }
 
-// component that renders the summary toggle switch for enabling/disabling summaries in the inbox
+/* Component that renders the summary toggle switch for enabling/disabling summaries in the inbox */
 export function SummariesInInbox({ isChecked, onToggle }) {
   return (
     <div className="settings-block">
@@ -76,7 +98,7 @@ export function SummariesInInbox({ isChecked, onToggle }) {
   );
 }
 
-// component that renders the email fetch interval slider
+/* Component that renders the email fetch interval slider */
 export function EmailFetchInterval({
   emailFetchInterval,
   onSetEmailFetchInterval,
@@ -101,11 +123,14 @@ export function EmailFetchInterval({
   );
 }
 
-// component that renders the buttons to switch between different themes
+/**
+ * Component that renders the theme switcher buttons
+ * @param {string} theme - The current theme
+ * @param {function} onSetTheme - Callback function to handle theme changes
+ * @returns {JSX.Element}
+ */
 export function Theme({ theme, onSetTheme }) {
-  const themes = ["light", "system", "dark"]; //array of themes
-
-  //function to handle theme change between light and dark through the buttons
+  const themes = ["light", "system", "dark"];
   const handleThemeChange = (setTheme) => {
     onSetTheme(setTheme);
     if (setTheme === "dark") {
@@ -123,14 +148,13 @@ export function Theme({ theme, onSetTheme }) {
       }
     }
   };
-
   return (
     <div className="settings-block">
       <h2>Theme</h2>
       <div className="theme-toggle-group">
-        {themes.map(
+        {themes.map( //renders the theme buttons
           (
-            t //renders the theme buttons
+            t
           ) => (
             <button
               key={t}
@@ -146,6 +170,7 @@ export function Theme({ theme, onSetTheme }) {
   );
 }
 
+/* Component that renders the logout button */
 export function Logout({ onLogout }) {
   return (
     <button className="logout" onClick={onLogout}>
@@ -154,6 +179,7 @@ export function Logout({ onLogout }) {
   );
 }
 
+/* Component that renders the delete account button */
 export function DeleteAccount({ onDelete }) {
   return (
     <button className="delete-account" onClick={onDelete}>
@@ -162,6 +188,11 @@ export function DeleteAccount({ onDelete }) {
   );
 }
 
+/**
+ * Custom hook to detect system theme preference
+ * This hook listens for changes in the user's system theme preference
+ * @returns {boolean} isDarkTheme - true if the system theme is dark, false otherwise
+ */
 const useSystemTheme = () => {
   const getCurrentTheme = () =>
     window.matchMedia("(prefers-color-scheme: dark)").matches;
@@ -180,7 +211,10 @@ const useSystemTheme = () => {
   return isDarkTheme;
 };
 
-//  @router.get("/me"), gets current users profile, Retrieves the authenticated user's profile
+/**
+ * Fetches the current user's profile information
+ * @returns {Promise<Object>} - The user's profile data
+ */
 export const fetchUserProfile = async () => {
   const token = localStorage.getItem("auth_token");
   const response = await fetch(`${baseUrl}/user/me`, {
@@ -195,7 +229,11 @@ export const fetchUserProfile = async () => {
   return response.json();
 };
 
-// @router.get("/preferences"), gets the user preferences, Retrieves the authenticated user's preferences settings
+
+/**
+ * Fetches the current user's preferences
+ * @returns {Promise<Object>} - The user's preferences data
+ */
 export const fetchUserPreferences = async () => {
   const token = localStorage.getItem("auth_token");
   const response = await fetch(`${baseUrl}/user/preferences`, {
@@ -210,7 +248,10 @@ export const fetchUserPreferences = async () => {
   return response.json();
 };
 
-// @router.put("/preferences"), updates the user preferences, Updates the authenticated user's preferences settings
+/**
+ * Fetches the user's preferences and updates them
+ * @returns {Promise<Object>} - The updated user's preferences data
+ */
 export const updateUserPreferences = async () => {
   const token = localStorage.getItem("auth_token");
   const response = await fetch(`${baseUrl}/user/preferences`, {
@@ -225,7 +266,10 @@ export const updateUserPreferences = async () => {
   return response.json();
 };
 
-// @router.get ("/user_id"). gets user by ID, retrieves user information by user ID
+/**
+ * Fetches a user by ID
+ * @returns {Promise<Object>} - The user's data
+ */
 export const fetchUserById = async () => {
   const token = localStorage.getItem("auth_token");
   const response = await fetch(`${baseUrl}/user/${user_id}`, {
@@ -240,7 +284,11 @@ export const fetchUserById = async () => {
   return response.json();
 };
 
-// @router.put("/user_id"), updates user, updates user information by user ID
+/**
+ * Updates a user by ID
+ * @param {string} user_id - The ID of the user to update
+  * @returns {Promise<Object>} - The updated user's data
+ */
 export const updateUserById = async (user_id) => {
   const token = localStorage.getItem("auth_token");
   const response = await fetch(`${baseUrl}/user/${user_id}`, {
@@ -255,10 +303,14 @@ export const updateUserById = async (user_id) => {
   return response.json();
 };
 
-// @router.delete( "/user_id"), deletes user, deletes user account by user ID
+/**
+ * Deletes a user by ID
+ * @param {string} user_id - The ID of the user to delete
+ * @returns {Promise<Object>} - The deleted user's data
+ */
 export const deleteUserById = async (user_id) => {
   const token = localStorage.getItem("auth_token");
-  
+
   const response = await fetch(`${baseUrl}/user/${user_id}`, {
     method: "DELETE",
     headers: {
@@ -272,7 +324,12 @@ export const deleteUserById = async (user_id) => {
   return response.json();
 };
 
-// function saves the user preferences to the backend
+/**
+ * Saves the user preferences to the backend
+ * @param {string} user_id - The ID of the user
+ * @param {Object} userPreferences - The user's preferences data
+ * @returns {Promise<Object>} - The updated user's preferences data
+ */
 export const saveUserPreferences = async (user_id, userPreferences) => {
   const token = localStorage.getItem("auth_token");
   const response = await fetch(

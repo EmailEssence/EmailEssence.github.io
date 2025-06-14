@@ -9,8 +9,10 @@ export default function TermsOfService() {
   const overviewRef = useRef(null);
   const aboutRef = useRef(null);
 
-  useEffect(() => { window.scrollTo(0, 0); }, []); //scrolls to the top
+  /* Scrolls to the top */
+  useEffect(() => { window.scrollTo(0, 0); }, []);
 
+  /* smoothly scrolls to the ref section */
   const scrollToSection = (ref) => {
     if (ref.current) {
       ref.current.scrollIntoView({ behavior: "smooth" });

@@ -3,10 +3,16 @@ import PropTypes from "prop-types";
 import { useEffect, useState } from "react";
 import ReactDom from "react-dom";
 import ReaderViewIcon from "../../../assets/ReaderView";
-import Email from "./Email";
 import { getReaderView } from "../../../emails/emailHandler";
+import Email from "./Email";
 import "./emailDisplay.css";
 
+/**
+ * Displays the currently selected email with header, body, and reader view option.
+ * @param {Object} props
+ * @param {Email} props.curEmail - The currently selected email object.
+ * @returns {JSX.Element}
+ */
 function EmailDisplay({
   curEmail = {
     user_id: 1,
@@ -40,10 +46,21 @@ function EmailDisplay({
   );
 }
 
+/**
+ * Fetches and displays a simplified, readable version of the email.
+ * @param {Object} props
+ * @param {Email} props.curEmail - The currently selected email object.
+ * @returns {JSX.Element}
+ */
 function ReaderView({ curEmail }) {
   const [text, setText] = useState("Loading ...");
   const [displaying, setDisplaying] = useState(false);
 
+  /**
+ * Toggles the display of the reader view and fetches content if opening.
+ * @async
+ * @returns {Promise<void>}
+ */
   async function displayReaderView() {
     setDisplaying(!displaying);
     if (!displaying) {
@@ -87,6 +104,14 @@ function ReaderView({ curEmail }) {
   );
 }
 
+/**
+ * Renders a modal overlay for displaying content or a loading spinner.
+ * @param {Object} props
+ * @param {boolean} props.isLoading - Whether to show the loading spinner.
+ * @param {Function} props.handleClose - Function to close the popup.
+ * @param {React.ReactNode} props.children - Content to display in the popup.
+ * @returns {JSX.Element}
+ */
 function PopUp({ isLoading, handleClose, children }) {
   return ReactDom.createPortal(
     isLoading ? (
@@ -108,10 +133,20 @@ function PopUp({ isLoading, handleClose, children }) {
   );
 }
 
+/**
+ * Formats a date array as MM/DD/YYYY.
+ * @param {Array<string|number>} date - [year, month, day]
+ * @returns {string} Formatted date string.
+ */
 const formatDate = (date) => {
   return `${date[1]}/${date[2]}/${date[0]}`;
 };
 
+/**
+ * Extracts the sender's name from the sender string.
+ * @param {string} sender - The sender string
+ * @returns {string} The sender's name.
+ */
 const getSenderName = (sender) => {
   return sender.slice(0, sender.indexOf("<"));
 };

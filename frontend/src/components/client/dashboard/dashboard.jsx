@@ -1,9 +1,18 @@
+import PropTypes from "prop-types";
 import ViewIcon from "../../../assets/ViewIcon";
 import { getTop5 } from "../../../emails/emailHandler";
-import MiniViewPanel from "./miniview";
-import PropTypes from "prop-types";
 import "./dashboard.css";
+import MiniViewPanel from "./miniview";
 
+/**
+ * Dashboard component for the client.
+ * Displays the weighted email list and the mini view panel.
+ * @param {Object} props
+ * @param {Array<Email>} props.emailList - List of emails.
+ * @param {Function} props.handlePageChange - Function to change the client page.
+ * @param {Function} props.setCurEmail - Function to set the current email.
+ * @returns {JSX.Element}
+ */
 function Dashboard({ emailList, handlePageChange, setCurEmail }) {
   return (
     <div className="dashboard">
@@ -21,6 +30,15 @@ function Dashboard({ emailList, handlePageChange, setCurEmail }) {
   );
 }
 
+/**
+ * Renders a list of the top 5 weighted emails.
+ * @const {JSX.Element} WEList - Returns an array of WEListEmail components for the top 5 emails.
+ * @param {Object} props
+ * @param {Array<Email>} props.emailList - List of emails.
+ * @param {Function} props.setCurEmail - Function to set the current email.
+ * @param {Function} props.handlePageChange - Function to change the client page.
+ * @returns {JSX.Element}
+ */
 function WeightedEmailList({ emailList, setCurEmail, handlePageChange }) {
   const emails = () => {
     const WEList = getTop5(emailList);
@@ -40,6 +58,15 @@ function WeightedEmailList({ emailList, setCurEmail, handlePageChange }) {
   return <div className="weighted-email-list-container">{emails()}</div>;
 }
 
+/**
+ * Renders a single weighted email entry with summary and view icon.
+ * @const {JSX.Element} summary - Renders the summary for the email, or a loading placeholder if not available.
+ * @param {Object} props
+ * @param {Email} props.email - The email object.
+ * @param {Function} props.setCurEmail - Function to set the current email.
+ * @param {Function} props.handlePageChange - Function to change the client page.
+ * @returns {JSX.Element}
+ */
 function WEListEmail({ email, setCurEmail, handlePageChange }) {
   const summary = () => {
     let returnBlock;

@@ -2,11 +2,20 @@ import PropTypes from "prop-types";
 import { useEffect, useRef, useState } from "react";
 import ArrowIcon from "../../../assets/InboxArrow";
 import { emailsPerPage } from "../../../assets/constants";
-import EmailDisplay from "./emailDisplay";
 import { getPageSummaries } from "../../../emails/emailHandler";
+import EmailDisplay from "./emailDisplay";
 import "./emailEntry.css";
 import "./emailList.css";
 
+/**
+ * Inbox component displays the email list and the selected email.
+ * @param {Object} props
+ * @param {boolean} props.displaySummaries - Whether to show summaries.
+ * @param {Array<Email>} props.emailList - List of emails.
+ * @param {Function} props.setCurEmail - Function to set the current email.
+ * @param {Email} props.curEmail - The currently selected email.
+ * @returns {JSX.Element}
+ */
 function Inbox({ displaySummaries, emailList, setCurEmail, curEmail }) {
   return (
     <div className="inbox-display">
@@ -21,7 +30,20 @@ function Inbox({ displaySummaries, emailList, setCurEmail, curEmail }) {
   );
 }
 
+/**
+ * Renders a single email entry in the inbox list.
+ * @param {Object} props
+ * @param {boolean} props.displaySummary - Whether to show the summary.
+ * @param {Email} props.email - The email object.
+ * @param {Function} props.onClick - Function to select this email.
+ * @param {boolean} props.selected - Whether this email is currently selected.
+ * @returns {JSX.Element}
+ */
 function EmailEntry({ displaySummary, email, onClick, selected }) {
+  /**
+   * Renders the summary for the email, or a loading placeholder if not available.
+   * @returns {JSX.Element}
+   */
   const summary = () => {
     let returnBlock;
     if (email.summary_text.length > 0) {
@@ -34,9 +56,8 @@ function EmailEntry({ displaySummary, email, onClick, selected }) {
   const date = getDate(email.received_at);
   return (
     <div
-      className={`entry${displaySummary ? "" : " no-summary"}${
-        selected ? " selected" : ""
-      }`}
+      className={`entry${displaySummary ? "" : " no-summary"}${selected ? " selected" : ""
+        }`}
       onClick={onClick}
     >
       <div className="indicator-container">
@@ -58,6 +79,15 @@ function EmailEntry({ displaySummary, email, onClick, selected }) {
   );
 }
 
+/**
+ * Renders the list of emails in the inbox, with infinite scroll and summary fetching.
+ * @param {Object} props
+ * @param {boolean} props.displaySummaries - Whether to show summaries.
+ * @param {Array<Email>} props.emailList - List of emails.
+ * @param {Email} props.curEmail - The currently selected email.
+ * @param {Function} props.onClick - Function to select an email.
+ * @returns {JSX.Element}
+ */
 function InboxEmailList({ displaySummaries, emailList, curEmail, onClick }) {
   const [pages, setPages] = useState(1);
   const ref = useRef(null);
@@ -67,13 +97,16 @@ function InboxEmailList({ displaySummaries, emailList, curEmail, onClick }) {
       : emailList.length;
   const hasUnloadedEmails = maxEmails < emailList.length;
 
+  /**
+   * Handles scroll event to load more emails when scrolled to the bottom.
+   */
   const handleScroll = () => {
     // add external summary call
     const fullyScrolled =
       Math.abs(
         ref.current.scrollHeight -
-          ref.current.clientHeight -
-          ref.current.scrollTop
+        ref.current.clientHeight -
+        ref.current.scrollTop
       ) <= 1;
     if (fullyScrolled && hasUnloadedEmails) {
       setPages(pages + 1);
@@ -85,6 +118,11 @@ function InboxEmailList({ displaySummaries, emailList, curEmail, onClick }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pages]); // Fixes minimum for large screens, but runs effect after every load which is unnecessary
 
+  /**
+   * Renders the list of EmailEntry components up to maxEmails.
+   * Fetches summaries for emails that need them.
+   * @returns {JSX.Element[]}
+   */
   const emails = () => {
     const returnBlock = [];
     const needsSummary = [];
@@ -143,10 +181,20 @@ InboxEmailList.propTypes = {
   onClick: PropTypes.func,
 };
 
+/**
+ * Formats a date array as MM/DD/YYYY.
+ * @param {Array<string|number>} date - [year, month, day]
+ * @returns {string} Formatted date string.
+ */
 const getDate = (date) => {
   return `${date[1]}/${date[2]}/${date[0]}`;
 };
 
+/**
+ * Extracts the sender's name from the sender string.
+ * @param {string} sender - The sender string, e.g., "John Doe <john@example.com>"
+ * @returns {string} The sender's name.
+ */
 const getSenderName = (sender) => {
   return sender.slice(0, sender.indexOf("<"));
 };
