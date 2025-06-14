@@ -13,8 +13,9 @@ from app.dependencies import get_current_user, get_current_user_info
 from app.utils.helpers import get_logger, log_operation, standardize_error_response
 from app.models import PreferencesSchema, UserSchema
 from app.services.auth_service import AuthService
-from app.services.database.factories import get_auth_service, get_user_service
 from app.services.user_service import UserService
+from app.services.email_service import EmailService
+from app.services.database.factories import get_auth_service, get_user_service, get_email_service
 
 # -------------------------------------------------------------------------
 # Router Configuration
@@ -278,7 +279,8 @@ async def update_user(
 async def delete_user(
     user_id: str,
     user_service: UserService = Depends(get_user_service),
-    auth_service: AuthService = Depends(get_auth_service)
+    auth_service: AuthService = Depends(get_auth_service),
+    email_service: EmailService = Depends(get_email_service)
 ) -> dict:
     """
     Delete a user.
@@ -294,12 +296,21 @@ async def delete_user(
     Raises:
         HTTPException: 404 if user not found
     """
-    success = await user_service.delete_user(user_id)
-    if not success:
+    successDeleteUser = await user_service.delete_user(user_id)
+    if not successDeleteUser:
         raise standardize_error_response(
             Exception("User not found"), 
             "delete user", 
             user_id
         )
+    
+    successDeleteEmails = await email_service.delete_emails(user_id)
+    if not successDeleteEmails:
+        raise standardize_error_response(
+            Exception("User not found"), 
+            "delete Emails by user ID", 
+            user_id
+       )
+    
     return {"message": "User deleted successfully"}
     
