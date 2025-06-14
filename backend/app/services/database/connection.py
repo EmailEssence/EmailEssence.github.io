@@ -36,12 +36,12 @@ class DatabaseConnection:
 
                 # Define valid connection options
                 connection_options = {
-                    #"serverSelectionTimeoutMS": 5000,
-                    #"connectTimeoutMS": 10000,
-                    "retryWrites": True,
-                    "retryReads": True,
-                    "maxPoolSize": 100,
-                    "minPoolSize": 2,
+                    #"serverSelectionTimeoutMS": 5000, # 5 second timeout
+                    #"connectTimeoutMS": 10000, # 10 second connection timeout
+                    "retryWrites": True, # Enable retryable writes on bad connections
+                    "retryReads": True, # Enable retryable reads on bad connections
+                    "maxPoolSize": 100, # Maximum number of connections in the pool
+                    "minPoolSize": 2,   # Minimum number of connections in the pool
                 }
 
                 self._client = AsyncIOMotorClient(
