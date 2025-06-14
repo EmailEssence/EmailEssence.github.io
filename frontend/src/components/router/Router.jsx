@@ -9,6 +9,11 @@ import PrivacyPolicy from "../login/privacy";
 import TermsOfService from "../login/terms";
 import AuthLoading from "../login/AuthLoading";
 
+/**
+ * Main Router component for the application.
+ * Wraps AppRouter in BrowserRouter for test environments.
+ * @returns {JSX.Element}
+ */
 export function Router() {
   const testing = import.meta.env.MODE === "test";
   if (testing) {
@@ -21,6 +26,11 @@ export function Router() {
   return <AppRouter />;
 }
 
+/**
+ * Defines routes and manages user email state for client routes.
+ * Updates userEmails state when the global emails array changes or when #newEmails is in the URL hash.
+ * @returns {JSX.Element}
+ */
 export function AppRouter() {
   return (
     <Routes>

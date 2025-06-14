@@ -1,5 +1,5 @@
-import { fetchUserPreferences } from "../components/client/settings/settings";
 import DOMPurify from "dompurify";
+import { fetchUserPreferences } from "../components/client/settings/settings";
 // TODO : env variable for baseUrl
 // export const baseUrl = "http://127.0.0.1:8000";
 export const baseUrl = "https://ee-backend-w86t.onrender.com";
@@ -66,6 +66,13 @@ async function getEmails(number, ...args) {
   }
 }
 
+/**
+ * Fetches the reader view content for a specific email.
+ * @async
+ * @param {string} emailId - The ID of the email to fetch the reader view for.
+ * @returns {Promise<string>} - A promise that resolves to the reader view content of the email.
+ * @throws {Error} Will throw if the fetch fails.
+ */
 export async function getReaderView(emailId) {
   const option = {
     method: "GET",

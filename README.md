@@ -18,28 +18,28 @@ EmailEssence is a sophisticated email management solution that leverages artific
 ### Feature Complete (FC) Features
 - 🎨 Customizable dashboard with modular components
 - 🔍 Advanced keyword analysis and topic identification
-- 💻 Cross-platform desktop support via Electron
 - 🔄 Incremental email fetching for large inboxes
 - 🎯 Smart email prioritization
 - 🛠️ Enhanced user preferences and settings
+
+### Future Features
+- 💻 Cross-platform desktop support via Electron
 
 ## Technical Stack
 
 ### Frontend
 - React - Modern UI framework
-- Remix - Full-stack web framework
-- Electron - Desktop application framework
-- JavaScript - Type-safe development
+- Vite - Frontend tooling and build server
+- JavaScript - Core language for the frontend
 
 ### Backend
 - Python - Core backend services
 - FastAPI - High-performance API framework
 - MongoDB - Flexible document database
 - Redis - High-performance caching
-- OpenRouter - AI-powered email processing
+- Flexible AI provider support (OpenAI, Google, OpenRouter)
 
 ### Infrastructure
-- Express.js - Web server and middleware
 - OAuth 2.0 - Secure authentication
 - IMAP - Email protocol support
 

@@ -1,5 +1,11 @@
 import PropTypes from "prop-types";
 
+/**
+ * Renders the email body, using inner HTML if present.
+ * @param {Object} props
+ * @param {Email} props.email - The email object to display.
+ * @returns {JSX.Element}
+ */
 export function Email({ email }) {
   return (
     <>

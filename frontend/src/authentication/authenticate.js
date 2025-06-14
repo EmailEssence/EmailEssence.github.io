@@ -1,11 +1,24 @@
 import { baseUrl } from "../emails/emailHandler";
+
+/**
+ * Initiates the OAuth authentication flow by redirecting to the backend login endpoint.
+ * Sets the redirect URI to the /loading route.
+ * @async
+ * @returns {void}
+ */
 export const authenticate = async () => {
   // Check for auth hash and render OAuthCallback if present
   const redirect_uri = `${window.location.origin}/loading`;
   window.location.href = `${baseUrl}/auth/login?redirect_uri=${redirect_uri}`;
 };
 
-// When Reach loading component call this function
+/**
+ * Handles the OAuth callback after authentication.
+ * Parses the auth state from the URL hash, verifies authentication, and stores the token.
+ * Navigates to the error page if authentication fails.
+ * @async
+ * @returns {Promise<void>}
+ */
 export const handleOAuthCallback = async () => {
   const hash = window.location.hash;
   if (hash && hash.startsWith("#auth=")) {
@@ -33,6 +46,14 @@ export const handleOAuthCallback = async () => {
   return false;
 };
 
+
+/**
+ * Handles authentication errors by logging out, storing the error message,
+ * and redirecting to the error page.
+ * @async
+ * @param {Error|string} error - The error object or message.
+ * @returns {Promise<void>}
+ */
 const handleAuthError = async (error) => {
   console.error("Auth flow error:", error);
   localStorage.removeItem("auth_token");
@@ -40,6 +61,12 @@ const handleAuthError = async (error) => {
   window.location.href = "/error"; // go to error page
 };
 
+/**
+ * Checks the authentication status of the provided token by querying the backend.
+ * @async
+ * @param {string} token - The authentication token.
+ * @returns {Promise<boolean>} True if authenticated, false otherwise.
+ */
 export const checkAuthStatus = async (token) => {
   const option = {
     method: "GET",

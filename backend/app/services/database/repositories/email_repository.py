@@ -82,6 +82,18 @@ class EmailRepository(BaseRepository[EmailSchema], IEmailRepository):
             update_data
         )
     
+    async def delete_by_google_id(self, google_id: str) -> bool:
+        """
+        Delete all emails by Google user ID.
+        
+        Args:
+            google_id: Google ID of the user
+            
+        Returns:
+            bool: True if deletion successful
+        """
+        return await self.delete_many({"google_id": google_id})
+    
     async def delete_by_email_and_google_id(self, email_id: str, google_id: str) -> bool:
         """
         Delete an email by IMAP UID and Google user ID.

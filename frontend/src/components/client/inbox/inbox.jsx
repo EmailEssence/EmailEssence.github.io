@@ -1,10 +1,22 @@
 import PropTypes from "prop-types";
 import { useEffect, useRef, useState } from "react";
 import ArrowIcon from "../../../assets/InboxArrow";
+import { emailsPerPage } from "../../../assets/constants";
+import { getPageSummaries } from "../../../emails/emailHandler";
 import EmailDisplay from "./emailDisplay";
+import { trimList } from "../../../emails/emailHandler"; // shared API URL base
 import "./emailEntry.css";
 import "./emailList.css";
-import { trimList } from "../../../emails/emailHandler"; // shared API URL base
+
+/**
+ * Inbox component displays the email list and the selected email.
+ * @param {Object} props
+ * @param {boolean} props.displaySummaries - Whether to show summaries.
+ * @param {Array<Email>} props.emailList - List of emails.
+ * @param {Function} props.setCurEmail - Function to set the current email.
+ * @param {Email} props.curEmail - The currently selected email.
+ * @returns {JSX.Element}
+ */
 
 function Inbox({
   displaySummaries,
@@ -30,7 +42,7 @@ function Inbox({
     <div className="inbox-display">
       <InboxEmailList
         displaySummaries={displaySummaries}
-        emailList={filteredEmails}
+        emailList={emailList}
         curEmail={curEmail}
         onClick={setCurEmail}
         handleEmailSearch={handleEmailSearch}
@@ -39,20 +51,34 @@ function Inbox({
         hasUnloadedEmails={hasUnloadedEmails}
         emailsPerPage={emailsPerPage}
       />
-      <EmailDisplay key={curEmail?.email_id || "none"} curEmail={curEmail} />
+      <EmailDisplay key={curEmail} curEmail={curEmail} />
     </div>
   );
 }
 
+/**
+ * Renders a single email entry in the inbox list.
+ * @param {Object} props
+ * @param {boolean} props.displaySummary - Whether to show the summary.
+ * @param {Email} props.email - The email object.
+ * @param {Function} props.onClick - Function to select this email.
+ * @param {boolean} props.selected - Whether this email is currently selected.
+ * @returns {JSX.Element}
+ */
 function EmailEntry({ displaySummary, email, onClick, selected }) {
+  /**
+   * Renders the summary for the email, or a loading placeholder if not available.
+   * @returns {JSX.Element}
+   */
   const summary = () => {
-    if (email.summary_text?.length > 0) {
-      return <div className="summary">{email.summary_text}</div>;
+    let returnBlock;
+    if (email.summary_text.length > 0) {
+      returnBlock = <div className="summary">{email.summary_text}</div>;
     } else {
-      return <div className="summary loading"></div>;
+      returnBlock = <div className="summary loading"></div>;
     }
+    return returnBlock;
   };
-
   const date = getDate(email.received_at);
   return (
     <div
@@ -80,6 +106,15 @@ function EmailEntry({ displaySummary, email, onClick, selected }) {
   );
 }
 
+/**
+ * Renders the list of emails in the inbox, with infinite scroll and summary fetching.
+ * @param {Object} props
+ * @param {boolean} props.displaySummaries - Whether to show summaries.
+ * @param {Array<Email>} props.emailList - List of emails.
+ * @param {Email} props.curEmail - The currently selected email.
+ * @param {Function} props.onClick - Function to select an email.
+ * @returns {JSX.Element}
+ */
 function InboxEmailList({
   displaySummaries,
   emailList,
@@ -95,15 +130,25 @@ function InboxEmailList({
   // const [loadingEmails, setLoadingEmails] = useState(false);
   const [pages, setPages] = useState(1);
   const ref = useRef(null);
-  const maxEmails = Math.min(pages * emailsPerPage, emailList.length);
+  const maxEmails =
+    pages * emailsPerPage < emailList.length
+      ? pages * emailsPerPage
+      : emailList.length;
   const hasLocallyUnloadedEmails = maxEmails < emailList.length;
 
+  /**
+   * Handles scroll event to load more emails when scrolled to the bottom.
+   */
   const handleScroll = async () => {
     const fullyScrolled =
       Math.abs(
+        
         ref.current.scrollHeight -
-          ref.current.clientHeight -
-          ref.current.scrollTop
+         
+        ref.current.clientHeight -
+         
+        ref.current.scrollTop
+      
       ) <= 1;
     if (fullyScrolled && (hasLocallyUnloadedEmails || hasUnloadedEmails)) {
       if (hasUnloadedEmails) {
@@ -118,6 +163,11 @@ function InboxEmailList({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pages]); // Fixes minimum for large screens, but runs effect after every load which is unnecessary
 
+  /**
+   * Renders the list of EmailEntry components up to maxEmails.
+   * Fetches summaries for emails that need them.
+   * @returns {JSX.Element[]}
+   */
   const emails = () => {
     const returnBlock = [];
     const needsSummary = [];
@@ -157,21 +207,14 @@ function InboxEmailList({
           className="inbox-search"
         />
       </div>
-
       <div className="divider"></div>
-      <div className="emails-wrapper">
-        <div className="emails" ref={ref} onScroll={handleScroll}>
-          {emails()}
-          {emailList.length === 0 && (
-            <div className="empty-results">No matching emails found.</div>
-          )}
-        </div>
+      <div className="emails" ref={ref} onScroll={handleScroll}>
+        {emails()}
       </div>
     </div>
   );
 }
 
-// PropTypes
 
 const sharedPropTypes = {
   displaySummaries: PropTypes.bool,
@@ -200,7 +243,11 @@ InboxEmailList.propTypes = {
   handleEmailSearch: PropTypes.func,
 };
 
-// Utils
+/**
+ * Formats a date array as MM/DD/YYYY.
+ * @param {Array<string|number>} date - [year, month, day]
+ * @returns {string} Formatted date string.
+ */
 const getDate = (date) => `${date[1]}/${date[2]}/${date[0]}`;
 const getSenderName = (sender) => sender.slice(0, sender.indexOf("<"));
 

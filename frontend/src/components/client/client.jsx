@@ -28,6 +28,10 @@ function Client() {
     { isChecked: true, emailFetchInterval: 120, theme: "light" }
   );
 
+  /**
+   * Sets up an interval to fetch new emails based on user preference.
+   * @returns {void}
+   */
   useEffect(() => {
     const clock = setInterval(async () => {
       try {
@@ -66,6 +70,7 @@ function Client() {
     `calc(${client.expandedSideBar ? "70px + 5vw" : "30px + 2vw"})`
   );
 
+  /** Handles logo click to toggle sidebar expansion. */
   const handleLogoClick = () => {
     dispatchClient({
       type: "logoClick",
@@ -73,6 +78,10 @@ function Client() {
     });
   };
 
+  /**
+   * Handles navigation between client pages.
+   * @param {string} pageName - The page route to navigate to.
+   */
   const handlePageChange = (pageName) => {
     const toChange = import.meta.env.MODE === "test" ? "/client" : null;
     if (toChange) {
@@ -82,6 +91,7 @@ function Client() {
     }
   };
 
+  /** Toggles the summaries-in-inbox user preference. */
   const handleToggleSummariesInInbox = () => {
     dispatchUserPreferences({
       type: "isChecked",
@@ -89,6 +99,10 @@ function Client() {
     });
   };
 
+  /**
+   * Sets the email fetch interval user preference.
+   * @param {number} interval - Interval in seconds.
+   */
   const handleSetEmailFetchInterval = (interval) => {
     dispatchUserPreferences({
       type: "emailFetchInterval",
@@ -96,6 +110,10 @@ function Client() {
     });
   };
 
+  /**
+   * Sets the theme user preference.
+   * @param {string} theme - Theme name ("light", "system", "dark").
+   */
   const handleSetTheme = (theme) => {
     dispatchUserPreferences({
       type: "theme",

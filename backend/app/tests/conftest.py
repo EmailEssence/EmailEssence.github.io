@@ -89,5 +89,6 @@ def test_settings():
         "OPENAI_API_KEY": os.getenv("OPENAI_API_KEY", "test_key_123"),
         "GOOGLE_CLIENT_ID": os.getenv("GOOGLE_CLIENT_ID", "test_client_id"),
         "GOOGLE_CLIENT_SECRET": os.getenv("GOOGLE_CLIENT_SECRET", "test_client_secret"),
-        "MONGO_URI": os.getenv("MONGO_URI", "mongodb://localhost:27017/test_db")
+        "MONGO_URI": os.getenv("MONGO_URI", "mongodb://localhost:27017/test_db"),
+        "OPENROUTER_API_KEY": os.getenv("OPENROUTER_API_KEY", "sk-or-test-key-123456789")
     }

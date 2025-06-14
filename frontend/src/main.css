@@ -2,7 +2,7 @@
   --sidebar-width: 1px;
   --sidebar-icon-height: calc(30px + 2vw);
 
-  /* Color palette from dark to light */
+  /*------------------------Color palette---------------------------------*/
   --black: #000;
   --grey: #1e1e1e;
   --grey-1: #161616;
@@ -14,7 +14,7 @@
   --white: white;
   --brown: #a2845e;
 
-  /*variables */
+  /*----------------------------Variables-----------------------------------*/
   --font-family: sans-serif;
   --font-size: 15px;
   --color-text: var(--black);
@@ -41,7 +41,7 @@
   --color-icon: var(--white);
 }
 
-/* dark theme variables */
+/*--------------------------dark theme variables----------------------------*/
 body.dark-mode {
   --color-text: var(--grey-5);
   --color-border: var(--grey-2);
@@ -65,6 +65,7 @@ body.dark-mode {
   --color-icon: var(--white);
 }
 
+/*--------------------------Scrollbar----------------------------*/
 /* Target the scrollbar track (the background) */
 ::-webkit-scrollbar-track {
   background-color: var(--color-scroll-background);
@@ -74,10 +75,8 @@ body.dark-mode {
 ::-webkit-scrollbar-thumb {
   background-color: var(--color-scroll-thumb);
   border-radius: 10px;
-  /* Optional: round the thumb */
 }
 
-/* Target the scrollbar thumb on hover */
 ::-webkit-scrollbar-thumb:hover {
   background-color: var(--color-scroll-hover);
 }
@@ -85,10 +84,9 @@ body.dark-mode {
 /* Target the whole scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
-  /* Optional: adjust the width */
 }
 
-/* CSS Reset */
+/*----------------------------------CSS Reset-----------------------------*/
 *,
 *::before,
 *::after {
