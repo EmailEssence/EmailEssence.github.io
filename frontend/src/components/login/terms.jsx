@@ -33,6 +33,8 @@ export default function TermsOfService() {
 
       <div className="terms-of-service">
         <h1>Terms of Service</h1>
+        <p><strong>Effective Date:</strong> 6/01/2025<br />
+          <strong>Last Updated:</strong> 6/01/2025</p>
         <p>
           Welcome to EmailEssence! By using our service, you agree to the
           following terms and conditions. If you do not agree, please do not
@@ -111,73 +113,13 @@ export default function TermsOfService() {
           accordance with the laws of the jurisdiction in which EmailEssence
           operates, without regard to its conflict of law principles.
         </p>
-        <h2>8. Contact Us</h2>
-        <p>
-          If you have any questions or concerns about these Terms of Service,
-          please contact us at emailessencellc@gmail.com
-        </p>
         <p>
           By using EmailEssence, you acknowledge that you have read and
           understood these Terms of Service and agree to be bound by them.
         </p>
-        <p>
-          Last updated: [Insert Date]
-        </p>
-        <p>
-          Thank you for using EmailEssence!
-        </p>
-        <p>
-          We hope you enjoy our service and find it helpful in managing your
-          emails.
-        </p>
-        <p>
-          If you have any feedback or suggestions for improvement, please
-          feel free to reach out to us. We value your input and are always
-          looking for ways to enhance our service.
-        </p>
-        <p>
-          Thank you for being a part of the EmailEssence community!
-        </p>
-        <p>
-          We look forward to serving you and helping you make the most of
-          your email experience.
-        </p>
-        <p>
+        <p><strong>
           Sincerely, The EmailEssence Team
-        </p>
-        <p>
-          [Insert Company Name]
-        </p>
-        <p>
-          [Insert Company Address]
-        </p>
-        <p>
-          [Insert Company Phone Number]
-        </p>
-        <p>
-          [Insert Company Email Address]
-        </p>
-        <p>
-          [Insert Company Website]
-        </p>
-        <p>
-          [Insert Company Social Media Links]
-        </p>
-        <p>
-          [Insert Company Logo]
-        </p>
-        <p>
-          [Insert Company Tagline]
-        </p>
-        <p>
-          [Insert Company Mission Statement]
-        </p>
-        <p>
-          [Insert Company Vision Statement]
-        </p>
-        <p>
-          [Insert Company Values]
-        </p>
+        </strong></p>
       </div>
 
       <footer className="footer-container">

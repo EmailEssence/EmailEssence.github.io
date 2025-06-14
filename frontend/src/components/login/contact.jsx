@@ -33,7 +33,26 @@ export default function Contact() {
 
             <div className="contact-us">
                 <h1>Contact Us</h1>
-                <p>Feel free to reach out to us for any inquiries.</p>
+                <p>
+                    Thank you for using EmailEssence!
+                </p>
+                <p>
+                    We hope you enjoy our service and find it helpful in managing your
+                    emails.
+                </p>
+                <p>
+                    If you have any feedback or suggestions for improvement, please
+                    feel free to reach out to us. We value your input and are always
+                    looking for ways to enhance our service.
+                </p>
+                <p>
+                    We look forward to serving you and helping you make the most of
+                    your email experience.
+                </p>
+                <p>
+                    If you have any questions or concerns,
+                    please contact us at <a href="mailto:emailessencellc@gmail.com">emailessencellc@gmail.com</a>
+                </p>
             </div>
 
             <footer className="footer-container">
