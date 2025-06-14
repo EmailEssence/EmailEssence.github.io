@@ -3,7 +3,7 @@ from pydantic_settings import BaseSettings
 from functools import lru_cache
 from enum import Enum
 from typing import Optional, List
-from pydantic import ConfigDict
+from pydantic import ConfigDict, model_validator
 
 class SummarizerProvider(str, Enum):
     OPENAI = "openai" # Currently Best option 
@@ -82,11 +82,11 @@ class Settings(BaseSettings):
     oauth_callback_url: Optional[str] = None
 
     # AI Providers
-    openrouter_api_key: str # Required Now :)
-    openai_api_key: str | None = None
-    google_api_key: str | None = None
-    deepseek_api_key: str | None = None
-    gemini_api_key: str | None = None
+    openrouter_api_key: Optional[str] = None # No longer required
+    openai_api_key: Optional[str] = None
+    google_api_key: Optional[str] = None
+    deepseek_api_key: Optional[str] = None
+    gemini_api_key: Optional[str] = None
      
     # Summarizer settings
     summarizer_provider: SummarizerProvider = SummarizerProvider.default()
@@ -95,6 +95,17 @@ class Settings(BaseSettings):
     summarizer_prompt_version: PromptVersion = PromptVersion.latest()
     
     model_config = ConfigDict(env_file=".env", use_enum_values=True)
+    
+    @model_validator(mode='after')
+    def validate_api_keys(self) -> 'Settings':
+        """Validate that the required API keys are present for the selected provider."""
+        if self.summarizer_provider == SummarizerProvider.OPENROUTER and not self.openrouter_api_key:
+            raise ValueError("OPENROUTER_API_KEY must be set when using the OpenRouter provider")
+        if self.summarizer_provider == SummarizerProvider.OPENAI and not self.openai_api_key:
+            raise ValueError("OPENAI_API_KEY must be set when using the OpenAI provider")
+        if self.summarizer_provider == SummarizerProvider.GOOGLE and not self.google_api_key:
+            raise ValueError("GOOGLE_API_KEY must be set when using the Google provider")
+        return self
         
 @lru_cache()
 def get_settings() -> Settings:
