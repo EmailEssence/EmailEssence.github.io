@@ -3,72 +3,67 @@ from typing import Any, Dict, List, Optional
 from app.services.summarization.prompts import(
     BasePromptManager,
     PromptTemplate,
-    EMAIL_SUMMARY_SYSTEM_PROMPT,
-    EMAIL_SUMMARY_USER_PROMPT
+    EMAIL_SUMMARY_USER_PROMPT,
+    PromptManager,
+    EMAIL_SUMMARY_SYSTEM_PROMPT
 )
 from app.utils.config import PromptVersion
 
-@dataclass
-class OpenRouterPromptTemplate(PromptTemplate):
-    """OpenRouter-specific prompt template with JSON schema support."""
-    schema_name: str = ""
-    schema_properties: Dict[str, Dict[str, Any]] = field(default_factory=dict)
-    required_fields: List[str] = field(default_factory=list)
-    strict: bool = True
-    
-    def get_response_format(self) -> Dict[str, Any]:
-        """Generate the OpenRouter-compatible response format."""
-        return {
-            "type": "json_schema",
-            "json_schema": {
-                "name": self.schema_name,
-                "strict": self.strict,
-                "schema": {
-                    "type": "object",
-                    "properties": self.schema_properties,
-                    "required": self.required_fields,
-                    "additionalProperties": False
-                }
-            }
-        }
+# New OpenRouter-specific system prompt
+OPENROUTER_SYSTEM_PROMPT_TEMPLATE = """You are a precise email summarizer. Your task is to analyze the user's email and provide a response in valid JSON format.
 
-# Example usage:
-EMAIL_SUMMARY_OPENROUTER_PROMPT = OpenRouterPromptTemplate(
+You must respond with a JSON object containing exactly these fields:
+- "summary": A concise, factual single-sentence summary capturing the key message or request
+- "keywords": An array of 3-5 key topics or themes extracted from the email
+
+Example response format:
+{
+  "summary": "The sender is requesting a meeting to discuss the quarterly budget review.",
+  "keywords": ["meeting", "quarterly", "budget", "review", "discussion"]
+}
+
+IMPORTANT: Respond only with a valid JSON object. Do not add any explanatory text or wrap the JSON in markdown code blocks."""
+
+EMAIL_SUMMARY_OPENROUTER_SYSTEM_PROMPT = PromptTemplate(
     version=PromptVersion.V1,
-    template=EMAIL_SUMMARY_SYSTEM_PROMPT.template,
-    metadata=EMAIL_SUMMARY_SYSTEM_PROMPT.metadata,
-    schema_name="email_summary",
-    schema_properties={
-        "summary": {
-            "type": "string",
-            "description": "A concise, factual single-sentence summary capturing the key message or request"
-        },
-        "keywords": {
-            "type": "array",
-            "items": {
-                "type": "string"
-            },
-            "description": "3-5 key topics or themes extracted from the email"
-        }
-    },
-    required_fields=["summary", "keywords"]
+    template=OPENROUTER_SYSTEM_PROMPT_TEMPLATE,
+    metadata={}
 )
 
 @dataclass
-class OpenRouterPromptManager(BasePromptManager):
-    """OpenRouter-specific prompt management."""
+class OpenRouterPromptTemplate(PromptTemplate):
+    """
+    OpenRouter-specific prompt template with basic JSON response format.
+    """
+    
+    def get_response_format(self) -> Dict[str, Any]:
+        """
+        Return the basic JSON response format supported by most OpenRouter models.
+        """
+        return {
+            "type": "json_object"
+        }
+
+# Simplified prompt template
+EMAIL_SUMMARY_OPENROUTER_PROMPT = OpenRouterPromptTemplate(
+    version=PromptVersion.V1,
+    template=EMAIL_SUMMARY_OPENROUTER_SYSTEM_PROMPT.template,
+    metadata={}
+)
+
+@dataclass
+class OpenRouterPromptManager(PromptManager):
+    """OpenRouter-specific prompt management, mirroring OpenAI's structure."""
+    prompt_version: PromptVersion = PromptVersion.latest()
     
     def get_system_prompt(self, version: Optional[PromptVersion] = None) -> str:
-        active_version = self._get_active_version(version)
-        # Could implement version-specific logic here if needed
-        return EMAIL_SUMMARY_SYSTEM_PROMPT.template
+        return OPENROUTER_SYSTEM_PROMPT_TEMPLATE
     
     def get_user_prompt(self, content: str, version: Optional[PromptVersion] = None) -> str:
-        active_version = self._get_active_version(version)
-        # Could implement version-specific logic here if needed
         return EMAIL_SUMMARY_USER_PROMPT.template.format(content=content)
     
     def get_response_format(self, version: Optional[PromptVersion] = None) -> Dict[str, Any]:
-        active_version = self._get_active_version(version)
-        # Could implement version-specific logic here if needed
-        return EMAIL_SUMMARY_OPENROUTER_PROMPT.get_response_format()
+        """
+        Return the basic JSON response format supported by most OpenRouter models.
+        """
+        return {"type": "json_object"}

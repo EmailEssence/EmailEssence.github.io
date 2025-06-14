@@ -3,7 +3,9 @@ from typing import List, Optional, Dict, TypeVar
 from datetime import datetime, timezone
 import asyncio
 import json
+import sys
 
+from openai import AsyncOpenAI, RateLimitError, APITimeoutError, APIError
 from tenacity import (
     retry,
     stop_after_attempt,
@@ -18,28 +20,32 @@ from app.utils.config import ProviderModel, SummarizerProvider
 from app.services.summarization.prompts import PromptManager
 from .prompts import OpenRouterPromptManager
 from app.utils.config import PromptVersion
+from app.utils.helpers import get_logger
 
 class OpenRouterBackend(ModelBackend):
-    """OpenRouter implementation of the ModelBackend protocol."""
+    """OpenRouter implementation that delegates model routing to the provider."""
     
     def __init__(
         self,
         api_key: str,
         prompt_manager: PromptManager,
-        model: str = ProviderModel.default_for_provider(SummarizerProvider.OPENROUTER),
         temperature: float = 0.3,
         max_tokens: int = 150,
     ):
-        self.api_key = api_key
+        self.logger = get_logger(self.__class__.__name__, 'service')
+        self.client = AsyncOpenAI(
+            base_url="https://openrouter.ai/api/v1",
+            api_key=api_key            
+        )
         self.prompt_manager = prompt_manager
-        self.model = model
         self.temperature = temperature
         self.max_tokens = max_tokens
-        self.base_url = "https://openrouter.ai/api/v1"
 
     @retry(
         retry=retry_if_exception_type((
-            Exception,  # Adjust with specific OpenRouter exceptions when available
+            RateLimitError,
+            APITimeoutError,
+            APIError,
         )),
         wait=wait_exponential(multiplier=1, min=4, max=10),
         stop=stop_after_attempt(3)
@@ -49,9 +55,7 @@ class OpenRouterBackend(ModelBackend):
         content: str,
         config: Optional[ModelConfig] = None
     ) -> tuple[str, List[str]]:
-        """Generate a summary for a single email using managed prompts."""
-        import httpx
-        
+        """Generate a summary, letting OpenRouter handle model selection."""
         cfg = config or {}
         
         messages = [
@@ -65,38 +69,43 @@ class OpenRouterBackend(ModelBackend):
             }
         ]
         
-        headers = {
-            "Authorization": f"Bearer {self.api_key}",
-            "Content-Type": "application/json"
-        }
-        
-        payload = {
-            "model": cfg.get("model", self.model),
+        # Log the request payload for diagnostics
+        request_payload = {
             "messages": messages,
             "temperature": cfg.get("temperature", self.temperature),
             "max_tokens": cfg.get("max_tokens", self.max_tokens),
-            "response_format": self.prompt_manager.get_response_format()
+            "models": ProviderModel.get_openrouter_fallbacks(),
+            "route": "fallback"
         }
-        
-        async with httpx.AsyncClient(timeout=60.0) as client:
-            response = await client.post(
-                f"{self.base_url}/chat/completions",
-                headers=headers,
-                json=payload
+        self.logger.info(f"Sending request to OpenRouter: {json.dumps(request_payload, indent=2)}")
+
+        try:
+            # Let OpenRouter select the model from the provided list
+            response = await self.client.chat.completions.create(
+                model=ProviderModel.get_openrouter_fallbacks()[0], # Required by SDK, OR will use list below
+                messages=messages,
+                temperature=cfg.get("temperature", self.temperature),
+                max_tokens=cfg.get("max_tokens", self.max_tokens),
+                response_format=self.prompt_manager.get_response_format(),
+                extra_body={
+                    "models": ProviderModel.get_openrouter_fallbacks(),
+                    "route": "fallback" # Ensures it tries models in order
+                }
             )
-            
-            if response.status_code != 200:
-                raise Exception(f"OpenRouter API error: {response.status_code} - {response.text}")
-            
-            response_data = response.json()
-        
+        except APIError as e:
+            self.logger.error(f"OpenRouter API request failed with status code {e.status_code}.")
+            if e.body:
+                self.logger.error(f"Error response body: {e.body}")
+            raise # Re-raise the exception to be handled by the retry decorator or calling service
+
         # Parse the response
         try:
-            result = json.loads(response_data["choices"][0]["message"]["content"])
-            return result["summary"], result["keywords"]
-        except (json.JSONDecodeError, KeyError) as e:
+            result = json.loads(response.choices[0].message.content)
+            return result.get("summary", ""), result.get("keywords", [])
+        except (json.JSONDecodeError, KeyError, IndexError) as e:
             # Fallback handling if JSON parsing fails
-            summary = response_data["choices"][0]["message"]["content"]
+            self.logger.warning(f"Failed to parse JSON. Response: {response.choices[0].message.content if response.choices else 'empty'}. Error: {e}")
+            summary = response.choices[0].message.content
             return summary.strip(), []
 
     async def batch_generate_summaries(
@@ -120,7 +129,7 @@ class OpenRouterBackend(ModelBackend):
     def model_info(self) -> Dict[str, str]:
         return {
             "provider": "OpenRouter",
-            "model": self.model
+            "model": "auto" # Model is selected by OpenRouter
         }
 
 class OpenRouterEmailSummarizer(AdaptiveSummarizer[EmailSchema]):
