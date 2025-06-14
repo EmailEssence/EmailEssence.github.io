@@ -303,28 +303,28 @@ async def delete_user(
     successDeleteUser = await user_service.delete_user(user_id)
     if not successDeleteUser:
         raise standardize_error_response(
-            Exception("User not found"), 
-            "delete user", 
-            user_id
+            HTTPException(status_code=404, detail="User not found"),
+            action="delete user",
+            context=user_id
         )
     
     successDeleteEmails = await email_service.delete_emails(user_id)
     if not successDeleteEmails:
         raise standardize_error_response(
-            Exception("User not found"), 
-            "delete Emails by user ID", 
-            user_id
-       )
+            HTTPException(status_code=500, detail="Failed to delete user emails"),
+            action="delete emails by user ID",
+            context=user_id
+        )
     
     # Note: This is commented out to avoid having to inccur the cost of deleting and resummarizing
     
     #successDeleteSummaries = await summary_service.delete_summaries_by_google_id(user_id)
     #if not successDeleteSummaries:
     #    raise standardize_error_response(
-    #        Exception("User not found"), 
-    #        "delete Summaries by user ID", 
-    #        user_id
-    #    )
+    #        HTTPException(status_code=404, detail="Summaries not found"),
+    #        action="delete summaries by user ID",
+    #        context=user_id
+    #)
     
     return {"message": "User deleted successfully"}
     
