@@ -83,11 +83,13 @@ export async function getReaderView(emailId) {
     throw new Error(`Failed to retrieve ReaderView: ${response.statusText}`);
   }
   const email = await response.json();
-  // console.log(`Returning: \n ${email.reader_content}`);
   return email.reader_content;
 }
 
-async function getSummary(emailId) {
+async function getSummary(emailIds) {
+  const params = new URLSearchParams();
+  emailIds.forEach((id) => params.append("ids", id));
+  params.append("batch_size", emailIds.length);
   const option = {
     method: "GET",
     headers: {
@@ -97,7 +99,10 @@ async function getSummary(emailId) {
     },
   };
   try {
-    const req = new Request(`${baseUrl}/summaries/${emailId}`, option);
+    const req = new Request(
+      `${baseUrl}/summaries/batch?${params.toString()}`,
+      option
+    );
     const response = await fetch(req);
     if (!response.ok) {
       throw new Error(`Failed to retrieve summaries: ${response.statusText}`);
@@ -112,18 +117,18 @@ async function getSummary(emailId) {
 }
 
 export async function setSummary(ids, allEmails) {
-  const result = allEmails.map(async (email) => {
-    let toReturn = email;
-    if (ids.includes(email.email_id)) {
-      const summary = await getSummary(email.email_id);
-      if (!summary.valid) return toReturn;
-      toReturn.keywords = summary.keywords;
-      toReturn.summary_text = summary.summary_text;
-      console.log(`Summary of ${email.email_id} has been fetched`);
+  const result = await getSummary(ids);
+  const toReturn = allEmails.map((email) => {
+    let eml = email;
+    for (const summary of result) {
+      if (summary.email_id === eml.email_id) {
+        eml.summary_text = summary.summary_text;
+        eml.keywords = summary.keywords;
+      }
     }
-    return toReturn;
+    return eml;
   });
-  return result;
+  return toReturn;
 }
 
 function parseDate(date) {

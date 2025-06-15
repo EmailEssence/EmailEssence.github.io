@@ -119,8 +119,6 @@ function Client() {
   };
 
   const handleSetEmails = async (emails) => {
-    console.log("setting to emails");
-    console.log(emails);
     dispatchClient({
       type: "emailAdd",
       email: emails,
@@ -130,14 +128,9 @@ function Client() {
   // requests a page worth of emails and adds to the current email list,
   // returns whether more emails exist or not
   const requestMoreEmails = async () => {
-    console.log(
-      `fetchEmails being called with ${emailsPerPage} & ${client.emails.length}`
-    );
     const newEmails = await fetchEmails(emailsPerPage, client.emails.length);
-    console.log(`newEmails.length = ${newEmails.length}`);
     if (newEmails.length > 0) {
       handleAddEmails(newEmails);
-      console.log(`Length: ${newEmails.length}`);
     } else {
       setHasUnloadedEmails(false);
     }
@@ -151,7 +144,6 @@ function Client() {
   };
 
   const handleRequestSummaries = async (emails) => {
-    console.log("entered handlerequestssummaries");
     const ids = emails.map((email) => {
       return email.email_id;
     });
@@ -160,8 +152,6 @@ function Client() {
     const toSet = settledEmails
       .filter((r) => r.status === "fulfilled")
       .map((r) => r.value || r.result);
-    console.log("setting to emails with summaries");
-    console.log(result);
     dispatchClient({
       type: "emailAdd",
       email: toSet,

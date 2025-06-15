@@ -40,7 +40,6 @@ function WeightedEmailList({
   handlePageChange,
   requestSummaries,
 }) {
-  console.log(emailList);
   const [WEEmails, setWEEmails] = useState(startMiniView(emailList.length));
 
   useEffect(() => {
