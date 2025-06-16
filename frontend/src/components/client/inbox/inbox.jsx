@@ -17,18 +17,26 @@ function Inbox({
   emailsPerPage,
 }) {
   const [filteredEmails, setFilteredEmails] = useState(emailList);
+  const [isFiltered, setIsFiltered] = useState(false);
 
   useEffect(() => {
     setFilteredEmails(emailList);
   }, [emailList]);
 
   const handleEmailSearch = (e) => {
-    e === "" ? setFilteredEmails(emailList) : setFilteredEmails(trimList(e));
+    if (e === "") {
+      setFilteredEmails(emailList);
+      setIsFiltered(false);
+    } else {
+      setFilteredEmails(trimList(emailList, e));
+      setIsFiltered(true);
+    }
   };
 
   return (
     <div className="inbox-display">
       <InboxEmailList
+        isFiltered={isFiltered}
         displaySummaries={displaySummaries}
         emailList={filteredEmails}
         curEmail={curEmail}
@@ -81,6 +89,7 @@ function EmailEntry({ displaySummary, email, onClick, selected }) {
 }
 
 function InboxEmailList({
+  isFiltered,
   displaySummaries,
   emailList,
   curEmail,
@@ -91,25 +100,25 @@ function InboxEmailList({
   hasUnloadedEmails,
   emailsPerPage,
 }) {
-  // const [allEmailsLoaded, setAllEmailsLoaded] = useState(false);
-  // const [loadingEmails, setLoadingEmails] = useState(false);
   const [pages, setPages] = useState(1);
   const ref = useRef(null);
   const maxEmails = Math.min(pages * emailsPerPage, emailList.length);
   const hasLocallyUnloadedEmails = maxEmails < emailList.length;
 
   const handleScroll = async () => {
-    const fullyScrolled =
-      Math.abs(
-        ref.current.scrollHeight -
-          ref.current.clientHeight -
-          ref.current.scrollTop
-      ) <= 1;
-    if (fullyScrolled && (hasLocallyUnloadedEmails || hasUnloadedEmails)) {
-      if (hasUnloadedEmails) {
-        await requestMoreEmails();
+    if (!isFiltered) {
+      const fullyScrolled =
+        Math.abs(
+          ref.current.scrollHeight -
+            ref.current.clientHeight -
+            ref.current.scrollTop
+        ) <= 1;
+      if (fullyScrolled && (hasLocallyUnloadedEmails || hasUnloadedEmails)) {
+        if (hasUnloadedEmails) {
+          await requestMoreEmails();
+        }
+        setPages(pages + 1);
       }
-      setPages(pages + 1);
     }
   };
 
@@ -152,7 +161,6 @@ function InboxEmailList({
           placeholder="Search by keyword..."
           onChange={(e) => {
             handleEmailSearch(e.target.value);
-            setPages(1);
           }}
           className="inbox-search"
         />
@@ -198,6 +206,7 @@ InboxEmailList.propTypes = {
   ...sharedPropTypes,
   onClick: PropTypes.func,
   handleEmailSearch: PropTypes.func,
+  isFiltered: PropTypes.bool,
 };
 
 // Utils
