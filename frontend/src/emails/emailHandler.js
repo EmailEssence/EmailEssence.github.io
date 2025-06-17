@@ -4,6 +4,12 @@ import { fetchUserPreferences } from "../components/client/settings/settings";
 // export const baseUrl = "http://127.0.0.1:8000";
 export const baseUrl = "https://ee-backend-w86t.onrender.com";
 
+/**
+ * Filters out emails that already exist in the list.
+ * @param {Array<Email>} allEmails - The list of all emails.
+ * @param {Array<Email>} requestedEmails - The list of requested emails.
+ * @returns {Array<Email>} The list of new emails.
+ */
 function getNewEmails(allEmails, requestedEmails) {
   return requestedEmails.filter((reqEmail) => {
     let exists = false;
@@ -13,6 +19,13 @@ function getNewEmails(allEmails, requestedEmails) {
     return !exists;
   });
 }
+
+/**
+ * Handles the new emails by filtering out emails that already exist in the list.
+ * @param {Array<Email>} allEmails - The list of all emails.
+ * @param {Array<Email>} requestedEmails - The list of requested emails.
+ * @returns {Array<Email>} The list of new emails.
+ */
 export const handleNewEmails = (allEmails, requestedEmails) => {
   if (requestedEmails.length > 0) {
     const newEmails = getNewEmails(allEmails, requestedEmails);
@@ -104,11 +117,9 @@ export async function getReaderView(emailId) {
 }
 
 /**
- * Fetches summaries for a batch of email IDs.
- * @async
- * @param {Array<string>} emailIds - Array of email IDs.
- * @returns {Promise<Array<Object>>} Array of summary objects.
- * @throws {Error} If the request fails.
+ * Fetches the summary for a specific email.
+ * @param {string} emailId - The ID of the email to fetch the summary for.
+ * @returns {Promise<Object>} The summary of the email.
  */
 async function getSummary(emailIds) {
   const params = new URLSearchParams();
@@ -141,10 +152,9 @@ async function getSummary(emailIds) {
 }
 
 /**
- * Parses a date string into an array of [year, month, day, time].
- * @param {string} date - The date string to parse.
- * @returns {Array<string>} [year, month, day, time] or ["", "", "", ""] on error.
- * @throws {Error} If the date string is invalid or parsing fails.
+ * Parses the date of an email.
+ * @param {string} date - The date of the email.
+ * @returns {Array<string>} The parsed date.
  */
 export async function setSummary(ids, allEmails) {
   const result = await getSummary(ids);
@@ -177,10 +187,10 @@ function parseDate(date) {
 }
 
 /**
- * Fetches emails from the backend.
- * @async
- * @param {number} numRequested - The number of emails to fetch.
- * @returns {Promise<Array>} - Array of processed email objects.
+ * Fetches the emails from the server.
+ * @param {number} pageSize - The number of emails to fetch.
+ * @param {...any} args - The arguments to fetch the emails.
+ * @returns {Promise<Array<Email>>} The list of emails.
  */
 export default async function fetchEmails(pageSize, ...args) {
   try {
@@ -213,6 +223,12 @@ export default async function fetchEmails(pageSize, ...args) {
   }
 }
 
+/**
+ * Trims the list of emails by keyword.
+ * @param {Array<Email>} emails - The list of emails to trim.
+ * @param {string} keyword - The keyword to trim the list by.
+ * @returns {Array<Email>} The trimmed list of emails.
+ */
 export function trimList(emails, keyword) {
   const toReturn = emails.filter((email) => {
     if (email.subject.includes(keyword) || email.sender.includes(keyword))
@@ -224,10 +240,21 @@ export function trimList(emails, keyword) {
   });
   return toReturn;
 }
+
+/**
+ * Gets the top 5 emails.
+ * @param {Array<Email>} emails - The list of emails to get the top 5 from.
+ * @returns {Array<Email>} The top 5 emails.
+ */
 export function getTop5(emails) {
   return emails.length > 5 ? emails.slice(0, 5) : emails;
 }
 
+/**
+ * Marks an email as read.
+ * @param {string} emailId - The ID of the email to mark as read.
+ * @returns {Promise<void>}
+ */
 export async function markEmailAsRead(emailId) {
   console.log(emailId);
   return;

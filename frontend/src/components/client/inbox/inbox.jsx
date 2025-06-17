@@ -1,6 +1,13 @@
 import PropTypes from "prop-types";
 import { useEffect, useRef, useState } from "react";
 import ArrowIcon from "../../../assets/InboxArrow";
+import { emailsPerPage } from "../../../assets/constants";
+import { getPageSummaries } from "../../../emails/emailHandler";
+import EmailDisplay from "./emailDisplay";
+import { trimList } from "../../../emails/emailHandler"; // shared API URL base
+import "./emailEntry.css";
+import "./emailList.css";
+
 /**
  * Inbox component displays the email list and the selected email.
  * @param {Object} props
@@ -10,11 +17,6 @@ import ArrowIcon from "../../../assets/InboxArrow";
  * @param {Email} props.curEmail - The currently selected email.
  * @returns {JSX.Element}
  */
-function Inbox({ displaySummaries, emailList, setCurEmail, curEmail }) {
-import EmailDisplay from "./emailDisplay";
-import "./emailEntry.css";
-import "./emailList.css";
-import { trimList } from "../../../emails/emailHandler"; // shared API URL base
 
 function Inbox({
   displaySummaries,
@@ -245,17 +247,7 @@ InboxEmailList.propTypes = {
  * @param {Array<string|number>} date - [year, month, day]
  * @returns {string} Formatted date string.
  */
-const getDate = (date) => {
-  return `${date[1]}/${date[2]}/${date[0]}`;
-};
-
-/**
- * Extracts the sender's name from the sender string.
- * @param {string} sender - The sender string, e.g., "John Doe <john@example.com>"
- * @returns {string} The sender's name.
- */
-const getSenderName = (sender) => {
-  return sender.slice(0, sender.indexOf("<"));
-};
+const getDate = (date) => `${date[1]}/${date[2]}/${date[0]}`;
+const getSenderName = (sender) => sender.slice(0, sender.indexOf("<"));
 
 export default Inbox;

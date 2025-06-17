@@ -4,6 +4,16 @@ import ViewIcon from "../../../assets/ViewIcon";
 import { getTop5 } from "../../../emails/emailHandler";
 import "./dashboard.css";
 import MiniViewPanel from "./miniview";
+
+/**
+ * Dashboard component for the client.
+ * Displays the weighted email list and the mini view panel.
+ * @param {Object} props
+ * @param {Array<Email>} props.emailList - List of emails.
+ * @param {Function} props.handlePageChange - Function to change the client page.
+ * @param {Function} props.setCurEmail - Function to set the current email.
+ * @returns {JSX.Element}
+ */
 function Dashboard({
   emailList,
   handlePageChange,
@@ -33,6 +43,15 @@ function Dashboard({
   );
 }
 
+/**
+ * Renders a list of the top 5 weighted emails.
+ * @const {JSX.Element} WEList - Returns an array of WEListEmail components for the top 5 emails.
+ * @param {Object} props
+ * @param {Array<Email>} props.emailList - List of emails.
+ * @param {Function} props.setCurEmail - Function to set the current email.
+ * @param {Function} props.handlePageChange - Function to change the client page.
+ * @returns {JSX.Element}
+ */
 function WeightedEmailList({
   emailList,
   setCurEmail,

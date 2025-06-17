@@ -6,6 +6,10 @@ import "./Loading.css";
 
 const user_id = null; // Get user ID
 
+/**
+ * A loading component that handles the OAuth callback and navigates to the home page.
+ * It displays a loading spinner and text while the OAuth process is completed.
+ */
 export default function Loading({
   setInitialEmails,
   setInitialEmail,

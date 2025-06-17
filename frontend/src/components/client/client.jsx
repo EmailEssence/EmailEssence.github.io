@@ -11,6 +11,7 @@ import { clientReducer, userPreferencesReducer } from "./reducers";
 import { Settings } from "./settings/settings";
 import SideBar from "./sidebar/sidebar";
 import Loading from "../login/Loading";
+
 function Client() {
   const navigate = useNavigate();
   const [emailsPerPage, setEmailsPerPage] = useState(

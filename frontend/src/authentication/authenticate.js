@@ -1,4 +1,11 @@
 import { baseUrl } from "../emails/emailHandler";
+
+/**
+ * Initiates the OAuth authentication flow by redirecting to the backend login endpoint.
+ * Sets the redirect URI to the /loading route.
+ * @async
+ * @returns {void}
+ */
 export const authenticate = async () => {
   // Check for auth hash and render OAuthCallback if present
   const redirect_uri = `${window.location.origin}/loading`;
@@ -38,7 +45,6 @@ export const handleOAuthCallback = async () => {
   }
   return false;
 };
-
 
 /**
  * Handles authentication errors by logging out, storing the error message,

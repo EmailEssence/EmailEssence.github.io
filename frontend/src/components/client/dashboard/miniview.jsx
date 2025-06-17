@@ -107,9 +107,9 @@ function MiniViewBody({
   }, [pages]); // Fixes minimum for large screens, but runs effect after every load which is unnecessary
 
   /**
- * Renders the list of MiniViewEmail components up to maxEmails.
- * @returns {JSX.Element[]}
- */
+   * Renders the list of MiniViewEmail components up to maxEmails.
+   * @returns {JSX.Element[]}
+   */
   const emails = () => {
     const returnBlock = [];
     for (let i = 0; i < maxEmails; i++) {
