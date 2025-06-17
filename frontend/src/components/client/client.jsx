@@ -35,9 +35,10 @@ function Client() {
   useEffect(() => {
     const clock = setInterval(async () => {
       try {
-        const requestedEmails = await fetchEmails(0, true);
+        const requestedEmails = await fetchEmails(client.emails.length, true);
         const newEmails = handleNewEmails(client.emails, requestedEmails);
         if (newEmails.length > 0) handleAddEmails(newEmails, true);
+        console.log(newEmails.length);
       } catch (error) {
         console.error(`Loading Emails Error: ${error}`);
       }
