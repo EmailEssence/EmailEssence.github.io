@@ -1,32 +1,33 @@
+import PropTypes from "prop-types";
 import { useEffect } from "react";
 import { useNavigate } from "react-router";
-import { handleOAuthCallback } from "../../authentication/authenticate";
+import fetchEmails, { getUserPreferences } from "../../emails/emailHandler";
 import "./Loading.css";
 
-/**
- * A loading component that handles the OAuth callback and navigates to the home page.
- * It displays a loading spinner and text while the OAuth process is completed.
- */
-export default function Loading() {
+const user_id = null; // Get user ID
+
+export default function Loading({
+  setInitialEmails,
+  setInitialEmail,
+  emailsPerPage,
+}) {
   const navigate = useNavigate();
   useEffect(() => {
-    const completeOAuth = async () => {
-      try {
-        /* calls Oauth and updates the loading state */
-        await handleOAuthCallback();
-
-        navigate("/client/home#newEmails");
-        /* Link to /client & mention new emails */
-      } catch (error) {
-        console.error("OAuth callback failed:", error);
-        /* Optionally navigate to an error page */
+    // duplicate call
+    async function getInitialData() {
+      const initialEmails = await fetchEmails(emailsPerPage);
+      if (user_id) getUserPreferences(user_id);
+      if (initialEmails.length < 1) {
+        localStorage.setItem("error_message", "Failed To Retrieve Emails");
         navigate("/error");
+      } else {
+        setInitialEmails(initialEmails);
+        setInitialEmail(initialEmails[0]);
+        navigate("/client/home");
       }
-    };
-
-    completeOAuth();
-  }, [navigate]);
-
+    }
+    getInitialData();
+  }, [navigate, setInitialEmails, setInitialEmail, emailsPerPage]);
   return (
     <div className="loading">
       <div className="loading-spinner" role="spinner"></div>
@@ -34,3 +35,9 @@ export default function Loading() {
     </div>
   );
 }
+
+Loading.propTypes = {
+  setInitialEmails: PropTypes.func,
+  setInitialEmail: PropTypes.func,
+  emailsPerPage: PropTypes.number,
+};

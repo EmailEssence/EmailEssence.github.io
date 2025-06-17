@@ -1,11 +1,4 @@
-import { baseUrl, retrieveUserData } from "../emails/emailHandler";
-
-/**
- * Initiates the OAuth authentication flow by redirecting to the backend login endpoint.
- * Sets the redirect URI to the /loading route.
- * @async
- * @returns {void}
- */
+import { baseUrl } from "../emails/emailHandler";
 export const authenticate = async () => {
   // Check for auth hash and render OAuthCallback if present
   const redirect_uri = `${window.location.origin}/loading`;
@@ -29,34 +22,21 @@ export const handleOAuthCallback = async () => {
       if (authState.authenticated && authState.token) {
         const isAuthenticated = checkAuthStatus(authState.token);
         if (isAuthenticated) {
-          await handleAuthenticate(authState.token);
+          localStorage.setItem("auth_token", authState.token);
         } else {
           handleAuthError("Unable to authenticate");
+          return false;
         }
       }
-      return;
     } catch (error) {
       window.location.hash = "";
       console.error("Error parsing auth state:", error);
       handleAuthError(error);
+      return false;
     }
+    return true;
   }
-};
-
-/**
- * Stores the authentication token and retrieves user data.
- * Navigates to the error page if authentication fails.
- * @async
- * @param {string} token - The authentication token.
- * @returns {Promise<void>}
- */
-export const handleAuthenticate = async (token) => {
-  try {
-    localStorage.setItem("auth_token", token);
-    await retrieveUserData();
-  } catch (error) {
-    handleAuthError(error);
-  }
+  return false;
 };
 
 

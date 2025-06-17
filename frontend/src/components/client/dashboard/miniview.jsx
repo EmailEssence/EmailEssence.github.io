@@ -3,7 +3,6 @@ import PropTypes from "prop-types";
 import { useEffect, useRef, useState } from "react";
 import FullScreenIcon from "../../../assets/FullScreenIcon";
 import InboxIcon from "../../../assets/InboxArrow";
-import { emailsPerPage } from "../../../assets/constants";
 import "./miniview.css";
 
 /**
@@ -15,7 +14,14 @@ import "./miniview.css";
  * @param {Function} props.setCurEmail - Function to set the current email.
  * @returns {JSX.Element}
  */
-function MiniViewPanel({ emailList, handlePageChange, setCurEmail }) {
+function MiniViewPanel({
+  emailList,
+  handlePageChange,
+  setCurEmail,
+  requestMoreEmails,
+  emailsPerPage,
+  hasUnloadedEmails,
+}) {
   return (
     <div className="mini-view">
       <MiniViewHead handlePageChange={handlePageChange} />
@@ -23,6 +29,9 @@ function MiniViewPanel({ emailList, handlePageChange, setCurEmail }) {
         emailList={emailList}
         setCurEmail={setCurEmail}
         handlePageChange={handlePageChange}
+        requestMoreEmails={requestMoreEmails}
+        emailsPerPage={emailsPerPage}
+        hasUnloadedEmails={hasUnloadedEmails}
       />
     </div>
   );
@@ -62,27 +71,33 @@ function MiniViewHead({ handlePageChange }) {
  * @param {Function} props.handlePageChange - Function to change the client page.
  * @returns {JSX.Element}
  */
-function MiniViewBody({ emailList, setCurEmail, handlePageChange }) {
+function MiniViewBody({
+  emailList,
+  setCurEmail,
+  handlePageChange,
+  requestMoreEmails,
+  emailsPerPage,
+  hasUnloadedEmails,
+}) {
   const [pages, setPages] = useState(1);
   const ref = useRef(null);
-  const maxEmails =
-    pages * emailsPerPage < emailList.length
-      ? pages * emailsPerPage
-      : emailList.length;
-  const hasUnloadedEmails = maxEmails < emailList.length;
-
+  let maxEmails = Math.min(pages * emailsPerPage, emailList.length);
+  let hasLocallyUnloadedEmails = maxEmails < emailList.length;
 
   /**
    * Handles the scroll event to load more emails when the user scrolls to the bottom.
    */
-  const handleScroll = () => {
+  const handleScroll = async () => {
     const fullyScrolled =
       Math.abs(
         ref.current.scrollHeight -
           ref.current.clientHeight -
           ref.current.scrollTop
       ) <= 1;
-    if (fullyScrolled && hasUnloadedEmails) {
+    if (fullyScrolled && (hasLocallyUnloadedEmails || hasUnloadedEmails)) {
+      if (hasUnloadedEmails) {
+        await requestMoreEmails();
+      }
       setPages(pages + 1);
     }
   };
@@ -147,9 +162,16 @@ const commonPropTypesDashboard = {
   setCurEmail: PropTypes.func,
 };
 
+const commonUtilityPropTypes = {
+  emailList: PropTypes.array,
+  requestMoreEmails: PropTypes.func,
+  emailsPerPage: PropTypes.number,
+  hasUnloadedEmails: PropTypes.bool,
+};
+
 MiniViewPanel.propTypes = {
   ...commonPropTypesDashboard,
-  emailList: PropTypes.array,
+  ...commonUtilityPropTypes,
 };
 
 MiniViewHead.propTypes = {
@@ -158,7 +180,7 @@ MiniViewHead.propTypes = {
 
 MiniViewBody.propTypes = {
   ...commonPropTypesDashboard,
-  emailList: PropTypes.array,
+  ...commonUtilityPropTypes,
 };
 
 MiniViewEmail.propTypes = {
