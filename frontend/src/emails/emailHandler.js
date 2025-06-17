@@ -1,5 +1,5 @@
-import { fetchUserPreferences } from "../components/client/settings/settings";
 import DOMPurify from "dompurify";
+import { fetchUserPreferences } from "../components/client/settings/settings";
 // TODO : env variable for baseUrl
 // export const baseUrl = "http://127.0.0.1:8000";
 export const baseUrl = "https://ee-backend-w86t.onrender.com";
@@ -13,7 +13,6 @@ function getNewEmails(allEmails, requestedEmails) {
     return !exists;
   });
 }
-
 export const handleNewEmails = (allEmails, requestedEmails) => {
   if (requestedEmails.length > 0) {
     const newEmails = getNewEmails(allEmails, requestedEmails);
@@ -23,7 +22,13 @@ export const handleNewEmails = (allEmails, requestedEmails) => {
   }
   return [];
 };
-
+/**
+ * Fetches user preferences based on the user ID.
+ * @async
+ * @param {string} user_id - The ID of the user whose preferences are to be fetched.
+ * @returns {Promise<void>}
+ * @throws {Error} If there is an error during the fetch operation.
+ */
 export const getUserPreferences = async (user_id) => {
   try {
     const preferences = await fetchUserPreferences(user_id);
@@ -32,7 +37,12 @@ export const getUserPreferences = async (user_id) => {
     console.error(error);
   }
 };
-
+/**
+ * Fetches raw emails from the backend.
+ * @param {number} extension - The number of emails to fetch.
+ * @returns {Promise<array>} - A promise that resolves to an array of emails.
+ * @throws {Error} If it fails to retrieve emails or response is not ok.
+ */
 async function getEmails(number, ...args) {
   let refresh = "false";
   let curEmail = "0";
@@ -66,6 +76,13 @@ async function getEmails(number, ...args) {
   }
 }
 
+/**
+ * Fetches the reader view content for a specific email.
+ * @async
+ * @param {string} emailId - The ID of the email to fetch the reader view for.
+ * @returns {Promise<string>} - A promise that resolves to the reader view content of the email.
+ * @throws {Error} Will throw if the fetch fails.
+ */
 export async function getReaderView(emailId) {
   const option = {
     method: "GET",
@@ -86,6 +103,13 @@ export async function getReaderView(emailId) {
   return email.reader_content;
 }
 
+/**
+ * Fetches summaries for a batch of email IDs.
+ * @async
+ * @param {Array<string>} emailIds - Array of email IDs.
+ * @returns {Promise<Array<Object>>} Array of summary objects.
+ * @throws {Error} If the request fails.
+ */
 async function getSummary(emailIds) {
   const params = new URLSearchParams();
   emailIds.forEach((id) => params.append("ids", id));
@@ -116,6 +140,12 @@ async function getSummary(emailIds) {
   }
 }
 
+/**
+ * Parses a date string into an array of [year, month, day, time].
+ * @param {string} date - The date string to parse.
+ * @returns {Array<string>} [year, month, day, time] or ["", "", "", ""] on error.
+ * @throws {Error} If the date string is invalid or parsing fails.
+ */
 export async function setSummary(ids, allEmails) {
   const result = await getSummary(ids);
   const toReturn = allEmails.map((email) => {
@@ -146,6 +176,12 @@ function parseDate(date) {
   }
 }
 
+/**
+ * Fetches emails from the backend.
+ * @async
+ * @param {number} numRequested - The number of emails to fetch.
+ * @returns {Promise<Array>} - Array of processed email objects.
+ */
 export default async function fetchEmails(pageSize, ...args) {
   try {
     // Fetch both emails and summaries concurrently
@@ -188,7 +224,6 @@ export function trimList(emails, keyword) {
   });
   return toReturn;
 }
-
 export function getTop5(emails) {
   return emails.length > 5 ? emails.slice(0, 5) : emails;
 }

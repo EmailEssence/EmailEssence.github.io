@@ -2,13 +2,16 @@
 Service for handling email summarization operations.
 """
 
-import logging
+# Standard library imports
 from typing import List, Optional, Dict, Any
 from datetime import datetime, timezone, timedelta
-from fastapi import HTTPException, status
-from fastapi import Depends
+
+# Third-party imports
+from fastapi import HTTPException, status, Depends
 from bson import ObjectId
 
+# Internal imports
+from app.utils.helpers import get_logger, log_operation, standardize_error_response
 from app.models import EmailSchema, SummarySchema
 from app.services.database.repositories.summary_repository import SummaryRepository
 from app.services.database.factories import get_summary_repository, get_email_service
@@ -19,15 +22,11 @@ from app.services.summarization import (
     GeminiEmailSummarizer
 )
 
-# Configure logging with format and level
-logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'
-)
+# -------------------------------------------------------------------------
+# Configuration
+# -------------------------------------------------------------------------
 
-# Create module-specific logger
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, 'service')
 
 class SummaryService:
     """
@@ -61,10 +60,9 @@ class SummaryService:
             await self.summary_repository.create_index("generated_at")  # For time-based queries
             await self.summary_repository.create_index("google_id")  # For user-specific summaries
             
-            logger.info("Summary collection indexes initialized")
+            log_operation(logger, 'info', "Summary collection indexes initialized")
         except Exception as e:
-            logger.error(f"Failed to initialize summary indexes: {e}")
-            raise
+            raise standardize_error_response(e, "initialize summary indexes")
     
     async def save_summary(self, summary: SummarySchema, google_id: str) -> str:
         """
@@ -101,12 +99,11 @@ class SummaryService:
             if not result:
                 raise Exception("Failed to save summary")
                 
-            logger.debug(f"Summary saved for email {summary.email_id} for user {google_id}")
+            log_operation(logger, 'debug', f"Summary saved for email {summary.email_id} for user {google_id}")
             return summary.email_id
             
         except Exception as e:
-            logger.error(f"Failed to save summary: {e}")
-            raise HTTPException(status_code=500, detail=str(e))
+            raise standardize_error_response(e, "save summary", summary.email_id)
     
     async def get_summary(self, email_id: str, google_id: str) -> Optional[SummarySchema]:
         """
@@ -132,8 +129,7 @@ class SummaryService:
             # Otherwise create a new SummarySchema instance
             return SummarySchema(**result)
         except Exception as e:
-            logger.error(f"Failed to retrieve summary for email {email_id}: {e}")
-            raise HTTPException(status_code=500, detail=str(e))
+            raise standardize_error_response(e, "get summary", email_id)
     
     async def get_summaries(
         self, 
@@ -177,8 +173,7 @@ class SummaryService:
             # Convert results to SummarySchema objects if needed
             return [result if isinstance(result, SummarySchema) else SummarySchema(**result) for result in results]
         except Exception as e:
-            logger.error(f"Failed to retrieve summaries: {e}")
-            raise HTTPException(status_code=500, detail=str(e))
+            raise standardize_error_response(e, "get summaries")
     
     async def search_by_keywords(
         self, 
@@ -208,8 +203,7 @@ class SummaryService:
             results = await self.summary_repository.find_many(query, limit=limit)
             return [result if isinstance(result, SummarySchema) else SummarySchema(**result) for result in results]
         except Exception as e:
-            logger.error(f"Failed to search summaries by keywords: {e}")
-            raise HTTPException(status_code=500, detail=str(e))
+            raise standardize_error_response(e, "search summaries by keywords")
     
     async def get_recent_summaries(
         self, 
@@ -246,7 +240,7 @@ class SummaryService:
             if google_id:
                 query["google_id"] = google_id
                 
-            logger.debug(f"Querying summaries between {cutoff_date.isoformat()} and {now.isoformat()}")
+            log_operation(logger, 'debug', f"Querying summaries between {cutoff_date.isoformat()} and {now.isoformat()}")
             
             results = await self.summary_repository.find_many(
                 query,
@@ -254,11 +248,10 @@ class SummaryService:
                 sort=[("generated_at", -1)]
             )
             
-            logger.debug(f"Found {len(results)} summaries matching query")
+            log_operation(logger, 'debug', f"Found {len(results)} summaries matching query")
             return [result if isinstance(result, SummarySchema) else SummarySchema(**result) for result in results]
         except Exception as e:
-            logger.error(f"Failed to retrieve recent summaries: {e}", exc_info=True)
-            raise HTTPException(status_code=500, detail=str(e))
+            raise standardize_error_response(e, "get recent summaries")
     
     async def delete_summary(self, email_id: str, google_id: str) -> bool:
         """
@@ -279,14 +272,39 @@ class SummaryService:
             deleted = result.deleted_count > 0
             
             if deleted:
-                logger.info(f"Summary for email {email_id} deleted for user {google_id}")
+                log_operation(logger, 'info', f"Summary for email {email_id} deleted for user {google_id}")
             else:
-                logger.info(f"No summary found for email {email_id} for user {google_id} to delete")
+                log_operation(logger, 'info', f"No summary found for email {email_id} for user {google_id} to delete")
                 
             return deleted
         except Exception as e:
-            logger.error(f"Failed to delete summary for email {email_id}: {e}")
-            raise HTTPException(status_code=500, detail=str(e))
+            raise standardize_error_response(e, "delete summary", email_id)
+    
+    async def delete_summaries_by_google_id(self, google_id: str) -> bool:
+        """
+        Delete all summaries for a specific Google user ID.
+        
+        Args:
+            google_id: Google ID of the user whose summaries to delete
+            
+        Returns:
+            bool: True if any summaries were deleted, False otherwise
+            
+        Raises:
+            Exception: If database operation fails
+        """
+        try:
+            result = await self.summary_repository.delete_by_google_id({"google_id": google_id})
+            deleted = result.deleted_count > 0
+            
+            if deleted:
+                log_operation(logger, 'info', f"All summaries deleted for user {google_id}")
+            else:
+                log_operation(logger, 'info', f"No summaries found for user {google_id} to delete")
+                
+            return deleted
+        except Exception as e:
+            raise standardize_error_response(e, "delete summaries by google id", google_id)
     
     async def save_summaries_batch(self, summaries: List[SummarySchema], google_id: str) -> Dict[str, int]:
         """
@@ -326,14 +344,13 @@ class SummaryService:
                     "inserted": result.upserted_count,
                     "modified": result.modified_count
                 }
-                logger.info(f"Batch summary save: {result.upserted_count} inserted, "
+                log_operation(logger, 'info', f"Batch summary save: {result.upserted_count} inserted, "
                             f"{result.modified_count} modified for user {google_id}")
                 return stats
             return {"inserted": 0, "modified": 0}
             
         except Exception as e:
-            logger.error(f"Error in batch saving summaries: {e}")
-            raise HTTPException(status_code=500, detail=str(e))
+            raise standardize_error_response(e, "save summaries batch")
     
     async def count_summaries(self, query: Dict = None, google_id: str = None) -> int:
         """
@@ -355,8 +372,7 @@ class SummaryService:
                 query["google_id"] = google_id
             return await self.summary_repository.count_documents(query)
         except Exception as e:
-            logger.error(f"Failed to count summaries: {e}")
-            raise HTTPException(status_code=500, detail=str(e))
+            raise standardize_error_response(e, "count summaries")
     
     async def get_summaries_by_ids(self, email_ids: List[str], google_id: str) -> List[SummarySchema]:
         """
@@ -389,12 +405,11 @@ class SummaryService:
                     summaries.append(SummarySchema(**doc))
             
             # Log how many were found
-            logger.debug(f"Found {len(summaries)} summaries out of {len(email_ids)} requested for user {google_id}")
+            log_operation(logger, 'debug', f"Found {len(summaries)} summaries out of {len(email_ids)} requested for user {google_id}")
             
             return summaries
         except Exception as e:
-            logger.error(f"Failed to retrieve summaries by IDs: {e}")
-            raise HTTPException(status_code=500, detail=str(e))
+            raise standardize_error_response(e, "get summaries by ids")
     
     async def get_or_create_summary(
         self,
@@ -422,7 +437,7 @@ class SummaryService:
             # Get email data
             email = await self.email_service.get_email(email_id, google_id)
             if not email:
-                logger.warning(f"Email {email_id} not found for user {google_id}")
+                log_operation(logger, 'warning', f"Email {email_id} not found for user {google_id}")
                 return None
                 
             # Generate summary using EmailSchema directly
@@ -432,7 +447,7 @@ class SummaryService:
             )
             
             if not summaries:
-                logger.warning(f"Failed to generate summary for email {email_id}")
+                log_operation(logger, 'warning', f"Failed to generate summary for email {email_id}")
                 return None
                 
             # Create a new SummarySchema with the google_id
@@ -442,13 +457,12 @@ class SummaryService:
             
             # Store summary
             await self.save_summary(summary, google_id)
-            logger.info(f"Created new summary for email {email_id}")
+            log_operation(logger, 'info', f"Created new summary for email {email_id}")
             
             return summary.model_dump()
             
         except Exception as e:
-            logger.error(f"Failed to get or create summary for email {email_id}: {e}")
-            raise HTTPException(status_code=500, detail=str(e))
+            raise standardize_error_response(e, "get or create summary", email_id)
     
     async def get_or_create_summaries_batch(
         self,
@@ -509,14 +523,15 @@ class SummaryService:
                                     missing_emails.append(email)
                                 else:
                                     failed_emails.append(email_id)
-                                    logger.warning(f"Email {email_id} not found for user {google_id}")
+                                    log_operation(logger, 'warning', f"Email {email_id} not found for user {google_id}")
                             except Exception as e:
                                 failed_emails.append(email_id)
-                                logger.warning(f"Error fetching email {email_id}: {e}")
+                                log_operation(logger, 'warning', f"Error fetching email {email_id}: {e}")
                         
                         if missing_emails:
                             # Generate summaries for missing emails
                             try:
+                                log_operation(logger, 'info', f"Attempting to generate summaries for {len(missing_emails)} emails.")
                                 new_summaries = await summarizer.summarize(
                                     missing_emails,
                                     strategy=ProcessingStrategy.ADAPTIVE
@@ -527,7 +542,7 @@ class SummaryService:
                                     await self.save_summaries_batch(new_summaries, google_id)
                                     all_summaries.extend(new_summaries)
                             except Exception as e:
-                                logger.error(f"Failed to generate summaries for batch: {e}")
+                                log_operation(logger, 'error', f"Failed to generate summaries for batch: {e}")
                                 all_failed_summaries.extend([email.email_id for email in missing_emails])
                                 continue
                         
@@ -537,13 +552,13 @@ class SummaryService:
                     all_summaries.extend(existing_summaries)
                     
                 except Exception as e:
-                    logger.error(f"Error processing batch {i//batch_size + 1}: {e}")
+                    log_operation(logger, 'error', f"Error processing batch {i//batch_size + 1}: {e}")
                     # Mark all emails in this batch as failed
                     all_failed_summaries.extend(batch_ids)
                     continue
             
             # Log final results
-            logger.info(
+            log_operation(logger, 'info',
                 f"Batch summary results for user {google_id}: "
                 f"{len(all_summaries)} successful, {len(all_missing_emails)} missing emails, "
                 f"{len(all_failed_summaries)} failed summaries"
@@ -556,8 +571,4 @@ class SummaryService:
             }
             
         except Exception as e:
-            logger.error(f"Failed to process batch summaries: {e}")
-            raise HTTPException(
-                status_code=500,
-                detail=f"Failed to process summaries: {str(e)}"
-            ) 
+            raise standardize_error_response(e, "process batch summaries")

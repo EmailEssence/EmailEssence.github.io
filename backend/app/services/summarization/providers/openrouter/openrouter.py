@@ -1,47 +1,43 @@
-# Standard library imports
+# Core
 from typing import List, Optional, Dict, TypeVar
 from datetime import datetime, timezone
 import asyncio
 import json
+import sys
 
-# Third-party imports
-from openai import (
-    RateLimitError,
-    APITimeoutError,
-    APIError,
-    AsyncOpenAI
-)
+from openai import AsyncOpenAI, RateLimitError, APITimeoutError, APIError
 from tenacity import (
     retry,
     stop_after_attempt,
     wait_exponential,
     retry_if_exception_type
 )
-
-# Internal imports
-from app.models import EmailSchema, SummarySchema
+# internal
 from app.services.summarization.base import AdaptiveSummarizer
-from app.services.summarization.prompts import PromptManager
 from app.services.summarization.types import ModelBackend, ModelConfig
-from app.utils.config import ProviderModel, SummarizerProvider, PromptVersion
-from .prompts import OpenAIPromptManager
+from app.models import EmailSchema, SummarySchema
+from app.utils.config import ProviderModel, SummarizerProvider
+from app.services.summarization.prompts import PromptManager
+from .prompts import OpenRouterPromptManager
+from app.utils.config import PromptVersion
+from app.utils.helpers import get_logger
 
-T = TypeVar('T')
-
-class OpenAIBackend(ModelBackend):
-    """OpenAI implementation of the ModelBackend protocol."""
+class OpenRouterBackend(ModelBackend):
+    """OpenRouter implementation that delegates model routing to the provider."""
     
     def __init__(
         self,
         api_key: str,
         prompt_manager: PromptManager,
-        model: str = ProviderModel.default_for_provider(SummarizerProvider.OPENAI),
         temperature: float = 0.3,
         max_tokens: int = 150,
     ):
-        self.client = AsyncOpenAI(api_key=api_key)
+        self.logger = get_logger(self.__class__.__name__, 'service')
+        self.client = AsyncOpenAI(
+            base_url="https://openrouter.ai/api/v1",
+            api_key=api_key            
+        )
         self.prompt_manager = prompt_manager
-        self.model = model
         self.temperature = temperature
         self.max_tokens = max_tokens
 
@@ -49,7 +45,7 @@ class OpenAIBackend(ModelBackend):
         retry=retry_if_exception_type((
             RateLimitError,
             APITimeoutError,
-            APIError
+            APIError,
         )),
         wait=wait_exponential(multiplier=1, min=4, max=10),
         stop=stop_after_attempt(3)
@@ -59,38 +55,59 @@ class OpenAIBackend(ModelBackend):
         content: str,
         config: Optional[ModelConfig] = None
     ) -> tuple[str, List[str]]:
-        """Generate a summary for a single email using managed prompts."""
+        """Generate a summary, letting OpenRouter handle model selection."""
         cfg = config or {}
         
         messages = [
             {
                 "role": "system", 
                 "content": self.prompt_manager.get_system_prompt()
-             },
+            },
             {
                 "role": "user", 
                 "content": self.prompt_manager.get_user_prompt(content)
             }
         ]
         
-        response = await self.client.chat.completions.create(
-            model=cfg.get("model", self.model),
-            messages=messages,
-            temperature=cfg.get("temperature", self.temperature),
-            max_tokens=cfg.get("max_tokens", self.max_tokens),
-            response_format=self.prompt_manager.get_response_format()
-        )
-        
+        # Log the request payload for diagnostics
+        request_payload = {
+            "messages": messages,
+            "temperature": cfg.get("temperature", self.temperature),
+            "max_tokens": cfg.get("max_tokens", self.max_tokens),
+            "models": ProviderModel.get_openrouter_fallbacks(),
+            "route": "fallback"
+        }
+        self.logger.info(f"Sending request to OpenRouter: {json.dumps(request_payload, indent=2)}")
+
+        try:
+            # Let OpenRouter select the model from the provided list
+            response = await self.client.chat.completions.create(
+                model=ProviderModel.get_openrouter_fallbacks()[0], # Required by SDK, OR will use list below
+                messages=messages,
+                temperature=cfg.get("temperature", self.temperature),
+                max_tokens=cfg.get("max_tokens", self.max_tokens),
+                response_format=self.prompt_manager.get_response_format(),
+                extra_body={
+                    "models": ProviderModel.get_openrouter_fallbacks(),
+                    "route": "fallback" # Ensures it tries models in order
+                }
+            )
+        except APIError as e:
+            self.logger.error(f"OpenRouter API request failed with status code {e.status_code}.")
+            if e.body:
+                self.logger.error(f"Error response body: {e.body}")
+            raise # Re-raise the exception to be handled by the retry decorator or calling service
+
         # Parse the response
         try:
             result = json.loads(response.choices[0].message.content)
-            return result["summary"], result["keywords"]
-        except (json.JSONDecodeError, KeyError) as e:
+            return result.get("summary", ""), result.get("keywords", [])
+        except (json.JSONDecodeError, KeyError, IndexError) as e:
             # Fallback handling if JSON parsing fails
+            self.logger.warning(f"Failed to parse JSON. Response: {response.choices[0].message.content if response.choices else 'empty'}. Error: {e}")
             summary = response.choices[0].message.content
             return summary.strip(), []
 
-    # TODO: Implement batch processing in a more efficient way that actually lowers resource usage and token limits ie. chunking
     async def batch_generate_summaries(
         self,
         contents: List[str],
@@ -111,27 +128,25 @@ class OpenAIBackend(ModelBackend):
     @property
     def model_info(self) -> Dict[str, str]:
         return {
-            "provider": "OpenAI",
-            "model": self.model
+            "provider": "OpenRouter",
+            "model": "auto" # Model is selected by OpenRouter
         }
 
-class OpenAIEmailSummarizer(AdaptiveSummarizer[EmailSchema]):
-    """Email summarizer implementation using OpenAI's API."""
+class OpenRouterEmailSummarizer(AdaptiveSummarizer[EmailSchema]):
+    """Email summarizer implementation using OpenRouter's API."""
     
     def __init__(
         self,
         api_key: str,
-        model: str = "gpt-4o-mini",
         batch_threshold: int = 10,
         max_batch_size: int = 50,
         timeout: float = 30.0,
         prompt_version: PromptVersion = PromptVersion.latest(),
     ):
-        prompt_manager = OpenAIPromptManager(prompt_version=prompt_version)
-        backend = OpenAIBackend(
+        prompt_manager = OpenRouterPromptManager(prompt_version=prompt_version)
+        backend = OpenRouterBackend(
             api_key=api_key,
             prompt_manager=prompt_manager,
-            model=model,
         )
         super().__init__(
             model_backend=backend,

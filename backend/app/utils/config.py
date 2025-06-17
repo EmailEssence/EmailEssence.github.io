@@ -2,18 +2,18 @@
 from pydantic_settings import BaseSettings
 from functools import lru_cache
 from enum import Enum
-from typing import Optional
-from pydantic import ConfigDict
+from typing import Optional, List
+from pydantic import ConfigDict, model_validator
 
 class SummarizerProvider(str, Enum):
     OPENAI = "openai" # Currently Best option 
     GOOGLE = "gemini"  
-    # TODO: Add DeepSeek
+    OPENROUTER = "openrouter"
     LOCAL = "local"
 
     @classmethod
     def default(cls) -> "SummarizerProvider":
-        return cls.OPENAI
+        return cls.OPENROUTER
 
 
 class ProviderModel(str, Enum):
@@ -24,10 +24,11 @@ class ProviderModel(str, Enum):
     # Gemini Models
     GEMINI_2_FLASH_LITE = "gemini-2.0-flash-lite-preview-02-05"
     GEMINI_2_FLASH = "gemini-2.0-flash-001"
-    
-    # TODO: Check for updates to flash_lite!
 
-    # DeepSeek Models TODO: UNIMPLEMENTED
+    # OpenRouter - 
+    OR_GPT_4_1_NANO = "openai/gpt-4.1-nano"
+    OR_MINISTRAL_8B = "mistralai/ministral-8b"
+    OR_GEMINI_2_5_FLASH = "google/gemini-2.5-flash-preview"
 
     @classmethod
     def default_for_provider(cls, provider: SummarizerProvider) -> "ProviderModel":
@@ -35,11 +36,23 @@ class ProviderModel(str, Enum):
         defaults = {
             SummarizerProvider.OPENAI: cls.GPT_4O_MINI,
             SummarizerProvider.GOOGLE: cls.GEMINI_2_FLASH_LITE,
-            SummarizerProvider.LOCAL: cls.GEMINI_2_FLASH_LITE,  # Fallback to OpenAI
+            SummarizerProvider.OPENROUTER: cls.OR_GPT_4_1_NANO,
+            SummarizerProvider.LOCAL: cls.GPT_4O_MINI,  # Fallback to OpenAI
         }
 
-
         return defaults.get(provider, cls.GPT_4O_MINI)
+
+    @classmethod
+    def get_openrouter_fallbacks(cls) -> List["ProviderModel"]:
+        """
+        Get ordered list of OpenRouter models for fallback.
+        The API limits the fallback list to a maximum of 3 models.
+        """
+        return [
+            cls.OR_GPT_4_1_NANO,
+            cls.OR_MINISTRAL_8B,
+            cls.OR_GEMINI_2_5_FLASH,
+        ]
 
 class PromptVersion(str, Enum):
     V1 = "v1"
@@ -69,11 +82,12 @@ class Settings(BaseSettings):
     oauth_callback_url: Optional[str] = None
 
     # AI Providers
-    openai_api_key: str
-    google_api_key: str | None = None
-    deepseek_api_key: str | None = None
-    gemini_api_key: str | None = None
-    
+    openrouter_api_key: Optional[str] = None # No longer required
+    openai_api_key: Optional[str] = None
+    google_api_key: Optional[str] = None
+    deepseek_api_key: Optional[str] = None
+    gemini_api_key: Optional[str] = None
+     
     # Summarizer settings
     summarizer_provider: SummarizerProvider = SummarizerProvider.default()
     summarizer_model: ProviderModel = ProviderModel.default_for_provider(summarizer_provider)
@@ -81,6 +95,17 @@ class Settings(BaseSettings):
     summarizer_prompt_version: PromptVersion = PromptVersion.latest()
     
     model_config = ConfigDict(env_file=".env", use_enum_values=True)
+    
+    @model_validator(mode='after')
+    def validate_api_keys(self) -> 'Settings':
+        """Validate that the required API keys are present for the selected provider."""
+        if self.summarizer_provider == SummarizerProvider.OPENROUTER and not self.openrouter_api_key:
+            raise ValueError("OPENROUTER_API_KEY must be set when using the OpenRouter provider")
+        if self.summarizer_provider == SummarizerProvider.OPENAI and not self.openai_api_key:
+            raise ValueError("OPENAI_API_KEY must be set when using the OpenAI provider")
+        if self.summarizer_provider == SummarizerProvider.GOOGLE and not self.google_api_key:
+            raise ValueError("GOOGLE_API_KEY must be set when using the Google provider")
+        return self
         
 @lru_cache()
 def get_settings() -> Settings:

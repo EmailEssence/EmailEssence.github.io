@@ -23,9 +23,9 @@ For local development without Docker, use one of the provided setup scripts:
 
 #### On Windows:
 
-```bash
+```ps1
 # Run the setup script to create a virtual environment and install dependencies
-.\setup.bat
+.\\setup.ps1
 ```
 
 These scripts will:
@@ -134,7 +134,7 @@ For Render deployments, environment variables are configured through the Render 
    - `google_client_secret`
    - `email_account`
    - `mongo_uri`
-   - `openai_api_key`
+   - `openrouter_api_key`
    - Any optional variables you wish to override
 
 This separates your development environment configuration from your production deployment, following security best practices.
@@ -152,9 +152,6 @@ For CI/CD environments, use the CI setup scripts:
 ```bash
 # Unix/Linux/macOS
 ./setup-ci.sh
-
-# Windows
-.\setup-ci.bat
 ```
 
 ## Troubleshooting

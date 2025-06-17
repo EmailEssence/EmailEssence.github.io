@@ -1,6 +1,9 @@
+# Standard library imports
 from typing import Dict, TypeVar, List, Optional
 from datetime import datetime, timezone
 import json
+
+# Third-party imports
 from google import genai
 from google.genai import types
 from tenacity import (
@@ -9,13 +12,13 @@ from tenacity import (
     wait_exponential,
     retry_if_exception_type
 )
-# internal
-from app.services.summarization.prompts import PromptManager
-from app.utils.config import ProviderModel, SummarizerProvider
-from app.services.summarization.providers.openai.openai import OpenAIBackend, OpenAIEmailSummarizer
+
+# Internal imports
 from app.models import SummarySchema
+from app.services.summarization.prompts import PromptManager, PromptVersion
+from app.services.summarization.providers.openai.openai import OpenAIBackend, OpenAIEmailSummarizer
 from app.services.summarization.types import ModelBackend, ModelConfig
-from app.services.summarization.prompts import PromptVersion
+from app.utils.config import ProviderModel, SummarizerProvider
 from .prompts import GeminiPromptManager
 
 
