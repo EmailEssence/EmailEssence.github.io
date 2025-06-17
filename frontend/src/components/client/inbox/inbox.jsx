@@ -1,8 +1,6 @@
 import PropTypes from "prop-types";
 import { useEffect, useRef, useState } from "react";
 import ArrowIcon from "../../../assets/InboxArrow";
-import { emailsPerPage } from "../../../assets/constants";
-import { getPageSummaries } from "../../../emails/emailHandler";
 import EmailDisplay from "./emailDisplay";
 import { trimList } from "../../../emails/emailHandler"; // shared API URL base
 import "./emailEntry.css";
@@ -50,7 +48,7 @@ function Inbox({
       <InboxEmailList
         isFiltered={isFiltered}
         displaySummaries={displaySummaries}
-        emailList={emailList}
+        emailList={filteredEmails}
         curEmail={curEmail}
         onClick={setCurEmail}
         handleEmailSearch={handleEmailSearch}
