@@ -40,9 +40,8 @@ beforeEach(() => {
     const original = await vi.importActual("../emails/emailHandler");
     return {
       ...original,
-      emails: [...mockEmail1, ...mockEmail2],
       getTop5: vi.fn(() => [...mockEmail1, ...mockEmail2]),
-      default: vi.fn(),
+      default: vi.fn(() => [...mockEmail1, ...mockEmail2]),
     };
   });
 });
