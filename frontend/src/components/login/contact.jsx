@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import { useNavigate } from "react-router";
 import Logo from "../../assets/Logo";
 import "./Home.css";
@@ -9,10 +9,6 @@ export default function Contact() {
     const overviewRef = useRef(null);
     const aboutRef = useRef(null);
 
-    /* Scrolls to the top */
-    useEffect(() => { window.scrollTo(0, 0);}, []);
-
-    /* smoothly scrolls to the ref section */
     const scrollToSection = (ref) => {
         if (ref.current) {
             ref.current.scrollIntoView({ behavior: "smooth" });
@@ -37,26 +33,7 @@ export default function Contact() {
 
             <div className="contact-us">
                 <h1>Contact Us</h1>
-                <p>
-                    Thank you for using EmailEssence!
-                </p>
-                <p>
-                    We hope you enjoy our service and find it helpful in managing your
-                    emails.
-                </p>
-                <p>
-                    If you have any feedback or suggestions for improvement, please
-                    feel free to reach out to us. We value your input and are always
-                    looking for ways to enhance our service.
-                </p>
-                <p>
-                    We look forward to serving you and helping you make the most of
-                    your email experience.
-                </p>
-                <p>
-                    If you have any questions or concerns,
-                    please contact us at <a href="mailto:emailessencellc@gmail.com">emailessencellc@gmail.com</a>
-                </p>
+                <p>Feel free to reach out to us for any inquiries.</p>
             </div>
 
             <footer className="footer-container">

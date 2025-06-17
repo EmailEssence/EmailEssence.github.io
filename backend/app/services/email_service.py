@@ -2,34 +2,32 @@
 Email service for handling email-related operations.
 """
 
-# Standard library imports
-import email
+import logging
 import os
+import email
+from typing import List, Optional, Dict, Any, Tuple, Union
 import re
-from datetime import datetime
 from email.header import decode_header
-from typing import Any, Dict, List, Optional, Tuple, Union
-
-# Third-party imports
-from fastapi import HTTPException, status
-from google.auth.transport.requests import Request
 from imapclient import IMAPClient
+from datetime import datetime
+from google.auth.transport.requests import Request
+from fastapi import HTTPException, status
 from starlette.concurrency import run_in_threadpool
 
-# Internal imports
-from app.utils.helpers import get_logger, log_operation, standardize_error_response
+# Import from app modules
 from app.models import EmailSchema, ReaderViewResponse
+from app.services.database import EmailRepository, SummaryRepository, get_email_repository, get_summary_repository
+from app.services.database.factories import get_user_service, get_auth_service
 from app.services import auth_service
-from app.services.database import EmailRepository, get_email_repository
-from app.services.database.factories import get_auth_service, get_user_service
-from app.utils.config import get_settings
 
-# -------------------------------------------------------------------------
-# Configuration
-# -------------------------------------------------------------------------
+# Configure logging
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
 
-logger = get_logger(__name__, 'service')
-settings = get_settings()
+logger = logging.getLogger(__name__)
 
 class EmailService:
     """
@@ -39,14 +37,16 @@ class EmailService:
     processing, and storage operations.
     """
     
-    def __init__(self, email_repository: EmailRepository = None):
+    def __init__(self, email_repository: EmailRepository = None, summary_repository: SummaryRepository = None):
         """
         Initialize the email service.
         
         Args:
             email_repository: Email repository instance
+            summary_repository: Summary repository instance
         """
         self.email_repository = email_repository or get_email_repository()
+        self.summary_repository = summary_repository or get_summary_repository()
         self.imap_host = 'imap.gmail.com'
         self.default_email_account = os.environ.get("EMAIL_ACCOUNT")
     
@@ -62,7 +62,16 @@ class EmailService:
     
     def _handle_email_error(self, error: Exception, operation: str, email_id: str = None, google_id: str = None) -> None:
         """Standardize error handling for email operations."""
-        raise standardize_error_response(error, operation, email_id, google_id)
+        error_msg = f"Failed to {operation}"
+        if email_id:
+            error_msg += f" email {email_id}"
+        if google_id:
+            error_msg += f" for user {google_id}"
+        logger.exception(f"{error_msg}: {str(error)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=error_msg
+        )
     
     def _get_imap_connection(self, token: str, email_account: str) -> IMAPClient:
         """Create and authenticate IMAP connection."""
@@ -71,7 +80,15 @@ class EmailService:
             server.oauth2_login(email_account, token)
             return server
         except Exception as e:
-            raise standardize_error_response(e, "get imap connection", email_account)
+            logger.error(f"IMAP Authentication Error: {e}")
+            if hasattr(e, 'args') and e.args:
+                logger.error(f"Additional error info: {e.args}")
+            raise
+    
+    def _log_operation(self, level: str, message: str, **kwargs) -> None:
+        """Standardize logging across the service."""
+        log_method = getattr(logger, level.lower())
+        log_method(message, **kwargs)
     
     def _build_search_query(self, search: str) -> Dict[str, Any]:
         """Build search query component."""
@@ -106,13 +123,16 @@ class EmailService:
                 if credentials.expired and credentials.refresh_token:
                     await run_in_threadpool(lambda: credentials.refresh(Request()))
                 else:
-                    raise standardize_error_response(
-                        Exception("Token expired and cannot be refreshed. User needs to re-authenticate."), 
-                        "get auth token"
+                    raise HTTPException(
+                        status_code=status.HTTP_401_UNAUTHORIZED,
+                        detail="Token expired and cannot be refreshed. User needs to re-authenticate."
                     )
             return credentials.token
         except Exception as e:
-            raise standardize_error_response(e, "get auth token")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail=f"Token retrieval failed: {str(e)}"
+            )
     
     # -------------------------------------------------------------------------
     # Email Parsing Methods
@@ -254,7 +274,7 @@ class EmailService:
                     body = html_part.get_payload(decode=True).decode(errors="replace")
                     is_html = True
                 except Exception as e:
-                    log_operation(logger, 'error', f"Error decoding HTML part: {e}")
+                    self._log_operation('error', f"Error decoding HTML part: {e}")
                     # Fall back to text part if available
                     if text_part:
                         body = text_part.get_payload(decode=True).decode(errors="replace")
@@ -268,14 +288,14 @@ class EmailService:
                 body = email_message.get_payload(decode=True).decode(errors="replace")
                 is_html = content_type == "text/html"
             except Exception as e:
-                log_operation(logger, 'error', f"Error decoding non-multipart message: {e}")
+                self._log_operation('error', f"Error decoding non-multipart message: {e}")
                 body = email_message.get_payload(decode=False)
                 # Try to detect HTML if content-type wasn't reliable
                 is_html = bool(re.search(r'<(?:html|body|div|p|h[1-6])[^>]*>', body, re.IGNORECASE))
         
         # Validate HTML detection with regex if needed
         if is_html and not bool(re.search(r'<(?:html|body|div|p|h[1-6])[^>]*>', body, re.IGNORECASE)):
-            log_operation(logger, 'warning', "Content marked as HTML but no HTML tags found, validating...")
+            self._log_operation('warning', "Content marked as HTML but no HTML tags found, validating...")
             is_html = False  # Reset if no HTML tags found
         
         # Apply minimal sanitization for HTML content
@@ -382,7 +402,7 @@ class EmailService:
                     emails.append(email_data)
                     
                 except Exception as e:
-                    log_operation(logger, 'error', f"Error processing email {uid}: {e}")
+                    self._log_operation('error', f"Error processing email {uid}: {e}")
                     continue
 
             return emails
@@ -399,7 +419,7 @@ class EmailService:
             if not existing_email:
                 email_schema = self._ensure_email_schema(email_data)
                 await self.email_repository.insert_one(email_schema)
-                log_operation(logger, 'info', f"Email {email_id} inserted successfully")
+                self._log_operation('info', f"Email {email_id} inserted successfully")
         except Exception as e:
             self._handle_email_error(e, "save", email_data.get("email_id"), email_data.get("google_id"))
 
@@ -448,7 +468,7 @@ class EmailService:
             email_id = str(email_id)
             email_data = await self.email_repository.find_by_email_and_google_id(email_id, google_id)
             if not email_data or email_data["google_id"] != google_id:
-                log_operation(logger, 'warning', f"Email {email_id} not found for user {google_id}")
+                self._log_operation('warning', f"Email {email_id} not found for user {google_id}")
                 return None
                 
             email_data["is_read"] = True
@@ -473,24 +493,46 @@ class EmailService:
             return await self.email_repository.delete_by_id(str(email_id), google_id)
         except Exception as e:
             self._handle_email_error(e, "delete", email_id, google_id)
-            
-    async def delete_emails(self, google_id: str) -> bool:
+    
+    async def search_emails_by_keyword(self, google_id: str, keyword: str, limit: int = 50) -> List[EmailSchema]:
         """
-        Deletes all emails attached to given Google ID.
-        
+        Search for emails using summary keywords.
+
         Args:
-            google_id: Google ID of the user
-            
+            google_id: Google ID of the user.
+            keyword: Keyword to search in the summary keywords.
+            limit: Maximum number of emails to return.
+
         Returns:
-            bool: True if deletion successful
+            List[EmailSchema]: List of emails whose summaries match the keyword and then enriched with corresponding summary.
         """
+        logger.info(f"[Keyword Search] google_id={google_id}, keyword='{keyword}'")
+        
         try:
-            return await self.email_repository.delete_by_google_id(google_id)
+            #Find all email_ids from summaries that match the keyword for the given user
+            email_ids = await self.summary_repository.find_email_ids_by_keyword(google_id, keyword)
+            if not email_ids:
+                return []
+
+            #Query emails from the email repository using those email_ids
+            query = {"google_id": google_id, "email_id": {"$in": [str(eid) for eid in email_ids]}}
+            emails = await self.email_repository.find_many(query, limit=limit)
+
+            # Retrieve matching summary records to extract summary_text
+            summaries = await self.summary_repository.find_many(query)
+            summary_map = {s.email_id: getattr(s, "summary_text", "") for s in summaries}
+
+            # Enrich email records with their corresponding summaries
+            enriched = []
+            for e in emails:
+                base = e if isinstance(e, dict) else e.model_dump()
+                base["summary_text"] = summary_map.get(base["email_id"], "")
+                enriched.append(base)
+
+            return enriched
+
         except Exception as e:
-            self._handle_email_error(e, "delete", google_id)
-    
-    
-    
+            self._handle_email_error(e, "search by keyword", None, google_id)
     # -------------------------------------------------------------------------
     # Content Processing Methods
     # -------------------------------------------------------------------------
@@ -637,7 +679,7 @@ class EmailService:
             )
             debug_info["timing"]["main_query"] = (datetime.now() - start_time).total_seconds()
             
-            log_operation(logger, 'info', f"Retrieved {len(emails)} emails out of {total} total for user {google_id}")
+            self._log_operation('info', f"Retrieved {len(emails)} emails out of {total} total for user {google_id}")
             return emails, total, debug_info
             
         except Exception as e:
@@ -657,26 +699,26 @@ class EmailService:
             # Get user by google_id
             user = await user_service.get_user(google_id)
             if not user:
-                log_operation(logger, 'error', f"User {google_id} not found in database during IMAP refresh")
+                self._log_operation('error', f"User {google_id} not found in database during IMAP refresh")
                 debug_info["imap_error"] = f"User {google_id} not found"
                 return
                 
             user_email = user.email
             if not user_email:
-                log_operation(logger, 'error', f"Email address not found for user {google_id}")
+                self._log_operation('error', f"Email address not found for user {google_id}")
                 debug_info["imap_error"] = "User email not found"
                 return
             
-            log_operation(logger, 'info', f"Fetching emails for {user_email}")
+            self._log_operation('info', f"Fetching emails for {user_email}")
             
             # Get token using google_id
             token_data = await auth_service.get_token_data(google_id)
             if not token_data:
-                log_operation(logger, 'error', f"No token found for user {google_id}")
+                self._log_operation('error', f"No token found for user {google_id}")
                 debug_info["imap_error"] = "No token found for user"
                 return
             
-            log_operation(logger, 'info', f"Fetching emails from IMAP for {user_email}")
+            self._log_operation('info', f"Fetching emails from IMAP for {user_email}")
             imap_emails = await self.fetch_from_imap(
                 token=token_data.token,
                 email_account=user_email,
@@ -684,18 +726,18 @@ class EmailService:
                 limit=50
             )
             
-            log_operation(logger, 'info', f"Retrieved {len(imap_emails)} emails from IMAP for {user_email}")
+            self._log_operation('info', f"Retrieved {len(imap_emails)} emails from IMAP for {user_email}")
             
             for email_data in imap_emails:
                 email_data["google_id"] = google_id
                 await self.save_email_to_db(email_data)
             
             debug_info["imap_fetch_count"] = len(imap_emails)
-            log_operation(logger, 'info', f"Saved {len(imap_emails)} emails to database for {user_email}")
+            self._log_operation('info', f"Saved {len(imap_emails)} emails to database for {user_email}")
             
         except Exception as e:
+            self._log_operation('exception', f"IMAP fetch failed for user {google_id}: {str(e)}")
             debug_info["imap_error"] = str(e)
-            raise standardize_error_response(e, "refresh emails from imap", google_id)
             
         finally:
             debug_info["timing"]["imap_fetch_duration"] = (datetime.now() - start_time).total_seconds()

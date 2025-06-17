@@ -1,10 +1,7 @@
-# Standard library imports
 from typing import List, Optional, Dict, TypeVar
 from datetime import datetime, timezone
 import asyncio
 import json
-
-# Third-party imports
 from openai import (
     RateLimitError,
     APITimeoutError,
@@ -17,14 +14,14 @@ from tenacity import (
     wait_exponential,
     retry_if_exception_type
 )
-
-# Internal imports
-from app.models import EmailSchema, SummarySchema
+# internal
 from app.services.summarization.base import AdaptiveSummarizer
-from app.services.summarization.prompts import PromptManager
 from app.services.summarization.types import ModelBackend, ModelConfig
-from app.utils.config import ProviderModel, SummarizerProvider, PromptVersion
+from app.models import EmailSchema, SummarySchema
+from app.utils.config import ProviderModel, SummarizerProvider
+from app.services.summarization.prompts import PromptManager
 from .prompts import OpenAIPromptManager
+from app.utils.config import PromptVersion
 
 T = TypeVar('T')
 

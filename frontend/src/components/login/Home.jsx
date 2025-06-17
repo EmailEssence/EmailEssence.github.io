@@ -6,7 +6,6 @@ import ReaderView from "../../assets/ReaderView";
 import UserIcon from "../../assets/UserIcon";
 import "./Home.css";
 
-/* The landing page component for EmailEssence. */
 export default function Home() {
   const navigate = useNavigate();
   const homeRef = useRef(null);

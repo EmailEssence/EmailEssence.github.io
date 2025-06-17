@@ -1,9 +1,10 @@
-import PropTypes from "prop-types";
 import { useEffect, useState } from "react";
 import ViewIcon from "../../../assets/ViewIcon";
 import { getTop5 } from "../../../emails/emailHandler";
-import "./dashboard.css";
 import MiniViewPanel from "./miniview";
+import PropTypes from "prop-types";
+import "./dashboard.css";
+
 function Dashboard({
   emailList,
   handlePageChange,
@@ -68,15 +69,6 @@ function WeightedEmailList({
   );
 }
 
-/**
- * Renders a single weighted email entry with summary and view icon.
- * @const {JSX.Element} summary - Renders the summary for the email, or a loading placeholder if not available.
- * @param {Object} props
- * @param {Email} props.email - The email object.
- * @param {Function} props.setCurEmail - Function to set the current email.
- * @param {Function} props.handlePageChange - Function to change the client page.
- * @returns {JSX.Element}
- */
 function WEListEmail({ email, setCurEmail, handlePageChange }) {
   const summary = () => {
     let returnBlock;

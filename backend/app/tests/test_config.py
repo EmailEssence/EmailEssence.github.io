@@ -16,7 +16,6 @@ class MockSettings(Settings):
     google_client_secret: str = os.getenv("GOOGLE_CLIENT_SECRET", "test-client-secret")
     email_account: str = os.getenv("EMAIL_ACCOUNT", "test@example.com")
     mongo_uri: str = os.getenv("MONGO_URI", "mongodb://localhost:27017/test_db")
-    openrouter_api_key: str = os.getenv("OPENROUTER_API_KEY", "sk-or-test-key-123456789")
     openai_api_key: str = os.getenv("OPENAI_API_KEY", "sk-test-key-123456789")
     deepseek_api_key: str | None = os.getenv("DEEPSEEK_API_KEY")
     gemini_api_key: str | None = os.getenv("GEMINI_API_KEY")
