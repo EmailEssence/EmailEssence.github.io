@@ -1,21 +1,13 @@
-import { useEffect, useState } from "react";
-import {
-  BrowserRouter,
-  Navigate,
-  Route,
-  Routes,
-  useLocation,
-} from "react-router";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router";
 import { authenticate } from "../../authentication/authenticate";
-import { emails, userPreferences } from "../../emails/emailHandler";
 import Client from "../client/client";
 import Contact from "../login/contact";
 import Error from "../login/Error";
 import Home from "../login/Home";
-import Loading from "../login/Loading";
 import Login from "../login/login";
 import PrivacyPolicy from "../login/privacy";
 import TermsOfService from "../login/terms";
+import AuthLoading from "../login/AuthLoading";
 
 /**
  * Main Router component for the application.
@@ -40,24 +32,6 @@ export function Router() {
  * @returns {JSX.Element}
  */
 export function AppRouter() {
-  const [userEmails, setUserEmails] = useState(emails);
-  const location = useLocation();
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (emails != userEmails || window.location.hash === "#newEmails") {
-        setUserEmails(emails);
-        window.history.replaceState(
-          null,
-          "",
-          window.location.pathname + window.location.search
-        ); // Remove the hash
-      }
-    }, 500);
-
-    return () => clearInterval(interval);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [location]);
-
   return (
     <Routes>
       <Route path="" element={<Navigate to="/home" replace />} />
@@ -65,23 +39,12 @@ export function AppRouter() {
       <Route path="/contact" element={<Contact />} />
       <Route path="/privacy" element={<PrivacyPolicy />} />
       <Route path="/terms" element={<TermsOfService />} />
+      <Route path="/loading" element={<AuthLoading />} />
       <Route
         path="/login"
         element={<Login handleGoogleClick={authenticate} />}
       />
-      <Route path="/loading" element={<Loading />} />
-      <Route
-        path="client/*"
-        // userEmails.length being more than 0 ensures that curEmail is not undefined when client is rendered
-        element={
-          userEmails.length > 0 && (
-            <Client
-              emailsByDate={userEmails}
-              defaultUserPreferences={userPreferences}
-            />
-          )
-        }
-      />
+      <Route path="client/*" element={<Client />} />
       <Route path="/error" element={<Error />} />
     </Routes>
   );
