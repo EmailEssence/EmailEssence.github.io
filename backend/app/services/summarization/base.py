@@ -1,11 +1,9 @@
-# Standard library imports
 from abc import ABC, abstractmethod
 from typing import Generic, List, Optional, TypeVar
 from datetime import datetime, timezone
 import asyncio
+import logging
 
-# Internal imports
-from app.utils.helpers import get_logger
 from app.models import SummarySchema, EmailSchema
 from app.services.summarization.types import(
     ModelBackend, 
@@ -45,7 +43,7 @@ class AdaptiveSummarizer(ABC, Generic[T]):
         self.timeout = timeout
         self.model_config = model_config or {}
         self._metrics: List[SummaryMetrics] = []
-        self._logger = get_logger(self.__class__.__name__, 'service')
+        self._logger = logging.getLogger(self.__class__.__name__)
 
     @abstractmethod
     async def prepare_content(self, email: T) -> str:

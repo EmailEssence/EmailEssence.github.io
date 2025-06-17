@@ -5,36 +5,32 @@ This module provides services for OAuth2 authentication, token management,
 and user authentication with Google.
 """
 
-# Standard library imports
+import logging
 import os
+from typing import Optional, Dict, Any
 from datetime import datetime, timedelta
-from typing import Any, Dict, Optional
-
-# Third-party imports
 from fastapi import HTTPException, status
-from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import Flow
+from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
 from starlette.concurrency import run_in_threadpool
 
-# Internal imports
-from app.utils.helpers import get_logger, log_operation, standardize_error_response
-from app.models import AuthState, TokenData, UserSchema
-from app.services.database import (
-    TokenRepository,
-    UserRepository,
-    get_token_repository,
-    get_user_repository,
-)
+# Import from app modules
+from app.models import TokenData, AuthState
+from app.services.database import TokenRepository, UserRepository, get_token_repository, get_user_repository
 from app.services.user_service import UserService
 from app.utils.config import Settings, get_settings
 
-# -------------------------------------------------------------------------
-# Configuration
-# -------------------------------------------------------------------------
+# Configure logging
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
 
-logger = get_logger(__name__, 'service')
+logger = logging.getLogger(__name__)
+
 settings = get_settings()
 
 SCOPES = [
@@ -90,55 +86,56 @@ class AuthService:
         Raises:
             HTTPException: 403 if access is denied
         """
-        log_operation(logger, 'debug', f"Verifying user access for user ID: {user_id}")
+        logger.debug(f"Verifying user access for user ID: {user_id}")
         
         try:
             # Get the current user's email from the token data
             token_record = await self.get_token_record(current_user_data['google_id'])
             if not token_record:
-                log_operation(logger, 'warning', f"No token record found for user: {current_user_data['google_id']}")
-                raise standardize_error_response(
-                    Exception("No valid token record found"), 
-                    "verify user access", 
-                    current_user_data['google_id']
+                logger.warning(f"No token record found for user: {current_user_data['google_id']}")
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="No valid token record found"
                 )
             
             current_user = await user_service.get_user(current_user_data['user_info']['id'])
             if not current_user:
-                raise standardize_error_response(
-                    Exception("Current user not found"), 
-                    "verify user access", 
-                    current_user_data['google_id']
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Current user not found"
                 )
                 
             # Allow access if:
             # 1. User is accessing their own data
             # 2. User has admin privileges
             if current_user['google_id'] == user_id or current_user.get('is_admin', False):
-                log_operation(logger, 'debug', f"Access granted for user ID: {user_id}")
+                logger.debug(f"Access granted for user ID: {user_id}")
                 return True
                 
-            log_operation(logger, 'debug', f"Access denied for user ID: {user_id}")
-            raise standardize_error_response(
-                Exception("You do not have permission to access this resource"), 
-                "verify user access", 
-                user_id
+            logger.debug(f"Access denied for user ID: {user_id}")
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You do not have permission to access this resource"
             )
+        except HTTPException:
+            raise
         except Exception as e:
-            raise standardize_error_response(e, "verify user access", user_id)
+            logger.error(f"Access verification failed: {str(e)}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Failed to verify access: {str(e)}"
+            )
 
     def create_authorization_url(self, custom_state=None) -> Dict[str, str]:
         """Generates Google OAuth2 authorization URL."""
-        log_operation(logger, 'debug', "Generating Google OAuth2 authorization URL...")
+        logger.debug("Generating Google OAuth2 authorization URL...")
 
         client_id = settings.google_client_id
         client_secret = settings.google_client_secret
 
         if not client_id or not client_secret:
-            raise standardize_error_response(
-                Exception("Google API credentials missing"), 
-                "create authorization URL"
-            )
+            logger.error("Google API credentials missing.")
+            raise HTTPException(status_code=500, detail="Google API credentials not found in settings.")
 
         client_config = {
             "web": {
@@ -153,7 +150,7 @@ class AuthService:
         flow = Flow.from_client_config(client_config, SCOPES)
         flow.redirect_uri = self.get_redirect_uri()
 
-        log_operation(logger, 'debug', f"Using redirect URI: {flow.redirect_uri}")
+        logger.debug(f"Using redirect URI: {flow.redirect_uri}")
 
         if custom_state:
             authorization_url, _ = flow.authorization_url(
@@ -239,7 +236,11 @@ class AuthService:
             return token
             
         except Exception as e:
-            raise standardize_error_response(e, "get tokens from code", email)
+            logger.error(f"Failed to get tokens for user {email}: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to get tokens"
+            )
 
     async def get_current_user(self, email: str) -> Optional[Dict[str, Any]]:
         """
@@ -263,7 +264,11 @@ class AuthService:
                 ))
             return user.model_dump()
         except Exception as e:
-            raise standardize_error_response(e, "get current user", email)
+            logger.error(f"Failed to get current user: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to get current user"
+            )
 
     async def get_token_data(self, google_id: str) -> Optional[TokenData]:
         """
@@ -278,14 +283,18 @@ class AuthService:
         try:
             return await self.token_repository.find_by_google_id(google_id)
         except Exception as e:
-            raise standardize_error_response(e, "get token data", google_id)
+            logger.error(f"Failed to get token record for google_id {google_id}: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to get token record"
+            )
 
     def get_redirect_uri(self):
         """Returns the OAuth redirect URI."""
-        log_operation(logger, 'debug', "Retrieving redirect URI...")
+        logger.debug("Retrieving redirect URI...")
 
         if callback_url := settings.oauth_callback_url:
-            log_operation(logger, 'debug', f"Using env-specified callback URL: {callback_url}")
+            logger.debug(f"Using env-specified callback URL: {callback_url}")
             return callback_url
 
         environment = settings.environment
@@ -302,7 +311,7 @@ class AuthService:
         Validates a token and returns user information from Google.
         Used for authenticating API requests.
         """
-        log_operation(logger, 'debug', "Validating access token and retrieving user info...")
+        logger.debug("Validating access token and retrieving user info...")
 
         try:
             # First try to validate the token directly
@@ -322,13 +331,13 @@ class AuthService:
                     service.userinfo().get().execute()
                 )
             except Exception as e:
-                log_operation(logger, 'debug', f"Initial token validation failed, attempting refresh: {e}")
+                logger.debug(f"Initial token validation failed, attempting refresh: {e}")
                 # If token validation fails, try to get a new token using refresh token
                 token_record = await self.token_repository.find_by_token(token)
                 if not token_record or not token_record.refresh_token:
-                    raise standardize_error_response(
-                        Exception("Invalid or expired token"), 
-                        "get credentials from token"
+                    raise HTTPException(
+                        status_code=status.HTTP_401_UNAUTHORIZED,
+                        detail="Invalid or expired token"
                     )
                 
                 # Create credentials with refresh token
@@ -360,13 +369,13 @@ class AuthService:
                 )
 
             if not user_info or not user_info.get('email'):
-                log_operation(logger, 'error', "Unable to retrieve user email from token.")
+                logger.error("Unable to retrieve user email from token.")
                 raise ValueError("Unable to retrieve user email from token")
 
             # Add google_id to user_info
             user_info['google_id'] = user_info.get('id')
             
-            log_operation(logger, 'info', f"User info retrieved for: {user_info.get('email')}")
+            logger.info(f"User info retrieved for: {user_info.get('email')}")
 
             return {
                 'user_info': user_info,
@@ -375,7 +384,8 @@ class AuthService:
             }
 
         except Exception as e:
-            raise standardize_error_response(e, "get credentials from token")
+            logger.exception("Token validation failed.")
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=f"Invalid token: {str(e)}")
 
     async def get_token_record(self, google_id: str) -> Optional[Dict[str, Any]]:
         """
@@ -388,15 +398,16 @@ class AuthService:
             Optional[Dict[str, Any]]: Complete token record if found, None otherwise
         """
         try:
-            log_operation(logger, 'debug', f"Getting token record for google_id: {google_id}")
+            logger.debug(f"Getting token record for google_id: {google_id}")
             token_data = await self.token_repository.find_by_google_id(google_id)
             if not token_data:
-                log_operation(logger, 'warning', f"No token record found for google_id: {google_id}")
+                logger.warning(f"No token record found for google_id: {google_id}")
                 return None
-            log_operation(logger, 'info', f"Found token record for google_id: {google_id}")
+            logger.info(f"Found token record for google_id: {google_id}")
             # Convert TokenData to dict if it's a model instance
             if hasattr(token_data, 'model_dump'):
                 return token_data.model_dump()
             return token_data
         except Exception as e:
-            raise standardize_error_response(e, "get token record", google_id)
+            logger.error(f"Failed to get token record for google_id {google_id}: {e}")
+            return None

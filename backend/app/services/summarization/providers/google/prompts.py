@@ -1,15 +1,12 @@
-# Standard library imports
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Dict, Optional
-
-# Internal imports
 from app.services.summarization.prompts import(
     PromptManager,
-    PromptTemplate,
     EMAIL_SUMMARY_SYSTEM_PROMPT,
     EMAIL_SUMMARY_USER_PROMPT
 )
 from app.utils.config import PromptVersion
+from app.services.summarization.prompts import PromptTemplate
 
 @dataclass
 class GeminiPromptManager(PromptManager):

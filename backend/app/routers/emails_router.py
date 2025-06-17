@@ -6,30 +6,53 @@ fetching individual email details, marking emails as read, and deleting emails.
 It provides a set of REST endpoints for interacting with the user's email data.
 """
 
-# Standard library imports
-from typing import Optional
+from fastapi import APIRouter, HTTPException, Query, Depends, status
+from fastapi.security import OAuth2PasswordBearer
+from typing import List, Optional
+from pydantic import BaseModel
+import logging
+from functools import lru_cache
 
-# Third-party imports
-from fastapi import APIRouter, Depends, HTTPException, Query, status
-
-# Internal imports
-from app.dependencies import get_current_user
-from app.utils.helpers import get_logger, log_operation, standardize_error_response
-from app.models.email_models import EmailResponse, EmailSchema, ReaderViewResponse
+from app.models.email_models import EmailSchema, EmailResponse, ReaderViewResponse
 from app.models.user_models import UserSchema
-from app.services.database.factories import get_email_service
+from app.routers.user_router import get_current_user
+from app.services.database.factories import get_email_repository, get_email_service
 from app.services.email_service import EmailService
 
-# -------------------------------------------------------------------------
-# Router Configuration
-# -------------------------------------------------------------------------
-
 router = APIRouter()
-logger = get_logger(__name__, 'router')
 
-# -------------------------------------------------------------------------
-# Endpoints
-# -------------------------------------------------------------------------
+# Configure logging with format and level
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
+
+# Add specific configuration for pymongo's logger
+logging.getLogger('pymongo').setLevel(logging.WARNING)
+
+# Create module-specific logger
+logger = logging.getLogger(__name__)
+
+@router.get("/search")
+async def search_emails_by_keyword(
+    keyword: str,
+    email_service: EmailService = Depends(get_email_service),
+    user: UserSchema = Depends(get_current_user)
+):
+    """
+    Search emails using extracted summary keywords.
+    
+    Args:
+        keyword: Keyword to search for
+        email_service: Injected email service
+        user: Current user (from token)
+
+    Returns:
+        List of matched emails based on summary keywords
+    """
+    logger.info(f"Search endpoint hit with keyword: {keyword}")
+    return await email_service.search_emails_by_keyword(user.google_id, keyword)
 
 @router.get(
     "/", 
@@ -88,8 +111,8 @@ async def retrieve_emails(
     
     try:
         # Log request parameters
-        log_operation(logger, 'debug', f"Email retrieval request with refresh={refresh}", extra={"params": debug_info["request_params"]})
-        log_operation(logger, 'debug', f"Google ID for email retrieval: {user.google_id}")
+        logger.debug(f"Email retrieval request with refresh={refresh}", extra={"params": debug_info["request_params"]})
+        logger.debug(f"Google ID for email retrieval: {user.google_id}")
         
         emails, total, service_debug_info = await email_service.fetch_emails(
             google_id=user.google_id,
@@ -105,7 +128,7 @@ async def retrieve_emails(
         
         # Combine debug info
         debug_info.update(service_debug_info)
-        log_operation(logger, 'info', f"Retrieved {len(emails)} emails out of {total} total")
+        logger.info(f"Retrieved {len(emails)} emails out of {total} total")
         
         return EmailResponse(
             emails=emails,
@@ -115,7 +138,9 @@ async def retrieve_emails(
         )
         
     except Exception as e:
-        raise standardize_error_response(e, "retrieve emails")
+        error_msg = f"Failed to retrieve emails: {str(e)}"
+        logger.exception(error_msg)  # This logs the full stack trace
+        raise HTTPException(status_code=500, detail=error_msg)
 
 @router.get(
     "/{email_id}", 
@@ -144,11 +169,7 @@ async def retrieve_email(
     """
     email = await email_service.get_email(email_id, user.google_id)
     if not email:
-        raise standardize_error_response(
-            Exception("Email not found"), 
-            "get email", 
-            email_id
-        )
+        raise HTTPException(status_code=404, detail="Email not found")
     return email
 
 @router.put(
@@ -178,11 +199,7 @@ async def mark_email_as_read(
     """
     updated_email = await email_service.mark_email_as_read(email_id, user.google_id)
     if not updated_email:
-        raise standardize_error_response(
-            Exception("Email not found"), 
-            "mark email as read", 
-            email_id
-        )
+        raise HTTPException(status_code=404, detail="Email not found")
     return updated_email
 
 @router.delete(
@@ -212,11 +229,7 @@ async def delete_email(
     """
     success = await email_service.delete_email(email_id, user.google_id)
     if not success:
-        raise standardize_error_response(
-            Exception("Email not found"), 
-            "delete email", 
-            email_id
-        )
+        raise HTTPException(status_code=404, detail="Email not found")
     return {"message": "Email deleted successfully"}
 
 @router.get(
@@ -250,15 +263,13 @@ async def get_email_reader_view(
         reader_content = await email_service.get_email_reader_view(email_id, user.google_id)
         
         if not reader_content:
-            raise standardize_error_response(
-                Exception("Email not found"), 
-                "get email reader view", 
-                email_id
-            )
+            raise HTTPException(status_code=404, detail="Email not found")
             
         return reader_content
         
     except Exception as e:
         if isinstance(e, HTTPException):
             raise e
-        raise standardize_error_response(e, "generate reader view", email_id)
+        error_msg = f"Failed to generate reader view: {str(e)}"
+        logger.exception(error_msg)
+        raise HTTPException(status_code=500, detail=error_msg)

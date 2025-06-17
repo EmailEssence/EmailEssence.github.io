@@ -1,9 +1,8 @@
-import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router";
-import Display from "./components/router/Router";
+import { createRoot } from "react-dom/client";
 import "./main.css";
+import Display from "./components/router/Router";
 
-/* Entry point for our react application.*/
 createRoot(document.getElementById("root")).render(
   <BrowserRouter basename={`/${import.meta.env.BASE_URL}`}>
     <Display />

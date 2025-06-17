@@ -5,15 +5,6 @@ import FullScreenIcon from "../../../assets/FullScreenIcon";
 import InboxIcon from "../../../assets/InboxArrow";
 import "./miniview.css";
 
-/**
- * MiniViewPanel component for the client dashboard.
- * Displays a list of emails in a compact view with an option to expand to the full inbox.
- * @param {Object} props
- * @param {Array<Email>} props.emailList - List of emails.
- * @param {Function} props.handlePageChange - Function to change the client page.
- * @param {Function} props.setCurEmail - Function to set the current email.
- * @returns {JSX.Element}
- */
 function MiniViewPanel({
   emailList,
   handlePageChange,
@@ -37,12 +28,6 @@ function MiniViewPanel({
   );
 }
 
-/**
- * Renders the headfor the mini view
- * @param {Object} props
- * @param {Function} props.handlePageChange - Function to change the client page.
- * @returns {JSX.Element}
- */
 function MiniViewHead({ handlePageChange }) {
   return (
     <div className="head-container">
@@ -63,14 +48,6 @@ function MiniViewHead({ handlePageChange }) {
   );
 }
 
-/**
- * Displays a scrollable list of emails, loading more as the user scrolls.
- * @param {Object} props
- * @param {Array<Email>} props.emailList - List of emails.
- * @param {Function} props.setCurEmail - Function to set the current email.
- * @param {Function} props.handlePageChange - Function to change the client page.
- * @returns {JSX.Element}
- */
 function MiniViewBody({
   emailList,
   setCurEmail,
@@ -84,9 +61,6 @@ function MiniViewBody({
   let maxEmails = Math.min(pages * emailsPerPage, emailList.length);
   let hasLocallyUnloadedEmails = maxEmails < emailList.length;
 
-  /**
-   * Handles the scroll event to load more emails when the user scrolls to the bottom.
-   */
   const handleScroll = async () => {
     const fullyScrolled =
       Math.abs(
@@ -106,10 +80,6 @@ function MiniViewBody({
     handleScroll();
   }, [pages]); // Fixes minimum for large screens, but runs effect after every load which is unnecessary
 
-  /**
- * Renders the list of MiniViewEmail components up to maxEmails.
- * @returns {JSX.Element[]}
- */
   const emails = () => {
     const returnBlock = [];
     for (let i = 0; i < maxEmails; i++) {
@@ -131,14 +101,6 @@ function MiniViewBody({
   );
 }
 
-/**
- * Renders a single email entry in the mini view.
- * @param {Object} props
- * @param {Email} props.email - The email object.
- * @param {Function} props.setCurEmail - Function to set the current email.
- * @param {Function} props.handlePageChange - Function to change the client page.
- * @returns {JSX.Element}
- */
 function MiniViewEmail({ email, setCurEmail, handlePageChange }) {
   return (
     <div
@@ -188,11 +150,6 @@ MiniViewEmail.propTypes = {
   email: PropTypes.object,
 };
 
-/**
- * Gets the sender's name from the sender string.
- * @param {string} sender - The sender string
- * @returns {string} The sender's name.
- */
 const getSenderName = (sender) => {
   return sender.slice(0, sender.indexOf("<"));
 };

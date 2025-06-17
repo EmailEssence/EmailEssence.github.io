@@ -1,7 +1,6 @@
-import Logo from "../../assets/Logo";
 import styles from "./Error.module.css";
+import Logo from "../../assets/Logo";
 
-/* Error page that is displayed when authentication fails. */
 function Error() {
   const errorMessage = localStorage.getItem("error_message") || "Unknown error";
 

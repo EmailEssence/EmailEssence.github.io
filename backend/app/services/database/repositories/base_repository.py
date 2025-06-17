@@ -131,7 +131,8 @@ class BaseRepository(Generic[T]):
         query: Dict[str, Any], 
         limit: int = 100, 
         skip: int = 0, 
-        sort: List[tuple] = None
+        sort: List[tuple] = None,
+        projection: Optional[Dict[str, int]] = None
     ) -> List[T]:
         """
         Find multiple documents matching the query with pagination support.
@@ -141,12 +142,13 @@ class BaseRepository(Generic[T]):
             limit: Maximum number of documents to return
             skip: Number of documents to skip
             sort: List of (field, direction) tuples for sorting
+            projection: Dictionary specifying fields to include/exclude (e.g., {"email_id": 1})
             
         Returns:
             List[T]: List of matching documents
         """
         try:
-            cursor = self._get_collection().find(query)
+            cursor = self._get_collection().find(query, projection) if projection else self._get_collection().find(query)
             
             if sort:
                 cursor = cursor.sort(sort)
@@ -267,22 +269,6 @@ class BaseRepository(Generic[T]):
         """
         try:
             result = await self._get_collection().delete_one(query)
-            return result.deleted_count > 0
-        except Exception as e:
-            raise
-    
-    async def delete_many(self, query: Dict[str, Any]) -> bool:
-        """
-        Delete multiple documents matching the query.
-        
-        Args:
-            query: MongoDB query filter
-            
-        Returns:
-            bool: True if deletion successful
-        """
-        try:
-            result = await self._get_collection().delete_many(query)
             return result.deleted_count > 0
         except Exception as e:
             raise
