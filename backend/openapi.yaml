@@ -1,0 +1,1335 @@
+openapi: 3.1.0
+info:
+  title: Email Essence API
+  description: API for the Email Essence application
+  version: 0.1.0
+paths:
+  /:
+    get:
+      tags:
+      - Root
+      summary: Root
+      description: 'Root endpoint that returns basic API information.
+
+        Useful for users and systems that discover the API.'
+      operationId: root__get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /favicon.ico:
+    get:
+      summary: Favicon
+      operationId: favicon_favicon_ico_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /health:
+    get:
+      summary: Health Check
+      description: 'Health check endpoint for monitoring and Docker health checks.
+
+        Verifies core dependencies: MongoDB connection and Google API.
+
+        Returns a 200 OK status if all components are operational.'
+      operationId: health_check_health_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /auth/login:
+    get:
+      tags:
+      - Auth
+      summary: Start Google OAuth login flow
+      description: Initiates the OAuth2 authentication process with Google. Redirects
+        to Google's consent screen.
+      operationId: login_auth_login_get
+      parameters:
+      - name: redirect_uri
+        in: query
+        required: true
+        schema:
+          type: string
+          description: Frontend URI to redirect back to after authentication. Use
+            http://localhost:8000/docs / http://127.0.0.1:8000/docs for Swagger testing.
+          title: Redirect Uri
+        description: Frontend URI to redirect back to after authentication. Use http://localhost:8000/docs
+          / http://127.0.0.1:8000/docs for Swagger testing.
+      responses:
+        '307':
+          description: Successful Response
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /auth/callback:
+    get:
+      tags:
+      - Auth
+      summary: Callback
+      description: "Handles the OAuth callback from Google and exchanges the authorization\
+        \ code for access tokens.\n\nArgs:\n    code: Authorization code from Google\n\
+        \    state: State parameter containing encoded redirect URI\n    auth_service:\
+        \ Auth service instance\n    user_service: User service instance\n    \nReturns:\n\
+        \    RedirectResponse: Redirects to frontend with authentication state"
+      operationId: callback_auth_callback_get
+      parameters:
+      - name: code
+        in: query
+        required: true
+        schema:
+          type: string
+          title: Code
+      - name: state
+        in: query
+        required: false
+        schema:
+          type: string
+          title: State
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /auth/exchange:
+    post:
+      tags:
+      - Auth
+      summary: Exchange Code
+      description: 'Exchanges an authorization code for tokens and stores them in
+        the database.
+
+        Requires the user''s email to associate the tokens.'
+      operationId: exchange_code_auth_exchange_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExchangeCodeRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /auth/token:
+    get:
+      tags:
+      - Auth
+      summary: Get Token
+      description: 'Retrieves the stored access token for the user.
+
+        If expired, it will refresh the token automatically.'
+      operationId: get_token_auth_token_get
+      parameters:
+      - name: user_email
+        in: query
+        required: true
+        schema:
+          type: string
+          title: User Email
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    post:
+      tags:
+      - Auth
+      summary: Store a Google token
+      description: "Store a Google token in the database.\n\nArgs:\n    username:\
+        \ Not used, can be left as 'oauth'\n    password: The Google token to store"
+      operationId: token_endpoint_auth_token_post
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Body_token_endpoint_auth_token_post'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /auth/refresh:
+    post:
+      tags:
+      - Auth
+      summary: Refresh Token
+      description: 'Forces a refresh of the user''s token, if a refresh token is available.
+
+        Requires authentication.'
+      operationId: refresh_token_auth_refresh_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshTokenRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - OAuth2PasswordBearer: []
+  /auth/status:
+    get:
+      tags:
+      - Auth
+      summary: Auth Status
+      description: 'Returns the user''s authentication status.
+
+        Requires authentication.'
+      operationId: auth_status_auth_status_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthStatusResponse'
+      security:
+      - OAuth2PasswordBearer: []
+  /auth/verify:
+    post:
+      tags:
+      - Auth
+      summary: Verify Token
+      description: 'Verifies a given access token by refreshing it.
+
+        Requires authentication.'
+      operationId: verify_token_auth_verify_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerifyTokenRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - OAuth2PasswordBearer: []
+  /user/me:
+    get:
+      tags:
+      - User
+      summary: Get current user profile
+      description: Retrieves the authenticated user's profile information or creates
+        a new user record if one doesn't exist
+      operationId: get_current_user_profile_user_me_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserSchema'
+      security:
+      - OAuth2PasswordBearer: []
+  /user/preferences:
+    get:
+      tags:
+      - User
+      summary: Get user preferences
+      description: Retrieves the authenticated user's preference settings
+      operationId: get_user_preferences_user_preferences_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+      security:
+      - OAuth2PasswordBearer: []
+    put:
+      tags:
+      - User
+      summary: Update user preferences
+      description: Updates the authenticated user's preference settings
+      operationId: update_preferences_user_preferences_put
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PreferencesSchema'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - OAuth2PasswordBearer: []
+  /user/{user_id}:
+    get:
+      tags:
+      - User
+      summary: Get User
+      description: "Get a user by ID.\n\nArgs:\n    user_id: The ID of the user to\
+        \ retrieve\n    user_service: Injected UserService instance\n    auth_service:\
+        \ Injected AuthService instance\n    \nReturns:\n    UserSchema: The requested\
+        \ user\n    \nRaises:\n    HTTPException: 404 if user not found"
+      operationId: get_user_user__user_id__get
+      parameters:
+      - name: user_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: User Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserSchema'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    put:
+      tags:
+      - User
+      summary: Update User
+      description: "Update a user.\n\nArgs:\n    user_id: The ID of the user to update\n\
+        \    user_data: The updated user data\n    user_service: Injected UserService\
+        \ instance\n    auth_service: Injected AuthService instance\n    \nReturns:\n\
+        \    UserSchema: The updated user\n    \nRaises:\n    HTTPException: 404 if\
+        \ user not found"
+      operationId: update_user_user__user_id__put
+      parameters:
+      - name: user_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: User Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserSchema'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserSchema'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    delete:
+      tags:
+      - User
+      summary: Delete User
+      description: "Delete a user.\n\nArgs:\n    user_id: The ID of the user to delete\n\
+        \    user_service: Injected UserService instance\n    auth_service: Injected\
+        \ AuthService instance\n    email_service: Injected EmailService instance\n\
+        \    summary_service: Injected SummaryService instance\n    \nReturns:\n \
+        \   dict: Success message\n    \nRaises:\n    HTTPException: 404 if user not\
+        \ found"
+      operationId: delete_user_user__user_id__delete
+      parameters:
+      - name: user_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: User Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                title: Response Delete User User  User Id  Delete
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /user/email/{email}:
+    get:
+      tags:
+      - User
+      summary: Get User By Email
+      description: "Get a user by email.\n\nArgs:\n    email: The email of the user\
+        \ to retrieve\n    user_service: Injected UserService instance\n    \nReturns:\n\
+        \    UserSchema: The requested user\n    \nRaises:\n    HTTPException: 404\
+        \ if user not found"
+      operationId: get_user_by_email_user_email__email__get
+      parameters:
+      - name: email
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Email
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserSchema'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /user/:
+    post:
+      tags:
+      - User
+      summary: Create User
+      description: "Create a new user.\n\nArgs:\n    user_data: The user data to create\n\
+        \    user_service: Injected UserService instance\n    \nReturns:\n    UserSchema:\
+        \ The created user"
+      operationId: create_user_user__post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserSchema'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserSchema'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /emails/:
+    get:
+      tags:
+      - Emails
+      summary: List emails
+      description: Retrieves emails with filtering, sorting, and pagination options
+      operationId: retrieve_emails_emails__get
+      security:
+      - OAuth2PasswordBearer: []
+      parameters:
+      - name: skip
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          description: Number of emails to skip
+          default: 0
+          title: Skip
+        description: Number of emails to skip
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 100
+          minimum: 1
+          description: Maximum number of emails to return
+          default: 20
+          title: Limit
+        description: Maximum number of emails to return
+      - name: unread_only
+        in: query
+        required: false
+        schema:
+          type: boolean
+          description: Filter for unread emails only
+          default: false
+          title: Unread Only
+        description: Filter for unread emails only
+      - name: category
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: Filter by email category
+          title: Category
+        description: Filter by email category
+      - name: search
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: Search in subject and body
+          title: Search
+        description: Search in subject and body
+      - name: sort_by
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - received_at
+          - sender
+          - subject
+          default: received_at
+          title: Sort By
+      - name: sort_order
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - asc
+          - desc
+          default: desc
+          title: Sort Order
+      - name: refresh
+        in: query
+        required: false
+        schema:
+          type: boolean
+          description: Whether to refresh emails from IMAP first
+          default: false
+          title: Refresh
+        description: Whether to refresh emails from IMAP first
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmailResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /emails/{email_id}:
+    get:
+      tags:
+      - Emails
+      summary: Get email by ID
+      description: Retrieves a specific email by its ID
+      operationId: retrieve_email_emails__email_id__get
+      security:
+      - OAuth2PasswordBearer: []
+      parameters:
+      - name: email_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Email Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmailSchema'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    delete:
+      tags:
+      - Emails
+      summary: Delete email
+      description: Deletes a specific email
+      operationId: delete_email_emails__email_id__delete
+      security:
+      - OAuth2PasswordBearer: []
+      parameters:
+      - name: email_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Email Id
+      responses:
+        '204':
+          description: Successful Response
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /emails/{email_id}/read:
+    put:
+      tags:
+      - Emails
+      summary: Mark email as read
+      description: Marks a specific email as read
+      operationId: mark_email_as_read_emails__email_id__read_put
+      security:
+      - OAuth2PasswordBearer: []
+      parameters:
+      - name: email_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Email Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmailSchema'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /emails/{email_id}/reader-view:
+    get:
+      tags:
+      - Emails
+      summary: Get email reader view
+      description: Returns a reader-friendly version of an email
+      operationId: get_email_reader_view_emails__email_id__reader_view_get
+      security:
+      - OAuth2PasswordBearer: []
+      parameters:
+      - name: email_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Email Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReaderViewResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /summaries/batch:
+    get:
+      tags:
+      - Summaries
+      summary: Get summaries by email IDs
+      description: Retrieves summaries for a batch of email IDs
+      operationId: get_summaries_by_ids_summaries_batch_get
+      security:
+      - OAuth2PasswordBearer: []
+      parameters:
+      - name: ids
+        in: query
+        required: true
+        schema:
+          type: array
+          items:
+            type: string
+          description: List of email IDs to fetch summaries for
+          title: Ids
+        description: List of email IDs to fetch summaries for
+      - name: batch_size
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 100
+          minimum: 1
+          description: Maximum number of emails to process in a single batch
+          default: 50
+          title: Batch Size
+        description: Maximum number of emails to process in a single batch
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SummarySchema'
+                title: Response Get Summaries By Ids Summaries Batch Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /summaries/:
+    get:
+      tags:
+      - Summaries
+      summary: Get user's email summaries
+      description: Retrieves summaries for the current user's emails with pagination,
+        filtering, and regeneration options
+      operationId: get_summaries_summaries__get
+      security:
+      - OAuth2PasswordBearer: []
+      parameters:
+      - name: refresh
+        in: query
+        required: false
+        schema:
+          type: boolean
+          description: Force regeneration of summaries
+          default: false
+          title: Refresh
+        description: Force regeneration of summaries
+      - name: auto_generate
+        in: query
+        required: false
+        schema:
+          type: boolean
+          description: Auto-generate missing summaries
+          default: true
+          title: Auto Generate
+        description: Auto-generate missing summaries
+      - name: skip
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          description: Number of summaries to skip
+          default: 0
+          title: Skip
+        description: Number of summaries to skip
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 100
+          minimum: 1
+          description: Maximum number of summaries to return
+          default: 20
+          title: Limit
+        description: Maximum number of summaries to return
+      - name: sort_by
+        in: query
+        required: false
+        schema:
+          type: string
+          description: Field to sort by
+          default: generated_at
+          title: Sort By
+        description: Field to sort by
+      - name: sort_order
+        in: query
+        required: false
+        schema:
+          type: string
+          description: Sort direction (asc or desc)
+          default: desc
+          title: Sort Order
+        description: Sort direction (asc or desc)
+      - name: fetch_all_emails
+        in: query
+        required: false
+        schema:
+          type: boolean
+          description: If true, fetches and processes all user emails; if false, uses
+            pagination on existing summaries
+          default: false
+          title: Fetch All Emails
+        description: If true, fetches and processes all user emails; if false, uses
+          pagination on existing summaries
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SummarySchema'
+                title: Response Get Summaries Summaries  Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /summaries/recent/{days}:
+    get:
+      tags:
+      - Summaries
+      summary: Get recent summaries
+      description: Retrieves summaries generated within recent days
+      operationId: get_recent_summaries_summaries_recent__days__get
+      security:
+      - OAuth2PasswordBearer: []
+      parameters:
+      - name: days
+        in: path
+        required: true
+        schema:
+          type: integer
+          description: Number of days to look back
+          title: Days
+        description: Number of days to look back
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          description: Maximum number of summaries to return
+          default: 20
+          title: Limit
+        description: Maximum number of summaries to return
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SummarySchema'
+                title: Response Get Recent Summaries Summaries Recent  Days  Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /summaries/keyword/{keyword}:
+    get:
+      tags:
+      - Summaries
+      summary: Search summaries by keyword
+      description: Retrieves summaries that contain the specified keyword
+      operationId: search_by_keyword_summaries_keyword__keyword__get
+      security:
+      - OAuth2PasswordBearer: []
+      parameters:
+      - name: keyword
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Keyword
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 50
+          minimum: 1
+          description: Maximum number of results
+          default: 10
+          title: Limit
+        description: Maximum number of results
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SummarySchema'
+                title: Response Search By Keyword Summaries Keyword  Keyword  Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /summaries/{email_id}:
+    get:
+      tags:
+      - Summaries
+      summary: Get Summary By Id
+      description: "Get a summary by email ID.\n\nArgs:\n    email_id: ID of the email\
+        \ to get summary for\n    user: Current authenticated user\n    summary_service:\
+        \ The summary service instance\n    summarizer: The summarizer implementation\
+        \ to use\n    \nReturns:\n    SummarySchema: Summary for the specified email"
+      operationId: get_summary_by_id_summaries__email_id__get
+      security:
+      - OAuth2PasswordBearer: []
+      parameters:
+      - name: email_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Email Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SummarySchema'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    delete:
+      tags:
+      - Summaries
+      summary: Delete summary
+      description: Deletes a summary for a specific email
+      operationId: delete_summary_summaries__email_id__delete
+      security:
+      - OAuth2PasswordBearer: []
+      parameters:
+      - name: email_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Email Id
+      responses:
+        '204':
+          description: Successful Response
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /summaries/summarize:
+    post:
+      tags:
+      - Summaries
+      summary: Summarize a single email
+      description: Generates or retrieves a summary for a single email
+      operationId: summarize_single_email_summaries_summarize_post
+      security:
+      - OAuth2PasswordBearer: []
+      parameters:
+      - name: refresh
+        in: query
+        required: false
+        schema:
+          type: boolean
+          description: Force regeneration of summary
+          default: false
+          title: Refresh
+        description: Force regeneration of summary
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailSchema'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SummarySchema'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+components:
+  schemas:
+    AuthStatusResponse:
+      properties:
+        is_authenticated:
+          type: boolean
+          title: Is Authenticated
+        token_valid:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Token Valid
+        has_refresh_token:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Has Refresh Token
+        error:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Error
+      type: object
+      required:
+      - is_authenticated
+      title: AuthStatusResponse
+      description: Response model for authentication status.
+    Body_token_endpoint_auth_token_post:
+      properties:
+        username:
+          type: string
+          title: Username
+          description: Just use 'oauth' here
+          default: oauth
+        password:
+          type: string
+          title: Password
+          description: Paste your Google token here
+      type: object
+      required:
+      - password
+      title: Body_token_endpoint_auth_token_post
+    EmailResponse:
+      properties:
+        emails:
+          items:
+            $ref: '#/components/schemas/EmailSchema'
+          type: array
+          title: Emails
+        total:
+          type: integer
+          title: Total
+        has_more:
+          type: boolean
+          title: Has More
+        debug_info:
+          type: object
+          title: Debug Info
+      type: object
+      required:
+      - emails
+      - total
+      - has_more
+      - debug_info
+      title: EmailResponse
+      description: Response model for email listing endpoints
+    EmailSchema:
+      properties:
+        google_id:
+          type: string
+          title: Google Id
+        email_id:
+          type: string
+          title: Email Id
+        sender:
+          type: string
+          title: Sender
+        recipients:
+          items:
+            type: string
+          type: array
+          title: Recipients
+        subject:
+          type: string
+          title: Subject
+        body:
+          type: string
+          title: Body
+        received_at:
+          type: string
+          format: date-time
+          title: Received At
+        category:
+          type: string
+          title: Category
+          default: uncategorized
+        is_read:
+          type: boolean
+          title: Is Read
+          default: false
+      type: object
+      required:
+      - google_id
+      - email_id
+      - sender
+      - recipients
+      - subject
+      - body
+      title: EmailSchema
+      description: Schema for email data storage and retrieval.
+    ExchangeCodeRequest:
+      properties:
+        code:
+          type: string
+          title: Code
+        user_email:
+          type: string
+          format: email
+          title: User Email
+      type: object
+      required:
+      - code
+      - user_email
+      title: ExchangeCodeRequest
+      description: Request model for exchanging an OAuth authorization code for tokens.
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
+    PreferencesSchema:
+      properties:
+        summaries:
+          type: boolean
+          title: Summaries
+          default: true
+        theme:
+          type: string
+          title: Theme
+          default: light
+        fetch_frequency:
+          type: string
+          title: Fetch Frequency
+          default: '120'
+      type: object
+      title: PreferencesSchema
+      description: User preferences schema.
+    ReaderViewResponse:
+      properties:
+        email_id:
+          type: string
+          title: Email Id
+        subject:
+          type: string
+          title: Subject
+        reader_content:
+          type: string
+          title: Reader Content
+        content_type:
+          type: string
+          title: Content Type
+        is_processed:
+          type: boolean
+          title: Is Processed
+        original_length:
+          type: integer
+          title: Original Length
+        processed_length:
+          type: integer
+          title: Processed Length
+      type: object
+      required:
+      - email_id
+      - subject
+      - reader_content
+      - content_type
+      - is_processed
+      - original_length
+      - processed_length
+      title: ReaderViewResponse
+      description: Response model for reader view endpoint
+    RefreshTokenRequest:
+      properties:
+        user_email:
+          type: string
+          format: email
+          title: User Email
+      type: object
+      required:
+      - user_email
+      title: RefreshTokenRequest
+      description: Request model for refreshing an access token.
+    SummarySchema:
+      properties:
+        google_id:
+          type: string
+          title: Google Id
+        email_id:
+          type: string
+          title: Email Id
+        summary_text:
+          type: string
+          title: Summary Text
+        keywords:
+          items:
+            type: string
+          type: array
+          title: Keywords
+        generated_at:
+          type: string
+          format: date-time
+          title: Generated At
+        model_info:
+          anyOf:
+          - additionalProperties:
+              type: string
+            type: object
+          - type: 'null'
+          title: Model Info
+      type: object
+      required:
+      - google_id
+      - email_id
+      - summary_text
+      - keywords
+      title: SummarySchema
+      description: Schema for email summaries.
+    TokenResponse:
+      properties:
+        access_token:
+          type: string
+          title: Access Token
+        token_type:
+          type: string
+          title: Token Type
+          default: bearer
+        expires_in:
+          type: integer
+          title: Expires In
+          default: 3600
+        refresh_token:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Refresh Token
+      type: object
+      required:
+      - access_token
+      title: TokenResponse
+      description: Response model for token-related endpoints.
+    UserSchema:
+      properties:
+        google_id:
+          type: string
+          title: Google Id
+        email:
+          type: string
+          format: email
+          title: Email
+        name:
+          type: string
+          title: Name
+        preferences:
+          $ref: '#/components/schemas/PreferencesSchema'
+      type: object
+      required:
+      - google_id
+      - email
+      - name
+      title: UserSchema
+      description: User schema for database operations.
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+          type: array
+          title: Location
+        msg:
+          type: string
+          title: Message
+        type:
+          type: string
+          title: Error Type
+      type: object
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError
+    VerifyTokenRequest:
+      properties:
+        token:
+          type: string
+          title: Token
+      type: object
+      required:
+      - token
+      title: VerifyTokenRequest
+      description: Request model for token verification.
+  securitySchemes:
+    OAuth2PasswordBearer:
+      type: oauth2
+      description: Enter the token you received from the login flow (without Bearer
+        prefix)
+      flows:
+        password:
+          scopes: {}
+          tokenUrl: /auth/token
