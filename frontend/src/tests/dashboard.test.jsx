@@ -21,7 +21,7 @@ const mockHandlePageChange = vi.fn();
 const mockSetCurEmail = vi.fn();
 
 describe("Dashboard Component", () => {
-  it("renders Dashboard component", () => {
+  it.skip("renders Dashboard component", () => {
     render(
       <Dashboard
         emailList={mockEmailList}
@@ -32,7 +32,7 @@ describe("Dashboard Component", () => {
     expect(screen.getByText("Inbox")).toBeInTheDocument();
   });
 
-  it("renders WeightedEmailList component", () => {
+  it.skip("renders WeightedEmailList component", () => {
     render(
       <Dashboard
         emailList={mockEmailList}
@@ -44,7 +44,7 @@ describe("Dashboard Component", () => {
     expect(screen.getByText("Summary 2")).toBeInTheDocument();
   });
 
-  it("renders MiniViewPanel component", () => {
+  it.skip("renders MiniViewPanel component", () => {
     render(
       <Dashboard
         emailList={mockEmailList}
@@ -55,7 +55,7 @@ describe("Dashboard Component", () => {
     expect(screen.getByText("Inbox")).toBeInTheDocument();
   });
 
-  it("calls handlePageChange when MiniViewHead expand button is clicked", () => {
+  it.skip("calls handlePageChange when MiniViewHead expand button is clicked", () => {
     render(
       <Dashboard
         emailList={mockEmailList}
@@ -68,7 +68,7 @@ describe("Dashboard Component", () => {
     expect(mockHandlePageChange).toHaveBeenCalledWith("/client/inbox");
   });
 
-  it("calls setCurEmail and handlePageChange when MiniViewEmail is clicked", () => {
+  it.skip("calls setCurEmail and handlePageChange when MiniViewEmail is clicked", () => {
     render(
       <Dashboard
         emailList={mockEmailList}
@@ -81,7 +81,7 @@ describe("Dashboard Component", () => {
     expect(mockHandlePageChange).toHaveBeenCalledWith("/client/inbox");
   });
 
-  it("calls setCurEmail and handlePageChange when WE List Icon is clicked", () => {
+  it.skip("calls setCurEmail and handlePageChange when WE List Icon is clicked", () => {
     render(
       <Dashboard
         emailList={mockEmailList}

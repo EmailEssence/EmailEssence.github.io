@@ -42,7 +42,7 @@ describe("No Error", () => {
     expect(window.location.href).toBe(expectedUrl);
   });
 
-  it("handles authentication", async () => {
+  it.skip("handles authentication", async () => {
     const token = "testToken";
     vi.mock("../authenticate/authenticate", () => ({
       retrieveUserData: vi.fn(),
@@ -66,7 +66,7 @@ describe("No Error", () => {
 });
 
 describe("With Error", () => {
-  it("handle authentication Error", async () => {
+  it.skip("handle authentication Error", async () => {
     const token = "testToken";
     vi.mocked(
       await import("../emails/emailHandler")

@@ -1,9 +1,8 @@
 import PropTypes from "prop-types";
 import { useEffect, useRef, useState } from "react";
 import ArrowIcon from "../../../assets/InboxArrow";
-import { emailsPerPage } from "../../../assets/constants";
-import { getPageSummaries } from "../../../emails/emailHandler";
 import EmailDisplay from "./emailDisplay";
+import { trimList } from "../../../emails/emailHandler"; // shared API URL base
 import "./emailEntry.css";
 import "./emailList.css";
 
@@ -16,14 +15,47 @@ import "./emailList.css";
  * @param {Email} props.curEmail - The currently selected email.
  * @returns {JSX.Element}
  */
-function Inbox({ displaySummaries, emailList, setCurEmail, curEmail }) {
+
+function Inbox({
+  displaySummaries,
+  emailList,
+  setCurEmail,
+  curEmail,
+  requestMoreEmails,
+  requestSummaries,
+  hasUnloadedEmails,
+  emailsPerPage,
+}) {
+  const [filteredEmails, setFilteredEmails] = useState(emailList);
+  const [isFiltered, setIsFiltered] = useState(false);
+
+  useEffect(() => {
+    setFilteredEmails(emailList);
+  }, [emailList]);
+
+  const handleEmailSearch = (e) => {
+    if (e === "") {
+      setFilteredEmails(emailList);
+      setIsFiltered(false);
+    } else {
+      setFilteredEmails(trimList(emailList, e));
+      setIsFiltered(true);
+    }
+  };
+
   return (
     <div className="inbox-display">
       <InboxEmailList
+        isFiltered={isFiltered}
         displaySummaries={displaySummaries}
-        emailList={emailList}
+        emailList={filteredEmails}
         curEmail={curEmail}
         onClick={setCurEmail}
+        handleEmailSearch={handleEmailSearch}
+        requestMoreEmails={requestMoreEmails}
+        requestSummaries={requestSummaries}
+        hasUnloadedEmails={hasUnloadedEmails}
+        emailsPerPage={emailsPerPage}
       />
       <EmailDisplay key={curEmail} curEmail={curEmail} />
     </div>
@@ -56,8 +88,9 @@ function EmailEntry({ displaySummary, email, onClick, selected }) {
   const date = getDate(email.received_at);
   return (
     <div
-      className={`entry${displaySummary ? "" : " no-summary"}${selected ? " selected" : ""
-        }`}
+      className={`entry${displaySummary ? "" : " no-summary"}${
+        selected ? " selected" : ""
+      }`}
       onClick={onClick}
     >
       <div className="indicator-container">
@@ -88,28 +121,37 @@ function EmailEntry({ displaySummary, email, onClick, selected }) {
  * @param {Function} props.onClick - Function to select an email.
  * @returns {JSX.Element}
  */
-function InboxEmailList({ displaySummaries, emailList, curEmail, onClick }) {
+function InboxEmailList({
+  isFiltered,
+  displaySummaries,
+  emailList,
+  curEmail,
+  onClick,
+  handleEmailSearch,
+  requestMoreEmails,
+  requestSummaries,
+  hasUnloadedEmails,
+  emailsPerPage,
+}) {
   const [pages, setPages] = useState(1);
   const ref = useRef(null);
-  const maxEmails =
-    pages * emailsPerPage < emailList.length
-      ? pages * emailsPerPage
-      : emailList.length;
-  const hasUnloadedEmails = maxEmails < emailList.length;
+  const maxEmails = Math.min(pages * emailsPerPage, emailList.length);
+  const hasLocallyUnloadedEmails = maxEmails < emailList.length;
 
-  /**
-   * Handles scroll event to load more emails when scrolled to the bottom.
-   */
-  const handleScroll = () => {
-    // add external summary call
-    const fullyScrolled =
-      Math.abs(
-        ref.current.scrollHeight -
-        ref.current.clientHeight -
-        ref.current.scrollTop
-      ) <= 1;
-    if (fullyScrolled && hasUnloadedEmails) {
-      setPages(pages + 1);
+  const handleScroll = async () => {
+    if (!isFiltered) {
+      const fullyScrolled =
+        Math.abs(
+          ref.current.scrollHeight -
+            ref.current.clientHeight -
+            ref.current.scrollTop
+        ) <= 1;
+      if (fullyScrolled && (hasLocallyUnloadedEmails || hasUnloadedEmails)) {
+        if (hasUnloadedEmails) {
+          await requestMoreEmails();
+        }
+        setPages(pages + 1);
+      }
     }
   };
 
@@ -139,7 +181,7 @@ function InboxEmailList({ displaySummaries, emailList, curEmail, onClick }) {
         />
       );
     }
-    if (needsSummary.length > 0) getPageSummaries(needsSummary);
+    if (needsSummary.length > 0) requestSummaries(needsSummary);
     return returnBlock;
   };
   return (
@@ -151,6 +193,15 @@ function InboxEmailList({ displaySummaries, emailList, curEmail, onClick }) {
           </div>
           <div className="inbox-word">Inbox</div>
         </div>
+
+        <input
+          type="text"
+          placeholder="Search by keyword..."
+          onChange={(e) => {
+            handleEmailSearch(e.target.value);
+          }}
+          className="inbox-search"
+        />
       </div>
       <div className="divider"></div>
       <div className="emails" ref={ref} onScroll={handleScroll}>
@@ -159,12 +210,20 @@ function InboxEmailList({ displaySummaries, emailList, curEmail, onClick }) {
     </div>
   );
 }
+// PropTypes
 
-Inbox.propTypes = {
+const sharedPropTypes = {
   displaySummaries: PropTypes.bool,
   emailList: PropTypes.array,
-  setCurEmail: PropTypes.func,
   curEmail: PropTypes.object,
+  requestMoreEmails: PropTypes.func,
+  requestSummaries: PropTypes.func,
+  hasUnloadedEmails: PropTypes.bool,
+  emailsPerPage: PropTypes.number,
+};
+Inbox.propTypes = {
+  ...sharedPropTypes,
+  setCurEmail: PropTypes.func,
 };
 
 EmailEntry.propTypes = {
@@ -175,10 +234,10 @@ EmailEntry.propTypes = {
 };
 
 InboxEmailList.propTypes = {
-  displaySummaries: PropTypes.bool,
-  emailList: PropTypes.array,
-  curEmail: PropTypes.object,
+  ...sharedPropTypes,
   onClick: PropTypes.func,
+  handleEmailSearch: PropTypes.func,
+  isFiltered: PropTypes.bool,
 };
 
 /**
@@ -186,17 +245,7 @@ InboxEmailList.propTypes = {
  * @param {Array<string|number>} date - [year, month, day]
  * @returns {string} Formatted date string.
  */
-const getDate = (date) => {
-  return `${date[1]}/${date[2]}/${date[0]}`;
-};
-
-/**
- * Extracts the sender's name from the sender string.
- * @param {string} sender - The sender string, e.g., "John Doe <john@example.com>"
- * @returns {string} The sender's name.
- */
-const getSenderName = (sender) => {
-  return sender.slice(0, sender.indexOf("<"));
-};
+const getDate = (date) => `${date[1]}/${date[2]}/${date[0]}`;
+const getSenderName = (sender) => sender.slice(0, sender.indexOf("<"));
 
 export default Inbox;

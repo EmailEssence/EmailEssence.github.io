@@ -1,38 +1,31 @@
-import PropTypes from "prop-types";
-import { useEffect, useReducer } from "react";
+import { useEffect, useReducer, useState } from "react";
 import { Outlet, Route, Routes, useNavigate } from "react-router";
-import { fetchNewEmails } from "../../emails/emailHandler";
-import "../client/dashboard/client.css";
+import fetchEmails, {
+  handleNewEmails,
+  setSummary,
+} from "../../emails/emailHandler";
+import "./client.css";
 import Dashboard from "./dashboard/dashboard";
 import Inbox from "./inbox/inbox";
 import { clientReducer, userPreferencesReducer } from "./reducers";
 import { Settings } from "./settings/settings";
 import SideBar from "./sidebar/sidebar";
+import Loading from "../login/Loading";
 
-/**
- * Main client component for authenticated user experience.
- * Handles sidebar, routing, user preferences, and periodic email fetching.
- * @param {Object} props
- * @param {Array<Email>} props.emailsByDate - List of emails grouped by date.
- * @param {Object} props.defaultUserPreferences - Default user preferences.
- * @returns {JSX.Element}
- */
-function Client({
-  emailsByDate,
-  defaultUserPreferences = {
-    isChecked: true,
-    emailFetchInterval: 120,
-    theme: "light",
-  },
-}) {
+function Client() {
   const navigate = useNavigate();
+  const [emailsPerPage, setEmailsPerPage] = useState(
+    Math.max(1, Math.floor(window.innerHeight / 35))
+  );
+  const [hasUnloadedEmails, setHasUnloadedEmails] = useState(true);
   const [client, dispatchClient] = useReducer(clientReducer, {
     expandedSideBar: false,
-    curEmail: emailsByDate[0],
+    emails: [],
+    curEmail: {},
   });
   const [userPreferences, dispatchUserPreferences] = useReducer(
     userPreferencesReducer,
-    defaultUserPreferences
+    { isChecked: true, emailFetchInterval: 120, theme: "light" }
   );
 
   /**
@@ -42,15 +35,35 @@ function Client({
   useEffect(() => {
     const clock = setInterval(async () => {
       try {
-        await fetchNewEmails();
+        const requestedEmails = await fetchEmails(client.emails.length, true);
+        const newEmails = handleNewEmails(client.emails, requestedEmails);
+        if (newEmails.length > 0) handleAddEmails(newEmails, true);
+        console.log(newEmails.length);
       } catch (error) {
         console.error(`Loading Emails Error: ${error}`);
       }
     }, userPreferences.emailFetchInterval * 1000);
     return () => clearInterval(clock);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userPreferences.emailFetchInterval]);
 
-  // Dynamically update sidebar width
+  useEffect(() => {
+    function updateEmailsPerPage() {
+      setEmailsPerPage(Math.max(1, Math.floor(window.innerHeight / 35)));
+    }
+
+    let resizeTimeout = null;
+    function handleResize() {
+      if (resizeTimeout) clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(updateEmailsPerPage, 50);
+    }
+
+    window.addEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      if (resizeTimeout) clearTimeout(resizeTimeout);
+    };
+  }, []);
   const root = document.querySelector(":root");
   root.style.setProperty(
     "--sidebar-width",
@@ -107,69 +120,134 @@ function Client({
       theme: theme,
     });
   };
+  const handleAddEmails = (emailsToAdd, addToFront = false) => {
+    if (addToFront) {
+      // add emails to the Front
+      dispatchClient({
+        type: "emailAdd",
+        email: [...emailsToAdd, ...client.emails],
+      });
+    } else {
+      // add emails to the back
+      dispatchClient({
+        type: "emailAdd",
+        email: [...client.emails, ...emailsToAdd],
+      });
+    }
+  };
 
-  /**
-   * Sets the currently selected email.
-   * @param {Email} email - The email object to set as current.
-   */
-  const handleSetCurEmail = (email) => {
+  const handleSetEmails = async (emails) => {
+    dispatchClient({
+      type: "emailAdd",
+      email: emails,
+    });
+  };
+
+  // requests a page worth of emails and adds to the current email list,
+  // returns whether more emails exist or not
+  const requestMoreEmails = async () => {
+    const newEmails = await fetchEmails(emailsPerPage, client.emails.length);
+    if (newEmails.length > 0) {
+      handleAddEmails(newEmails);
+    } else {
+      setHasUnloadedEmails(false);
+    }
+  };
+
+  const handleSetCurEmail = async (email) => {
     dispatchClient({
       type: "emailChange",
       email: email,
     });
   };
 
+  const handleRequestSummaries = async (emails) => {
+    const ids = emails.map((email) => {
+      return email.email_id;
+    });
+    const result = await setSummary(ids, client.emails);
+    const settledEmails = await Promise.allSettled(result);
+    const toSet = settledEmails
+      .filter((r) => r.status === "fulfilled")
+      .map((r) => r.value || r.result);
+    dispatchClient({
+      type: "emailAdd",
+      email: toSet,
+    });
+  };
+
   return (
-    <div className="client">
-      <SideBar
-        onLogoClick={handleLogoClick}
-        expanded={client.expandedSideBar}
-        handlePageChange={handlePageChange}
-      />
+    <>
       <Routes>
         <Route
-          path="home"
+          path="loading"
           element={
-            <Dashboard
-              emailList={emailsByDate}
-              handlePageChange={handlePageChange}
-              setCurEmail={handleSetCurEmail}
+            <Loading
+              emailsPerPage={emailsPerPage}
+              setInitialEmails={handleSetEmails}
+              setInitialEmail={handleSetCurEmail}
             />
           }
         />
         <Route
-          path="inbox"
+          path="*"
           element={
-            <Inbox
-              displaySummaries={userPreferences.isChecked}
-              emailList={emailsByDate}
-              setCurEmail={handleSetCurEmail}
-              curEmail={client.curEmail}
-            />
+            <div className="client">
+              <SideBar
+                onLogoClick={handleLogoClick}
+                expanded={client.expandedSideBar}
+                handlePageChange={handlePageChange}
+              />
+              <Outlet />
+            </div>
           }
-        />
-        <Route
-          path="settings"
-          element={
-            <Settings
-              isChecked={userPreferences.isChecked}
-              handleToggleSummariesInInbox={handleToggleSummariesInInbox}
-              emailFetchInterval={userPreferences.emailFetchInterval}
-              handleSetEmailFetchInterval={handleSetEmailFetchInterval}
-              theme={userPreferences.theme}
-              handleSetTheme={handleSetTheme}
-            />
-          }
-        />
+        >
+          <Route
+            path="inbox"
+            element={
+              <Inbox
+                displaySummaries={userPreferences.isChecked}
+                emailList={client.emails}
+                setCurEmail={handleSetCurEmail}
+                curEmail={client.curEmail}
+                requestMoreEmails={requestMoreEmails}
+                requestSummaries={handleRequestSummaries}
+                hasUnloadedEmails={hasUnloadedEmails}
+                emailsPerPage={emailsPerPage}
+              />
+            }
+          />
+          <Route
+            path="settings"
+            element={
+              <Settings
+                isChecked={userPreferences.isChecked}
+                handleToggleSummariesInInbox={handleToggleSummariesInInbox}
+                emailFetchInterval={userPreferences.emailFetchInterval}
+                handleSetEmailFetchInterval={handleSetEmailFetchInterval}
+                theme={userPreferences.theme}
+                handleSetTheme={handleSetTheme}
+              />
+            }
+          />
+          <Route
+            path="home"
+            element={
+              <Dashboard
+                emailList={client.emails}
+                handlePageChange={handlePageChange}
+                setCurEmail={handleSetCurEmail}
+                requestMoreEmails={requestMoreEmails}
+                emailsPerPage={emailsPerPage}
+                requestSummaries={handleRequestSummaries}
+                hasUnloadedEmails={hasUnloadedEmails}
+              />
+            }
+          />
+        </Route>
       </Routes>
-      <Outlet />
-    </div>
+    </>
   );
 }
-
-Client.propTypes = {
-  emailsByDate: PropTypes.array,
-  defaultUserPreferences: PropTypes.object,
-};
 
 export default Client;
