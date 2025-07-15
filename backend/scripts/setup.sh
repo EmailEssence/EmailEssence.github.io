@@ -20,11 +20,9 @@ print_error() {
     echo -e "${RED}ERROR:${NC} $1"
 }
 
-# Move to backend directory if not already in
-if [[ $(basename "$PWD") != "backend" ]]; then
-    print_step "Changing to backend directory..."
-    cd backend || { print_error "Failed to change to backend directory"; exit 1; }
-fi
+# Change to the backend directory (parent of the script directory)
+SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)
+cd -- "$SCRIPT_DIR/.." || { print_error "Failed to change to backend directory"; exit 1; }
 
 print_step "Setting up development environment..."
 

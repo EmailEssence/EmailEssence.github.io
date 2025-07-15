@@ -20,16 +20,8 @@ function Print-Error {
     return $false
 }
 
-# Move to backend directory if not already in
-if ((Get-Item -Path ".").Name -ne "backend") {
-    Print-Step "Changing to backend directory..."
-    try {
-        Set-Location -Path "backend"
-    } catch {
-        Print-Error "Failed to change to backend directory"
-        exit 1
-    }
-}
+# Ensure the script runs with the backend directory as the current directory.
+Set-Location -Path (Join-Path $PSScriptRoot '..')
 
 Print-Step "Setting up development environment..."
 

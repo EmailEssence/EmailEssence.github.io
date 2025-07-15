@@ -10,11 +10,9 @@ log() {
 
 log "INFO" "Starting CI environment setup..."
 
-# Ensure we're in the backend directory
-if [[ $(basename "$PWD") != "backend" ]]; then
-    log "INFO" "Changing to backend directory..."
-    cd backend || { log "ERROR" "Failed to change directory"; exit 1; }
-fi
+# Change to the backend directory (parent of the script directory)
+SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)
+cd -- "$SCRIPT_DIR/.." || { log "ERROR" "Failed to change directory"; exit 1; }
 
 # Create log directory if it doesn't exist
 mkdir -p logs
